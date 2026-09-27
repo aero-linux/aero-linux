@@ -27,6 +27,10 @@ from aero.docker_tools import prune_docker, show_docker_stats
 from aero.env_mgr import check_sdk_environment
 from aero.display import show_display_info
 from aero.shell_repl import run_aero_shell
+from aero.thermals import show_thermals
+from aero.git_tools import check_git_status, clean_merged_branches
+from aero.cron_mgr import show_cron_status, enable_auto_maintenance
+from aero.clipboard import clear_clipboard
 
 
 def print_banner():
@@ -166,6 +170,26 @@ def main():
 
     # Interactive Shell
     subparsers.add_parser("shell", help="Launch interactive Aero developer shell")
+
+    # Thermals & Fan Sensors
+    subparsers.add_parser("temp", help="Inspect CPU and GPU hardware core temperatures")
+
+    # Git Tools
+    git_parser = subparsers.add_parser("git", help="Developer Git workspace inspector and branch cleaner")
+    git_sub = git_parser.add_subparsers(dest="git_action", help="Git actions")
+    git_sub.add_parser("status", help="Inspect active repository and uncommitted changes")
+    git_sub.add_parser("clean", help="Prune merged local Git branches")
+
+    # Cron & Timers
+    cron_parser = subparsers.add_parser("cron", help="Manage automated background maintenance timers")
+    cron_sub = cron_parser.add_subparsers(dest="cron_action", help="Cron actions")
+    cron_sub.add_parser("status", help="Show active systemd timers")
+    cron_sub.add_parser("enable", help="Enable daily automated cache & memory maintenance")
+
+    # Clipboard Manager
+    clip_parser = subparsers.add_parser("clip", help="Wayland clipboard manager")
+    clip_sub = clip_parser.add_subparsers(dest="clip_action", help="Clipboard actions")
+    clip_sub.add_parser("clear", help="Clear all clipboard buffers")
 
     args = parser.parse_args()
 
@@ -345,6 +369,27 @@ def main():
 
     elif args.command == "shell":
         run_aero_shell()
+
+    elif args.command == "temp":
+        show_thermals()
+
+    elif args.command == "git":
+        if args.git_action == "clean":
+            clean_merged_branches()
+        else:
+            check_git_status()
+
+    elif args.command == "cron":
+        if args.cron_action == "enable":
+            enable_auto_maintenance()
+        else:
+            show_cron_status()
+
+    elif args.command == "clip":
+        if args.clip_action == "clear":
+            clear_clipboard()
+        else:
+            clip_parser.print_help()
 
 
 if __name__ == "__main__":

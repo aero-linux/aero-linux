@@ -9,6 +9,8 @@ from aero.monitor import render_bar
 from aero.security import audit_security
 from aero.benchmark import cpu_worker
 from aero.docker_tools import check_docker
+from aero.thermals import get_temperatures
+from aero.clipboard import check_clipboard
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -83,6 +85,14 @@ class TestAeroCLI(unittest.TestCase):
     def test_check_docker(self):
         # Function returns a boolean based on environment
         res = check_docker()
+        self.assertIsInstance(res, bool)
+
+    def test_thermals(self):
+        res = get_temperatures()
+        self.assertIsInstance(res, list)
+
+    def test_clipboard(self):
+        res = check_clipboard()
         self.assertIsInstance(res, bool)
 
 
