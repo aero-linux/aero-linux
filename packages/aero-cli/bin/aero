@@ -44,6 +44,7 @@ from aero.db_tools import list_databases, start_database, stop_database, DATABAS
 from aero.api_bench import bench_url
 from aero.vm import run_iso_in_vm
 from aero.system_updater import check_system_kernel, update_aero_os
+from aero.layout import set_desktop_layout
 
 
 def print_banner():
@@ -297,6 +298,10 @@ def main():
     sys_sub = sys_parser.add_subparsers(dest="sys_action", help="System actions")
     sys_sub.add_parser("info", help="Check active kernel flavor and release")
     sys_sub.add_parser("update", help="Upgrade base packages and Aero CLI")
+
+    # Desktop Layout Switcher
+    layout_parser = subparsers.add_parser("layout", help="Switch between Windows-Friendly and Tiling desktop layouts")
+    layout_parser.add_argument("mode", choices=["windows", "tiling"], help="Desktop layout mode (windows or tiling)")
 
     args = parser.parse_args()
 
@@ -573,6 +578,9 @@ def main():
             update_aero_os()
         else:
             check_system_kernel()
+
+    elif args.command == "layout":
+        set_desktop_layout(args.mode)
 
 
 if __name__ == "__main__":

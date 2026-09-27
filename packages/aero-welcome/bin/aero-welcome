@@ -41,8 +41,25 @@ class AeroWelcomeApp(Gtk.Window):
         page_quick.set_margin_top(15)
 
         lbl_quick = Gtk.Label()
-        lbl_quick.set_markup("<b>🚀 Essential Optimizations & Hardware</b>")
+        lbl_quick.set_markup("<b>🚀 Desktop Mode & Essential Optimizations</b>")
         page_quick.pack_start(lbl_quick, False, False, 0)
+
+        # Layout Switcher Buttons
+        layout_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        layout_box.set_homogeneous(True)
+
+        btn_win_mode = Gtk.Button(label="🪟 Windows-Friendly Mode\n(Bottom Taskbar + Start Menu)")
+        btn_win_mode.connect("clicked", lambda b: self.run_cmd("aero layout windows"))
+        layout_box.pack_start(btn_win_mode, True, True, 0)
+
+        btn_tile_mode = Gtk.Button(label="⚡ Hacker Tiling Mode\n(Top Bar + Auto-Tiling)")
+        btn_tile_mode.connect("clicked", lambda b: self.run_cmd("aero layout tiling"))
+        layout_box.pack_start(btn_tile_mode, True, True, 0)
+
+        page_quick.pack_start(layout_box, False, False, 0)
+
+        sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        page_quick.pack_start(sep, False, False, 5)
 
         btn_zram = Gtk.Button(label="🧠 Compact zRAM Memory & Drop Caches")
         btn_zram.connect("clicked", lambda b: self.run_cmd("aero memory --optimize"))

@@ -1,0 +1,71 @@
+{
+  "layer": "top",
+  "position": "bottom",
+  "height": 40,
+  "margin-top": 0,
+  "margin-bottom": 0,
+  "margin-left": 0,
+  "margin-right": 0,
+  "modules-left": [
+    "custom/start",
+    "custom/files",
+    "custom/browser",
+    "custom/terminal",
+    "custom/control",
+    "sway/workspaces"
+  ],
+  "modules-center": [
+    "sway/window"
+  ],
+  "modules-right": [
+    "custom/zram",
+    "custom/power",
+    "pulseaudio",
+    "network",
+    "battery",
+    "clock",
+    "tray"
+  ],
+  "custom/start": {
+    "format": "⚡ Start",
+    "tooltip": "Open Application Menu (Win Key)",
+    "on-click": "wofi --show drun --allow-images"
+  },
+  "custom/files": {
+    "format": "📁",
+    "tooltip": "File Explorer (Win + E)",
+    "on-click": "nemo ~ || thunar ~ || pcmanfm ~"
+  },
+  "custom/browser": {
+    "format": "🌐",
+    "tooltip": "Web Browser",
+    "on-click": "brave-browser || google-chrome || firefox"
+  },
+  "custom/terminal": {
+    "format": "💻",
+    "tooltip": "Terminal (Win + Enter)",
+    "on-click": "alacritty"
+  },
+  "custom/control": {
+    "format": "⚙️",
+    "tooltip": "Aero Control Center",
+    "on-click": "aero-welcome"
+  },
+  "clock": {
+    "format": "{:%I:%M %p  |  %d %b %Y}",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+  },
+  "battery": {
+    "format": "🔋 {capacity}%",
+    "format-charging": "⚡ {capacity}%"
+  },
+  "network": {
+    "format-wifi": "📶 {essid}",
+    "format-ethernet": "🌐 Wired",
+    "format-disconnected": "⚠️ Offline"
+  },
+  "pulseaudio": {
+    "format": "🔊 {volume}%",
+    "format-muted": "🔇 Muted"
+  }
+}

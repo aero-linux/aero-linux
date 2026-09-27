@@ -18,6 +18,7 @@ from aero.audio import LATENCY_PRESETS
 from aero.fonts import NERD_FONTS
 from aero.db_tools import DATABASES
 from aero.vm import check_kvm
+from aero.layout import set_desktop_layout
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -135,6 +136,10 @@ class TestAeroCLI(unittest.TestCase):
     def test_kvm(self):
         res = check_kvm()
         self.assertIsInstance(res, bool)
+
+    def test_desktop_layout(self):
+        res = set_desktop_layout("windows")
+        self.assertTrue(res)
 
 
 if __name__ == "__main__":
