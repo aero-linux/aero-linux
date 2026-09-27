@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and ISO outputs
+output/
+work/
+release-artifacts/
+*.iso
+*.iso.sha256
+*.tar.gz
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log

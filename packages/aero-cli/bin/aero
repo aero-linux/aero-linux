@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""
+Aero Linux System & AI Control CLI
+"""
+import argparse
+import sys
+import json
+
+from aero.doctor import run_doctor
+from aero.power import set_profile, get_current_profile, PROFILES, set_charge_threshold
+from aero.memory import compact_memory, get_top_memory_processes
+from aero.ai import install_ollama, get_ai_status, pull_model, run_model
+
+
+def print_banner():
+    print(r"""
+    ___    ______ ____  ____     __    _____   __  ___  __  __
+   /   |  / ____// __ \/ __ \   / /   /  _/ | / / / / / / |/ /
+  / /| | / __/  / /_/ / / / /  / /    / / |  |/ / / / / /|   / 
+ / ___ |/ /___ / _, _/ /_/ /  / /____/ /  |    / / /_/ //   |  
+/_/  |_/_____//_/ |_|\____/  /_____/___/  |_/_/  \____//_/|_|  
+    ⚡ The High-Performance AI & Developer Linux Distribution
+    """)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Aero Linux Management Suite",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
+    # Doctor
+    doc_parser = subparsers.add_parser("doctor", help="Inspect hardware, kernel, battery, and AI readiness")
+    doc_parser.add_argument("--json", action="store_true", help="Output as JSON")
+
+    # Power
+    pow_parser = subparsers.add_parser("power", help="Manage power profiles and battery health")
+    pow_parser.add_argument("profile", nargs="?", choices=list(PROFILES.keys()), help="Set active power profile")
+    pow_parser.add_argument("--threshold", type=int, help="Set battery charge limit (e.g. 80)")
+
+    # Memory
+    mem_parser = subparsers.add_parser("memory", help="Optimize RAM, zRAM compaction, and inspect memory")
+    mem_parser.add_argument("--optimize", action="store_true", help="Trigger zRAM compaction and cache drop")
+    mem_parser.add_argument("--top", action="store_true", help="Show top memory consuming processes")
+
+    # AI
+    ai_parser = subparsers.add_parser("ai", help="Local AI runtime & model management")
+    ai_sub = ai_parser.add_subparsers(dest="ai_action", help="AI subcommands")
+    ai_sub.add_parser("init", help="Install and initialize local Ollama AI runtime")
+    ai_sub.add_parser("status", help="Show status of local AI daemon and downloaded models")
+    ai_pull = ai_sub.add_parser("pull", help="Download an LLM model")
+    ai_pull.add_argument("model", help="Model name (e.g. llama3.2, deepseek-r1:8b, qwen2.5-coder)")
+    ai_run = ai_sub.add_parser("run", help="Run an interactive session with a model")
+    ai_run.add_argument("model", help="Model name (e.g. llama3.2, qwen2.5-coder)")
+
+    args = parser.parse_args()
+
+    if not args.command:
+        print_banner()
+        parser.print_help()
+        sys.exit(0)
+
+    if args.command == "doctor":
+        report = run_doctor()
+        if args.json:
+            print(json.dumps(report, indent=2))
+        else:
+            print_banner()
+            print(f"🖥️  OS: {report['os']} (Kernel: {report['kernel']})")
+            print(f"⚙️  CPU: {report['cpu']['model']} ({report['cpu']['cores']} cores) [Governor: {report['cpu']['governor']}]")
+            print(f"🧠 RAM: {report['memory']['available_mb']}MB available / {report['memory']['total_mb']}MB total (zRAM Active: {report['memory']['zram_active']})")
+            
+            if report['gpus']:
+                print("🎮 GPU(s):")
+                for g in report['gpus']:
+                    print(f"   - {g['vendor']}: {g['model']}")
+            else:
+                print("🎮 GPU: Integrated / Standard Graphics")
+
+            if report['battery']['present']:
+                print(f"🔋 Battery: {report['battery']['percentage']}% ({report['battery']['status']})")
+            
+            print(f"🤖 AI Stack: Docker={report['ai_stack']['docker']}, Ollama={report['ai_stack']['ollama']}, Python={report['ai_stack']['python']}")
+
+    elif args.command == "power":
+        if args.threshold:
+            success = set_charge_threshold(args.threshold)
+            print(f"🔋 Battery charge threshold set to {args.threshold}%: {'Success' if success else 'Failed'}")
+        elif args.profile:
+            set_profile(args.profile)
+            print(f"⚡ Power profile switched to: {args.profile.upper()}")
+            print(f"   ℹ️  {PROFILES[args.profile]['description']}")
+        else:
+            current = get_current_profile()
+            print(f"⚡ Current Power Profile: {current.upper()}")
+            print("\nAvailable profiles:")
+            for name, p in PROFILES.items():
+                print(f"   • {name:10} - {p['description']}")
+
+    elif args.command == "memory":
+        if args.top or not args.optimize:
+            print("🧠 Top 10 Memory Consuming Processes:")
+            for p in get_top_memory_processes(10):
+                print(f"   PID {p['pid']:<6} {p['mem_percent']:>5.1f}% ({p['rss_mb']:>5}MB) - {p['command']}")
+        if args.optimize:
+            print("\n🧹 Compacting zRAM and dropping caches...")
+            res = compact_memory()
+            print(f"✅ Optimization complete! Freed: ~{res['memory_freed_mb']}MB RAM")
+
+    elif args.command == "ai":
+        if args.ai_action == "init":
+            install_ollama()
+        elif args.ai_action == "status":
+            st = get_ai_status()
+            print(f"🤖 Ollama Installed: {st['ollama_installed']}")
+            print(f"🟢 Daemon Running:  {st['ollama_running']}")
+            if st["models"]:
+                print("📦 Installed Models:")
+                for m in st["models"]:
+                    print(f"   • {m}")
+            else:
+                print("📦 No models installed yet. Run 'aero ai pull llama3.2' to get started.")
+        elif args.ai_action == "pull":
+            pull_model(args.model)
+        elif args.ai_action == "run":
+            run_model(args.model)
+        else:
+            ai_parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

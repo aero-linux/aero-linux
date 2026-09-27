@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aero Linux — The Ultra-Lean AI & Developer Operating System</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">AERO<b>LINUX</b></span>
+      </div>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#benchmarks">Benchmarks</a>
+        <a href="#ai-stack">AI Stack</a>
+        <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="github-link">GitHub</a>
+      </nav>
+      <a href="#download" class="btn btn-primary nav-btn">Download ISO</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container hero-container">
+        <div class="badge">🔥 Next-Gen Developer Distribution</div>
+        <h1 class="hero-title">The Ultra-Lean Operating System for <span class="gradient-text">AI & High Performance</span></h1>
+        <p class="hero-subtitle">
+          Engineered for engineers. Sub-350MB idle RAM, low-latency kernel scheduler, dynamic zRAM ZSTD compression, and 1-click local LLM serving out of the box.
+        </p>
+        <div class="hero-actions">
+          <a href="#download" class="btn btn-primary btn-lg">Download Aero 1.0 (amd64)</a>
+          <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="btn btn-secondary btn-lg">View Source Code</a>
+        </div>
+        <div class="code-preview">
+          <div class="code-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="code-title">aero-terminal</span>
+          </div>
+          <pre><code><span class="prompt">$</span> aero doctor
+<span class="text-cyan">OS:</span> Aero Linux (Rolling Edge) [Kernel: 6.8-lowlatency]
+<span class="text-cyan">Memory:</span> 312MB used / 15.2GB total [zRAM ZSTD Active]
+<span class="text-cyan">AI Runtime:</span> Ollama + CUDA 12.4 Ready
+<span class="prompt">$</span> aero ai run deepseek-r1:8b
+<span class="text-green">⚡ Launching interactive session with deepseek-r1:8b...</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Pillars -->
+    <section id="features" class="features">
+      <div class="container">
+        <div class="section-header">
+          <h2>Engineered Without Compromise</h2>
+          <p>Every layer of Aero is stripped of bloat and tuned for speed.</p>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <h3>Dynamic zRAM & Memory Compaction</h3>
+            <p>Integrated ZSTD zRAM doubles your effective multitasking memory while eliminating swap stalls during heavy local model inference.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3>Native Local AI Control Suite</h3>
+            <p>Pre-configured Ollama, vLLM, PyTorch, and Docker. Launch models locally with single-word CLI commands.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔋</div>
+            <h3>Adaptive Battery & Thermal Engine</h3>
+            <p>Smart P-State scaling: silent fans and max endurance on battery, full multi-core boost on AC.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section id="benchmarks" class="comparison">
+      <div class="container">
+        <div class="section-header">
+          <h2>Benchmarked Against Industry Standards</h2>
+        </div>
+        <div class="table-wrapper">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th class="highlight">Aero Linux</th>
+                <th>Ubuntu 24.04</th>
+                <th>Pop!_OS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Idle RAM Usage</td>
+                <td class="highlight"><b>~310 MB</b></td>
+                <td>~1,400 MB</td>
+                <td>~1,250 MB</td>
+              </tr>
+              <tr>
+                <td>zRAM ZSTD Compression</td>
+                <td class="highlight"><b>Default (100% RAM)</b></td>
+                <td>Disabled</td>
+                <td>Disabled</td>
+              </tr>
+              <tr>
+                <td>Local LLM CLI Suite</td>
+                <td class="highlight"><b>Built-in (`aero ai`)</b></td>
+                <td>Manual Setup</td>
+                <td>Manual Setup</td>
+              </tr>
+              <tr>
+                <td>Kernel Tuning</td>
+                <td class="highlight"><b>Low-Latency BBR/P-State</b></td>
+                <td>Standard Generic</td>
+                <td>Standard Generic</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-container">
+      <p>© 2026 Aero Linux Project. Open Source under MIT License.</p>
+      <p>Crafted by Ronit Gupta & Contributors.</p>
+    </div>
+  </footer>
+</body>
+</html>

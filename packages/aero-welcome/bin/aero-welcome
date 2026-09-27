@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""
+Aero Linux Welcome & Setup App
+"""
+import sys
+import subprocess
+import gi
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Gdk, GLib
+
+
+class AeroWelcomeApp(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Welcome to Aero Linux")
+        self.set_default_size(800, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
+        main_box.set_margin_top(20)
+        main_box.set_margin_bottom(20)
+        main_box.set_margin_start(25)
+        main_box.set_margin_end(25)
+        self.add(main_box)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        title = Gtk.Label()
+        title.set_markup("<span size='xx-large' weight='bold'>⚡ Welcome to Aero Linux</span>")
+        subtitle = Gtk.Label(label="The Ultra-Lean AI & High-Performance Developer Operating System")
+        header_box.pack_start(title, False, False, 0)
+        header_box.pack_start(subtitle, False, False, 0)
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Tabs / Stack
+        stack = Gtk.Stack()
+        stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        stack.set_transition_duration(250)
+
+        # 1. Quick Setup Page
+        page_quick = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_quick.set_margin_top(15)
+
+        lbl_quick = Gtk.Label()
+        lbl_quick.set_markup("<b>🚀 Essential Optimizations</b>")
+        page_quick.pack_start(lbl_quick, False, False, 0)
+
+        btn_zram = Gtk.Button(label="🧠 Enable zRAM ZSTD Compression (Doubles usable RAM)")
+        btn_zram.connect("clicked", lambda b: self.run_cmd("sudo systemctl enable --now aero-zram.service"))
+        page_quick.pack_start(btn_zram, False, False, 0)
+
+        btn_battery = Gtk.Button(label="🔋 Enable 80% Battery Health Protection Threshold")
+        btn_battery.connect("clicked", lambda b: self.run_cmd("aero power --threshold 80"))
+        page_quick.pack_start(btn_battery, False, False, 0)
+
+        btn_gamemode = Gtk.Button(label="🎮 Enable Low-Latency Kernel Scheduler (Gaming & Compute)")
+        btn_gamemode.connect("clicked", lambda b: self.run_cmd("aero power gaming"))
+        page_quick.pack_start(btn_gamemode, False, False, 0)
+
+        stack.add_titled(page_quick, "quick", "Quick Setup")
+
+        # 2. AI & ML Stack Page
+        page_ai = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_ai.set_margin_top(15)
+
+        lbl_ai = Gtk.Label()
+        lbl_ai.set_markup("<b>🤖 1-Click Local AI & Deep Learning Stack</b>")
+        page_ai.pack_start(lbl_ai, False, False, 0)
+
+        btn_ollama = Gtk.Button(label="⚡ Install Ollama Runtime (Local LLM Serving)")
+        btn_ollama.connect("clicked", lambda b: self.run_cmd("aero ai init"))
+        page_ai.pack_start(btn_ollama, False, False, 0)
+
+        btn_docker = Gtk.Button(label="🐳 Install Rootless Docker Engine & NVIDIA Container Toolkit")
+        btn_docker.connect("clicked", lambda b: self.run_cmd("sudo apt-get install -y docker.io"))
+        page_ai.pack_start(btn_docker, False, False, 0)
+
+        stack.add_titled(page_ai, "ai", "AI & Compute")
+
+        # 3. Developer Toolchains Page
+        page_dev = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_dev.set_margin_top(15)
+
+        lbl_dev = Gtk.Label()
+        lbl_dev.set_markup("<b>🛠️ Developer Toolchains</b>")
+        page_dev.pack_start(lbl_dev, False, False, 0)
+
+        btn_node = Gtk.Button(label="📦 Node.js, TypeScript & Bun Runtimes")
+        page_dev.pack_start(btn_node, False, False, 0)
+
+        btn_rust = Gtk.Button(label="🦀 Rust Toolchain (rustc, cargo, rust-analyzer)")
+        page_dev.pack_start(btn_rust, False, False, 0)
+
+        btn_python = Gtk.Button(label="🐍 Python 3.12+ (uv, pip, virtualenv, PyTorch)")
+        page_dev.pack_start(btn_python, False, False, 0)
+
+        stack.add_titled(page_dev, "dev", "Dev Toolchains")
+
+        # Switcher
+        switcher = Gtk.StackSwitcher()
+        switcher.set_stack(stack)
+        switcher.set_halign(Gtk.Align.CENTER)
+        main_box.pack_start(switcher, False, False, 0)
+        main_box.pack_start(stack, True, True, 0)
+
+        # Status Label
+        self.status_lbl = Gtk.Label(label="Ready")
+        main_box.pack_end(self.status_lbl, False, False, 0)
+
+    def run_cmd(self, cmd):
+        self.status_lbl.set_text(f"Running: {cmd}...")
+        try:
+            subprocess.Popen(cmd, shell=True)
+            self.status_lbl.set_text(f"Executed: {cmd}")
+        except Exception as e:
+            self.status_lbl.set_text(f"Error: {e}")
+
+
+def main():
+    app = AeroWelcomeApp()
+    app.connect("destroy", Gtk.main_quit)
+    app.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
