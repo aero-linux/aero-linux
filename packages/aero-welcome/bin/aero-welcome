@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-Aero Linux Welcome & Setup App
+Aero Linux Welcome & Control Center GUI (GTK3)
 """
-import sys
 import subprocess
 import gi
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk
 
 
 class AeroWelcomeApp(Gtk.Window):
     def __init__(self):
-        super().__init__(title="Welcome to Aero Linux")
-        self.set_default_size(800, 520)
+        super().__init__(title="Aero Linux Control Center")
+        self.set_default_size(840, 560)
         self.set_position(Gtk.WindowPosition.CENTER)
 
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
@@ -26,7 +25,7 @@ class AeroWelcomeApp(Gtk.Window):
         # Header
         header_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         title = Gtk.Label()
-        title.set_markup("<span size='xx-large' weight='bold'>⚡ Welcome to Aero Linux</span>")
+        title.set_markup("<span size='xx-large' weight='bold'>⚡ Aero Linux Control Center</span>")
         subtitle = Gtk.Label(label="The Ultra-Lean AI & High-Performance Developer Operating System")
         header_box.pack_start(title, False, False, 0)
         header_box.pack_start(subtitle, False, False, 0)
@@ -42,24 +41,28 @@ class AeroWelcomeApp(Gtk.Window):
         page_quick.set_margin_top(15)
 
         lbl_quick = Gtk.Label()
-        lbl_quick.set_markup("<b>🚀 Essential Optimizations</b>")
+        lbl_quick.set_markup("<b>🚀 Essential Optimizations & Hardware</b>")
         page_quick.pack_start(lbl_quick, False, False, 0)
 
-        btn_zram = Gtk.Button(label="🧠 Enable zRAM ZSTD Compression (Doubles usable RAM)")
-        btn_zram.connect("clicked", lambda b: self.run_cmd("sudo systemctl enable --now aero-zram.service"))
+        btn_zram = Gtk.Button(label="🧠 Compact zRAM Memory & Drop Caches")
+        btn_zram.connect("clicked", lambda b: self.run_cmd("aero memory --optimize"))
         page_quick.pack_start(btn_zram, False, False, 0)
 
         btn_battery = Gtk.Button(label="🔋 Enable 80% Battery Health Protection Threshold")
         btn_battery.connect("clicked", lambda b: self.run_cmd("aero power --threshold 80"))
         page_quick.pack_start(btn_battery, False, False, 0)
 
-        btn_gamemode = Gtk.Button(label="🎮 Enable Low-Latency Kernel Scheduler (Gaming & Compute)")
-        btn_gamemode.connect("clicked", lambda b: self.run_cmd("aero power gaming"))
-        page_quick.pack_start(btn_gamemode, False, False, 0)
+        btn_bbr = Gtk.Button(label="⚡ Enable Google BBR Low-Latency TCP Congestion Control")
+        btn_bbr.connect("clicked", lambda b: self.run_cmd("aero net bbr"))
+        page_quick.pack_start(btn_bbr, False, False, 0)
+
+        btn_sec = Gtk.Button(label="🛡️ Apply UFW Firewall & Kernel Security Hardening")
+        btn_sec.connect("clicked", lambda b: self.run_cmd("aero security harden"))
+        page_quick.pack_start(btn_sec, False, False, 0)
 
         stack.add_titled(page_quick, "quick", "Quick Setup")
 
-        # 2. AI & ML Stack Page
+        # 2. AI & Local Models
         page_ai = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page_ai.set_margin_top(15)
 
@@ -67,34 +70,63 @@ class AeroWelcomeApp(Gtk.Window):
         lbl_ai.set_markup("<b>🤖 1-Click Local AI & Deep Learning Stack</b>")
         page_ai.pack_start(lbl_ai, False, False, 0)
 
-        btn_ollama = Gtk.Button(label="⚡ Install Ollama Runtime (Local LLM Serving)")
+        btn_ollama = Gtk.Button(label="⚡ Initialize Ollama Runtime (Local LLM Serving)")
         btn_ollama.connect("clicked", lambda b: self.run_cmd("aero ai init"))
         page_ai.pack_start(btn_ollama, False, False, 0)
 
-        btn_docker = Gtk.Button(label="🐳 Install Rootless Docker Engine & NVIDIA Container Toolkit")
-        btn_docker.connect("clicked", lambda b: self.run_cmd("sudo apt-get install -y docker.io"))
-        page_ai.pack_start(btn_docker, False, False, 0)
+        btn_gpu = Gtk.Button(label="🎮 Auto-Configure NVIDIA CUDA / AMD ROCm GPU Acceleration")
+        btn_gpu.connect("clicked", lambda b: self.run_cmd("aero gpu setup"))
+        page_ai.pack_start(btn_gpu, False, False, 0)
+
+        btn_deepseek = Gtk.Button(label="📦 Download DeepSeek-R1 (8B Reasoning Model)")
+        btn_deepseek.connect("clicked", lambda b: self.run_cmd("alacritty -e aero ai pull deepseek-r1:8b"))
+        page_ai.pack_start(btn_deepseek, False, False, 0)
 
         stack.add_titled(page_ai, "ai", "AI & Compute")
 
-        # 3. Developer Toolchains Page
+        # 3. Developer Toolchains & Databases
         page_dev = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page_dev.set_margin_top(15)
 
         lbl_dev = Gtk.Label()
-        lbl_dev.set_markup("<b>🛠️ Developer Toolchains</b>")
+        lbl_dev.set_markup("<b>🛠️ Sandboxes & Local Databases</b>")
         page_dev.pack_start(lbl_dev, False, False, 0)
 
-        btn_node = Gtk.Button(label="📦 Node.js, TypeScript & Bun Runtimes")
-        page_dev.pack_start(btn_node, False, False, 0)
+        btn_pg = Gtk.Button(label="🐘 Launch Local PostgreSQL 16 (Port 5432)")
+        btn_pg.connect("clicked", lambda b: self.run_cmd("aero db start postgres"))
+        page_dev.pack_start(btn_pg, False, False, 0)
 
-        btn_rust = Gtk.Button(label="🦀 Rust Toolchain (rustc, cargo, rust-analyzer)")
-        page_dev.pack_start(btn_rust, False, False, 0)
+        btn_redis = Gtk.Button(label="⚡ Launch Local Redis 7 In-Memory Cache (Port 6379)")
+        btn_redis.connect("clicked", lambda b: self.run_cmd("aero db start redis"))
+        page_dev.pack_start(btn_redis, False, False, 0)
 
-        btn_python = Gtk.Button(label="🐍 Python 3.12+ (uv, pip, virtualenv, PyTorch)")
-        page_dev.pack_start(btn_python, False, False, 0)
+        btn_bench = Gtk.Button(label="📊 Run Hardware Performance Benchmark")
+        btn_bench.connect("clicked", lambda b: self.run_cmd("alacritty -e aero benchmark"))
+        page_dev.pack_start(btn_bench, False, False, 0)
 
-        stack.add_titled(page_dev, "dev", "Dev Toolchains")
+        stack.add_titled(page_dev, "dev", "Dev & Databases")
+
+        # 4. Themes & Aesthetics
+        page_themes = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_themes.set_margin_top(15)
+
+        lbl_themes = Gtk.Label()
+        lbl_themes.set_markup("<b>🎨 Desktop Aesthetics & Color Themes</b>")
+        page_themes.pack_start(lbl_themes, False, False, 0)
+
+        btn_cyan = Gtk.Button(label="⚡ Cyber Cyan (Default Dark Neon)")
+        btn_cyan.connect("clicked", lambda b: self.run_cmd("aero theme set cyber-cyan"))
+        page_themes.pack_start(btn_cyan, False, False, 0)
+
+        btn_tokyo = Gtk.Button(label="🌙 Tokyo Night (Indigo & Purple)")
+        btn_tokyo.connect("clicked", lambda b: self.run_cmd("aero theme set tokyo-night"))
+        page_themes.pack_start(btn_tokyo, False, False, 0)
+
+        btn_nord = Gtk.Button(label="❄️ Nord Arctic (Muted Frost)")
+        btn_nord.connect("clicked", lambda b: self.run_cmd("aero theme set nord"))
+        page_themes.pack_start(btn_nord, False, False, 0)
+
+        stack.add_titled(page_themes, "themes", "Themes")
 
         # Switcher
         switcher = Gtk.StackSwitcher()
@@ -108,7 +140,7 @@ class AeroWelcomeApp(Gtk.Window):
         main_box.pack_end(self.status_lbl, False, False, 0)
 
     def run_cmd(self, cmd):
-        self.status_lbl.set_text(f"Running: {cmd}...")
+        self.status_lbl.set_text(f"Executing: {cmd}...")
         try:
             subprocess.Popen(cmd, shell=True)
             self.status_lbl.set_text(f"Executed: {cmd}")
