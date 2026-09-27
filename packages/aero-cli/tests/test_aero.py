@@ -11,6 +11,8 @@ from aero.benchmark import cpu_worker
 from aero.docker_tools import check_docker
 from aero.thermals import get_temperatures
 from aero.clipboard import check_clipboard
+from aero.themes import THEMES
+from aero.share import get_local_ip
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -94,6 +96,17 @@ class TestAeroCLI(unittest.TestCase):
     def test_clipboard(self):
         res = check_clipboard()
         self.assertIsInstance(res, bool)
+
+    def test_themes(self):
+        self.assertIn("cyber-cyan", THEMES)
+        self.assertIn("tokyo-night", THEMES)
+        self.assertIn("nord", THEMES)
+        self.assertIn("gruvbox", THEMES)
+
+    def test_share_ip(self):
+        ip = get_local_ip()
+        self.assertIsInstance(ip, str)
+        self.assertTrue(len(ip) >= 7)
 
 
 if __name__ == "__main__":

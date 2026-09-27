@@ -31,6 +31,10 @@ from aero.thermals import show_thermals
 from aero.git_tools import check_git_status, clean_merged_branches
 from aero.cron_mgr import show_cron_status, enable_auto_maintenance
 from aero.clipboard import clear_clipboard
+from aero.themes import list_themes, set_theme, THEMES
+from aero.ssh_tools import check_ssh_status, generate_ed25519_key, copy_public_key, test_github_auth
+from aero.disk_tools import find_large_files, clean_node_modules
+from aero.share import start_file_server
 
 
 def print_banner():
@@ -190,6 +194,36 @@ def main():
     clip_parser = subparsers.add_parser("clip", help="Wayland clipboard manager")
     clip_sub = clip_parser.add_subparsers(dest="clip_action", help="Clipboard actions")
     clip_sub.add_parser("clear", help="Clear all clipboard buffers")
+
+    # Themes
+    theme_parser = subparsers.add_parser("theme", help="Desktop aesthetic and palette switcher")
+    theme_sub = theme_parser.add_subparsers(dest="theme_action", help="Theme actions")
+    theme_sub.add_parser("list", help="List available desktop themes")
+    theme_set = theme_sub.add_parser("set", help="Apply a desktop theme")
+    theme_set.add_argument("name", choices=list(THEMES.keys()), help="Theme name (cyber-cyan, tokyo-night, nord, gruvbox)")
+
+    # SSH Tools
+    ssh_parser = subparsers.add_parser("ssh", help="Ed25519 SSH key generation, copy, and auth test")
+    ssh_sub = ssh_parser.add_subparsers(dest="ssh_action", help="SSH actions")
+    ssh_sub.add_parser("status", help="List available SSH keys and permissions")
+    ssh_gen = ssh_sub.add_parser("gen", help="Generate a new Ed25519 SSH keypair")
+    ssh_gen.add_argument("--email", default="developer@aero-linux.org", help="Key comment/email")
+    ssh_sub.add_parser("copy", help="Copy public SSH key to clipboard")
+    ssh_sub.add_parser("test", help="Test GitHub SSH authentication")
+
+    # Disk Space Tools
+    disk_parser = subparsers.add_parser("disk", help="Disk usage analyzer and large file cleaner")
+    disk_sub = disk_parser.add_subparsers(dest="disk_action", help="Disk actions")
+    disk_top = disk_sub.add_parser("top", help="Find large files on disk")
+    disk_top.add_argument("--dir", default=".", help="Directory to scan")
+    disk_top.add_argument("--min-mb", type=int, default=100, help="Minimum file size in MB")
+    disk_clean = disk_sub.add_parser("clean-node-modules", help="Prune node_modules folders in directory")
+    disk_clean.add_argument("--dir", default=".", help="Root directory to clean")
+
+    # Local Share Server
+    share_parser = subparsers.add_parser("share", help="Start instant local network HTTP file server")
+    share_parser.add_argument("path", nargs="?", default=".", help="File or directory path to serve")
+    share_parser.add_argument("--port", type=int, default=8080, help="Port to listen on (default 8080)")
 
     args = parser.parse_args()
 
@@ -390,6 +424,31 @@ def main():
             clear_clipboard()
         else:
             clip_parser.print_help()
+
+    elif args.command == "theme":
+        if args.theme_action == "set":
+            set_theme(args.name)
+        else:
+            list_themes()
+
+    elif args.command == "ssh":
+        if args.ssh_action == "gen":
+            generate_ed25519_key(args.email)
+        elif args.ssh_action == "copy":
+            copy_public_key()
+        elif args.ssh_action == "test":
+            test_github_auth()
+        else:
+            check_ssh_status()
+
+    elif args.command == "disk":
+        if args.disk_action == "clean-node-modules":
+            clean_node_modules(args.dir)
+        else:
+            find_large_files(args.dir, args.min_mb)
+
+    elif args.command == "share":
+        start_file_server(args.path, args.port)
 
 
 if __name__ == "__main__":
