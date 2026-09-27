@@ -13,6 +13,8 @@ from aero.thermals import get_temperatures
 from aero.clipboard import check_clipboard
 from aero.themes import THEMES
 from aero.share import get_local_ip
+from aero.battery import get_battery_health
+from aero.audio import LATENCY_PRESETS
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -107,6 +109,15 @@ class TestAeroCLI(unittest.TestCase):
         ip = get_local_ip()
         self.assertIsInstance(ip, str)
         self.assertTrue(len(ip) >= 7)
+
+    def test_battery_health(self):
+        health = get_battery_health()
+        self.assertIn("present", health)
+
+    def test_audio_presets(self):
+        self.assertIn("low", LATENCY_PRESETS)
+        self.assertIn("medium", LATENCY_PRESETS)
+        self.assertIn("high", LATENCY_PRESETS)
 
 
 if __name__ == "__main__":

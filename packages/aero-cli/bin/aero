@@ -35,6 +35,10 @@ from aero.themes import list_themes, set_theme, THEMES
 from aero.ssh_tools import check_ssh_status, generate_ed25519_key, copy_public_key, test_github_auth
 from aero.disk_tools import find_large_files, clean_node_modules
 from aero.share import start_file_server
+from aero.battery import show_battery_health
+from aero.audio import check_audio_status, set_audio_latency, LATENCY_PRESETS
+from aero.bt import check_bt_status, toggle_bt_power
+from aero.vpn import check_vpn_status, toggle_wireguard
 
 
 def print_banner():
@@ -224,6 +228,32 @@ def main():
     share_parser = subparsers.add_parser("share", help="Start instant local network HTTP file server")
     share_parser.add_argument("path", nargs="?", default=".", help="File or directory path to serve")
     share_parser.add_argument("--port", type=int, default=8080, help="Port to listen on (default 8080)")
+
+    # Battery Health
+    subparsers.add_parser("battery", help="Inspect lithium battery wear, cycles, and health")
+
+    # Audio Engine
+    audio_parser = subparsers.add_parser("audio", help="PipeWire audio latency & DSP buffer management")
+    audio_sub = audio_parser.add_subparsers(dest="audio_action", help="Audio actions")
+    audio_sub.add_parser("status", help="Show audio server and latency status")
+    audio_lat = audio_sub.add_parser("latency", help="Set PipeWire audio latency preset")
+    audio_lat.add_argument("preset", choices=list(LATENCY_PRESETS.keys()), help="Latency preset (low, medium, high)")
+
+    # Bluetooth
+    bt_parser = subparsers.add_parser("bt", help="Bluetooth controller and power-saving management")
+    bt_sub = bt_parser.add_subparsers(dest="bt_action", help="Bluetooth actions")
+    bt_sub.add_parser("status", help="Show controller and connected devices")
+    bt_sub.add_parser("on", help="Power ON Bluetooth controller")
+    bt_sub.add_parser("off", help="Power OFF Bluetooth controller (saves battery)")
+
+    # VPN & Mesh
+    vpn_parser = subparsers.add_parser("vpn", help="WireGuard & Tailscale mesh network management")
+    vpn_sub = vpn_parser.add_subparsers(dest="vpn_action", help="VPN actions")
+    vpn_sub.add_parser("status", help="Show active VPN tunnels")
+    vpn_up = vpn_sub.add_parser("up", help="Bring WireGuard tunnel UP")
+    vpn_up.add_argument("interface", help="WireGuard interface name (e.g. wg0)")
+    vpn_down = vpn_sub.add_parser("down", help="Bring WireGuard tunnel DOWN")
+    vpn_down.add_argument("interface", help="WireGuard interface name (e.g. wg0)")
 
     args = parser.parse_args()
 
@@ -449,6 +479,31 @@ def main():
 
     elif args.command == "share":
         start_file_server(args.path, args.port)
+
+    elif args.command == "battery":
+        show_battery_health()
+
+    elif args.command == "audio":
+        if args.audio_action == "latency":
+            set_audio_latency(args.preset)
+        else:
+            check_audio_status()
+
+    elif args.command == "bt":
+        if args.bt_action == "on":
+            toggle_bt_power(True)
+        elif args.bt_action == "off":
+            toggle_bt_power(False)
+        else:
+            check_bt_status()
+
+    elif args.command == "vpn":
+        if args.vpn_action == "up":
+            toggle_wireguard(args.interface, True)
+        elif args.vpn_action == "down":
+            toggle_wireguard(args.interface, False)
+        else:
+            check_vpn_status()
 
 
 if __name__ == "__main__":

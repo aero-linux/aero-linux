@@ -1,0 +1,13 @@
+# Aero Linux Power-Saving Idle & Lock Configuration
+
+# Lock after 10 minutes of inactivity
+timeout 600 'swaylock -C ~/.config/swaylock/config'
+
+# Turn off display backlight after 15 minutes
+timeout 900 'swaymsg "output * power off"' resume 'swaymsg "output * power on"'
+
+# Suspend system after 30 minutes of inactivity on battery
+timeout 1800 'systemctl suspend'
+
+# Lock screen before system suspends
+before-sleep 'swaylock -C ~/.config/swaylock/config'

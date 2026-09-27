@@ -1,0 +1,35 @@
+# Aero Linux Cyber Dark Lockscreen Config
+
+daemonize
+ignore-empty-password
+show-failed-attempts
+
+# Colors (Cyber Dark Palette)
+color=0a0b0e
+inside-color=141824ee
+inside-clear-color=141824ee
+inside-caps-lock-color=141824ee
+inside-ver-color=141824ee
+inside-wrong-color=141824ee
+
+ring-color=222838
+ring-clear-color=ffbd2e
+ring-caps-lock-color=fe8019
+ring-ver-color=00f2fe
+ring-wrong-color=ff5f56
+
+key-hl-color=00f2fe
+bs-hl-color=ff5f56
+separator-color=00000000
+
+text-color=f8fafc
+text-clear-color=ffbd2e
+text-caps-lock-color=fe8019
+text-ver-color=00f2fe
+text-wrong-color=ff5f56
+
+indicator-radius=110
+indicator-thickness=12
+line-uses-ring
+grace=2
+fade-in=0.2
