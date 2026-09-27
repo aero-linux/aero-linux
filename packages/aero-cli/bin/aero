@@ -15,6 +15,10 @@ from aero.dev import list_dev_environments, run_dev_environment, ENVIRONMENTS
 from aero.pkg import update_packages, clean_system, install_packages
 from aero.snapshot import create_snapshot, list_snapshots, restore_snapshot
 from aero.net import enable_bbr, set_dns, optimize_wifi_latency, DNS_PROVIDERS
+from aero.monitor import run_live_monitor
+from aero.keys import list_keybinds
+from aero.backup import export_backup, import_backup
+from aero.security import audit_security, harden_system
 
 
 def print_banner():
@@ -97,6 +101,26 @@ def main():
     net_dns = net_sub.add_parser("dns", help="Set encrypted DNS-over-TLS provider")
     net_dns.add_argument("provider", choices=list(DNS_PROVIDERS.keys()), help="DNS provider (cloudflare, quad9, google)")
     net_sub.add_parser("wifi", help="Disable WiFi power-save mode for low jitter")
+
+    # Live Monitor
+    subparsers.add_parser("monitor", help="Launch live interactive terminal system & AI monitor")
+
+    # Keyboard & Shortcuts Cheatsheet
+    subparsers.add_parser("keys", help="Display Aero desktop hotkeys and command shortcuts")
+
+    # Dotfiles Backup & Restore
+    backup_parser = subparsers.add_parser("backup", help="Export and restore encrypted dotfile configurations")
+    backup_sub = backup_parser.add_subparsers(dest="backup_action", help="Backup actions")
+    backup_exp = backup_sub.add_parser("export", help="Export desktop dotfiles to archive")
+    backup_exp.add_argument("--output", "-o", help="Custom archive destination path")
+    backup_imp = backup_sub.add_parser("import", help="Restore desktop dotfiles from archive")
+    backup_imp.add_argument("file", help="Path to archive file")
+
+    # Security & Hardening
+    sec_parser = subparsers.add_parser("security", help="Kernel security audit and firewall hardening")
+    sec_sub = sec_parser.add_subparsers(dest="sec_action", help="Security actions")
+    sec_sub.add_parser("audit", help="Run kernel and network security audit")
+    sec_sub.add_parser("harden", help="Apply kernel lockdown and firewall hardening")
 
     args = parser.parse_args()
 
@@ -221,6 +245,26 @@ def main():
             optimize_wifi_latency()
         else:
             net_parser.print_help()
+
+    elif args.command == "monitor":
+        run_live_monitor()
+
+    elif args.command == "keys":
+        list_keybinds()
+
+    elif args.command == "backup":
+        if args.backup_action == "export":
+            export_backup(args.output)
+        elif args.backup_action == "import":
+            import_backup(args.file)
+        else:
+            backup_parser.print_help()
+
+    elif args.command == "security":
+        if args.sec_action == "audit" or not args.sec_action:
+            audit_security()
+        elif args.sec_action == "harden":
+            harden_system()
 
 
 if __name__ == "__main__":

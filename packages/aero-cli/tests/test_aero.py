@@ -5,6 +5,8 @@ from aero.memory import get_top_memory_processes
 from aero.dev import ENVIRONMENTS
 from aero.net import DNS_PROVIDERS
 from aero.ai import get_ai_status
+from aero.monitor import render_bar
+from aero.security import audit_security
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -61,6 +63,16 @@ class TestAeroCLI(unittest.TestCase):
         status = get_ai_status()
         self.assertIn("ollama_installed", status)
         self.assertIn("ollama_running", status)
+
+    def test_render_bar(self):
+        bar = render_bar(50.0, width=10)
+        self.assertEqual(len(bar), 10)
+        self.assertTrue(bar.startswith("█████"))
+
+    def test_audit_security(self):
+        sec = audit_security()
+        self.assertIn("firewall_active", sec)
+        self.assertIn("aslr_enabled", sec)
 
 
 if __name__ == "__main__":

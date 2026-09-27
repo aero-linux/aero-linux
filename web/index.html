@@ -44,14 +44,37 @@
             <span class="dot red"></span>
             <span class="dot yellow"></span>
             <span class="dot green"></span>
-            <span class="code-title">aero-terminal</span>
+            <span class="code-title">aero-terminal — interactive</span>
           </div>
-          <pre><code><span class="prompt">$</span> aero doctor
+          <div class="terminal-tabs">
+            <button class="tab-btn active" onclick="showTab('doctor')">aero doctor</button>
+            <button class="tab-btn" onclick="showTab('ai')">aero ai</button>
+            <button class="tab-btn" onclick="showTab('dev')">aero dev</button>
+            <button class="tab-btn" onclick="showTab('net')">aero net</button>
+          </div>
+          <pre id="tab-doctor"><code><span class="prompt">$</span> aero doctor
 <span class="text-cyan">OS:</span> Aero Linux (Rolling Edge) [Kernel: 6.8-lowlatency]
 <span class="text-cyan">Memory:</span> 312MB used / 15.2GB total [zRAM ZSTD Active]
-<span class="text-cyan">AI Runtime:</span> Ollama + CUDA 12.4 Ready
-<span class="prompt">$</span> aero ai run deepseek-r1:8b
-<span class="text-green">⚡ Launching interactive session with deepseek-r1:8b...</span></code></pre>
+<span class="text-cyan">Governor:</span> powersave (Quiet Fan Profile)
+<span class="text-cyan">Battery:</span> 79% (Hardware Charge Threshold: 80% Active)
+<span class="text-cyan">AI Runtime:</span> Ollama + CUDA 12.4 + ROCm Ready</code></pre>
+
+          <pre id="tab-ai" style="display: none;"><code><span class="prompt">$</span> aero ai run deepseek-r1:8b
+<span class="text-green">⚡ Launching interactive session with deepseek-r1:8b...</span>
+<span class="text-cyan">&gt;&gt;&gt;</span> Explain the difference between zRAM and disk swap in 2 sentences.
+<span class="text-white">zRAM compresses memory pages into a dynamic RAM block device at nanosecond speeds.
+Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.</span></code></pre>
+
+          <pre id="tab-dev" style="display: none;"><code><span class="prompt">$</span> aero dev run node
+<span class="text-green">🚀 Launching node environment (node:22-alpine)...</span>
+<span class="text-cyan">Mounted:</span> /home/ronit138/project ➔ /workspace
+<span class="text-white">node -v ➔ v22.9.0 | npm -v ➔ 10.8.3 | TypeScript Ready</span></code></pre>
+
+          <pre id="tab-net" style="display: none;"><code><span class="prompt">$</span> aero net bbr
+<span class="text-green">⚡ Enabling Google BBR TCP Congestion Control...</span>
+<span class="text-cyan">✅ BBR active (maximum bandwidth, zero bufferbloat).</span>
+<span class="prompt">$</span> aero net dns cloudflare
+<span class="text-cyan">✅ Switched to Cloudflare DNS-over-TLS (1.1.1.1).</span></code></pre>
         </div>
       </div>
     </section>
@@ -137,5 +160,15 @@
       <p>Crafted by Ronit Gupta & Contributors.</p>
     </div>
   </footer>
+
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.code-preview pre').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      const activePre = document.getElementById('tab-' + tabId);
+      if (activePre) activePre.style.display = 'block';
+      event.target.classList.add('active');
+    }
+  </script>
 </body>
 </html>
