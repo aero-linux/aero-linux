@@ -1,0 +1,33 @@
+# Aero Linux Calamares Branding Descriptor
+---
+componentName: aero
+
+welcomeStyleCalamares: false
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 840px,560px
+windowPlacement: center
+
+strings:
+    productName:         Aero Linux
+    shortProductName:    Aero
+    version:             1.0 Edge
+    shortVersion:        1.0
+    versionedName:       Aero Linux 1.0 (Edge)
+    shortVersionedName:  Aero 1.0
+    bootloaderEntryName: Aero Linux
+    productUrl:          https://github.com/ronitgupta138/aero-linux
+    supportUrl:          https://github.com/ronitgupta138/aero-linux/issues
+    releaseNotesUrl:     https://github.com/ronitgupta138/aero-linux/releases
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow:               "show.qml"
+
+style:
+   SidebarBackground:    "#0a0b0e"
+   SidebarTextColor:     "#f8fafc"
+   SidebarTextHighlight: "#00f2fe"

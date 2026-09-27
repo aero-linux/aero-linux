@@ -10,6 +10,7 @@ from aero.doctor import run_doctor
 from aero.power import set_profile, get_current_profile, PROFILES, set_charge_threshold
 from aero.memory import compact_memory, get_top_memory_processes
 from aero.ai import install_ollama, get_ai_status, pull_model, run_model
+from aero.gpu import setup_nvidia_driver, setup_rocm_driver
 
 
 def print_banner():
@@ -29,6 +30,13 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
+    # GPU & Accelerators
+    gpu_parser = subparsers.add_parser("gpu", help="Detect hardware and setup NVIDIA CUDA or AMD ROCm drivers")
+    gpu_sub = gpu_parser.add_subparsers(dest="gpu_action", help="GPU action")
+    gpu_sub.add_parser("setup", help="Auto-detect GPU and configure drivers + Wayland acceleration + Container Toolkit")
+    gpu_sub.add_parser("nvidia", help="Install official NVIDIA driver + Wayland KMS + AI Container Toolkit")
+    gpu_sub.add_parser("rocm", help="Install AMD ROCm runtime permissions and PyTorch environment variables")
 
     # Doctor
     doc_parser = subparsers.add_parser("doctor", help="Inspect hardware, kernel, battery, and AI readiness")
@@ -61,7 +69,23 @@ def main():
         parser.print_help()
         sys.exit(0)
 
-    if args.command == "doctor":
+    if args.command == "gpu":
+        if args.gpu_action == "nvidia":
+            setup_nvidia_driver()
+        elif args.gpu_action == "rocm":
+            setup_rocm_driver()
+        elif args.gpu_action == "setup" or not args.gpu_action:
+            report = run_doctor()
+            nvidia = any(g.get("vendor") == "NVIDIA" for g in report["gpus"])
+            amd = any(g.get("vendor") == "AMD" for g in report["gpus"])
+            if nvidia:
+                setup_nvidia_driver()
+            elif amd:
+                setup_rocm_driver()
+            else:
+                print("ℹ️ Standard Integrated Graphics detected. Intel/Mesa drivers are already active.")
+
+    elif args.command == "doctor":
         report = run_doctor()
         if args.json:
             print(json.dumps(report, indent=2))
