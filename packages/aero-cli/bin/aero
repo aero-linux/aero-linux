@@ -39,6 +39,11 @@ from aero.battery import show_battery_health
 from aero.audio import check_audio_status, set_audio_latency, LATENCY_PRESETS
 from aero.bt import check_bt_status, toggle_bt_power
 from aero.vpn import check_vpn_status, toggle_wireguard
+from aero.fonts import list_fonts, install_font, NERD_FONTS
+from aero.db_tools import list_databases, start_database, stop_database, DATABASES
+from aero.api_bench import bench_url
+from aero.vm import run_iso_in_vm
+from aero.system_updater import check_system_kernel, update_aero_os
 
 
 def print_banner():
@@ -254,6 +259,44 @@ def main():
     vpn_up.add_argument("interface", help="WireGuard interface name (e.g. wg0)")
     vpn_down = vpn_sub.add_parser("down", help="Bring WireGuard tunnel DOWN")
     vpn_down.add_argument("interface", help="WireGuard interface name (e.g. wg0)")
+
+    # Fonts
+    font_parser = subparsers.add_parser("font", help="Developer Nerd Font manager")
+    font_sub = font_parser.add_subparsers(dest="font_action", help="Font actions")
+    font_sub.add_parser("list", help="List available Nerd Fonts")
+    font_in = font_sub.add_parser("install", help="Download and install a Nerd Font")
+    font_in.add_argument("name", choices=list(NERD_FONTS.keys()), help="Font name")
+
+    # Databases
+    db_parser = subparsers.add_parser("db", help="Local containerized database suite")
+    db_sub = db_parser.add_subparsers(dest="db_action", help="Database actions")
+    db_sub.add_parser("list", help="List supported databases")
+    db_start = db_sub.add_parser("start", help="Start a local database container")
+    db_start.add_argument("name", choices=list(DATABASES.keys()), help="Database name")
+    db_stop = db_sub.add_parser("stop", help="Stop a database container")
+    db_stop.add_argument("name", choices=list(DATABASES.keys()), help="Database name")
+
+    # API Benchmarking
+    api_parser = subparsers.add_parser("api", help="API load testing and benchmarking")
+    api_sub = api_parser.add_subparsers(dest="api_action", help="API actions")
+    api_bench = api_sub.add_parser("bench", help="Run HTTP load benchmark against URL")
+    api_bench.add_argument("url", help="Target URL (e.g. http://localhost:3000/api/users)")
+    api_bench.add_argument("--count", "-c", type=int, default=100, help="Total requests (default 100)")
+    api_bench.add_argument("--concurrency", "-w", type=int, default=10, help="Concurrent workers (default 10)")
+
+    # Micro-VMs
+    vm_parser = subparsers.add_parser("vm", help="QEMU/KVM micro-VM runner")
+    vm_sub = vm_parser.add_subparsers(dest="vm_action", help="VM actions")
+    vm_run = vm_sub.add_parser("run", help="Boot ISO file in accelerated micro-VM")
+    vm_run.add_argument("iso", help="Path to ISO image")
+    vm_run.add_argument("--ram", type=int, default=4096, help="RAM in MB (default 4096)")
+    vm_run.add_argument("--cores", type=int, default=4, help="CPU cores (default 4)")
+
+    # System Updater
+    sys_parser = subparsers.add_parser("system", help="OS and Kernel upgrade manager")
+    sys_sub = sys_parser.add_subparsers(dest="sys_action", help="System actions")
+    sys_sub.add_parser("info", help="Check active kernel flavor and release")
+    sys_sub.add_parser("update", help="Upgrade base packages and Aero CLI")
 
     args = parser.parse_args()
 
@@ -504,6 +547,32 @@ def main():
             toggle_wireguard(args.interface, False)
         else:
             check_vpn_status()
+
+    elif args.command == "font":
+        if args.font_action == "install":
+            install_font(args.name)
+        else:
+            list_fonts()
+
+    elif args.command == "db":
+        if args.db_action == "start":
+            start_database(args.name)
+        elif args.db_action == "stop":
+            stop_database(args.name)
+        else:
+            list_databases()
+
+    elif args.command == "api":
+        bench_url(args.url, args.count, args.concurrency)
+
+    elif args.command == "vm":
+        run_iso_in_vm(args.iso, args.ram, args.cores)
+
+    elif args.command == "system":
+        if args.sys_action == "update":
+            update_aero_os()
+        else:
+            check_system_kernel()
 
 
 if __name__ == "__main__":

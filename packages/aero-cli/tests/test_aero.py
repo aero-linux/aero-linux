@@ -15,6 +15,9 @@ from aero.themes import THEMES
 from aero.share import get_local_ip
 from aero.battery import get_battery_health
 from aero.audio import LATENCY_PRESETS
+from aero.fonts import NERD_FONTS
+from aero.db_tools import DATABASES
+from aero.vm import check_kvm
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -118,6 +121,20 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIn("low", LATENCY_PRESETS)
         self.assertIn("medium", LATENCY_PRESETS)
         self.assertIn("high", LATENCY_PRESETS)
+
+    def test_fonts(self):
+        self.assertIn("jetbrains-mono", NERD_FONTS)
+        self.assertIn("fira-code", NERD_FONTS)
+
+    def test_databases(self):
+        self.assertIn("postgres", DATABASES)
+        self.assertIn("redis", DATABASES)
+        self.assertIn("mysql", DATABASES)
+        self.assertIn("mongo", DATABASES)
+
+    def test_kvm(self):
+        res = check_kvm()
+        self.assertIsInstance(res, bool)
 
 
 if __name__ == "__main__":
