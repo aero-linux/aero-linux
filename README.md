@@ -146,6 +146,15 @@ aero-linux/
 
 ---
 
+## 👥 Contributors & Maintainers
+
+* **[Ronit Gupta](https://github.com/ronitgupta138)** — *Lead Architect & Creator*
+* **Hermes Agent ([Nous Research](https://nousresearch.com))** — *AI Systems Engineering Collaborator*
+
+See [CONTRIBUTORS.md](CONTRIBUTORS.md) for full project acknowledgments.
+
+---
+
 ## 📜 License
 
-Distributed under the **MIT License**. Created by [Ronit Gupta](https://github.com/ronitgupta138) and Open Source Contributors.
+Distributed under the **MIT License**. Created by [Ronit Gupta](https://github.com/ronitgupta138) and Contributors.
