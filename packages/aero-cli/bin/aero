@@ -22,6 +22,11 @@ from aero.security import audit_security, harden_system
 from aero.benchmark import run_benchmark
 from aero.gamemode import run_game
 from aero.logs import show_logs
+from aero.port import list_ports, kill_port
+from aero.docker_tools import prune_docker, show_docker_stats
+from aero.env_mgr import check_sdk_environment
+from aero.display import show_display_info
+from aero.shell_repl import run_aero_shell
 
 
 def print_banner():
@@ -137,6 +142,30 @@ def main():
     # Logs
     log_parser = subparsers.add_parser("logs", help="Analyze system errors, kernel panics, and boot timings")
     log_parser.add_argument("type", nargs="?", default="error", choices=["error", "kernel", "boot", "all"], help="Log type to inspect")
+
+    # Port Inspector
+    port_parser = subparsers.add_parser("port", help="Inspect and kill active listening developer ports")
+    port_sub = port_parser.add_subparsers(dest="port_action", help="Port actions")
+    port_sub.add_parser("list", help="List active listening ports and services")
+    port_kill = port_sub.add_parser("kill", help="Kill process listening on a port")
+    port_kill.add_argument("port_number", help="Port number to terminate (e.g. 3000, 5432)")
+
+    # Docker Tools
+    docker_parser = subparsers.add_parser("docker", help="Docker engine cleanup and container resource monitor")
+    docker_sub = docker_parser.add_subparsers(dest="docker_action", help="Docker actions")
+    docker_sub.add_parser("prune", help="Clean unused containers, images, and volumes")
+    docker_sub.add_parser("stats", help="Show live CPU and memory usage of running containers")
+
+    # SDK Environment
+    env_parser = subparsers.add_parser("env", help="Audit installed SDKs, compilers, and toolchains")
+    env_sub = env_parser.add_subparsers(dest="env_action", help="Environment actions")
+    env_sub.add_parser("check", help="Check versions of Node, Python, C, Rust, Go, Java, Docker")
+
+    # Display & Wayland
+    subparsers.add_parser("display", help="Query Wayland output resolutions, refresh rates, and monitors")
+
+    # Interactive Shell
+    subparsers.add_parser("shell", help="Launch interactive Aero developer shell")
 
     args = parser.parse_args()
 
@@ -293,6 +322,29 @@ def main():
 
     elif args.command == "logs":
         show_logs(args.type)
+
+    elif args.command == "port":
+        if args.port_action == "kill":
+            kill_port(args.port_number)
+        else:
+            list_ports()
+
+    elif args.command == "docker":
+        if args.docker_action == "prune":
+            prune_docker()
+        elif args.docker_action == "stats":
+            show_docker_stats()
+        else:
+            docker_parser.print_help()
+
+    elif args.command == "env":
+        check_sdk_environment()
+
+    elif args.command == "display":
+        show_display_info()
+
+    elif args.command == "shell":
+        run_aero_shell()
 
 
 if __name__ == "__main__":

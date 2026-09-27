@@ -8,6 +8,7 @@ from aero.ai import get_ai_status
 from aero.monitor import render_bar
 from aero.security import audit_security
 from aero.benchmark import cpu_worker
+from aero.docker_tools import check_docker
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -78,6 +79,11 @@ class TestAeroCLI(unittest.TestCase):
     def test_cpu_worker(self):
         res = cpu_worker(10)
         self.assertEqual(res, sum(i * i for i in range(1, 10)))
+
+    def test_check_docker(self):
+        # Function returns a boolean based on environment
+        res = check_docker()
+        self.assertIsInstance(res, bool)
 
 
 if __name__ == "__main__":
