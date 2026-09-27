@@ -11,6 +11,10 @@ from aero.power import set_profile, get_current_profile, PROFILES, set_charge_th
 from aero.memory import compact_memory, get_top_memory_processes
 from aero.ai import install_ollama, get_ai_status, pull_model, run_model
 from aero.gpu import setup_nvidia_driver, setup_rocm_driver
+from aero.dev import list_dev_environments, run_dev_environment, ENVIRONMENTS
+from aero.pkg import update_packages, clean_system, install_packages
+from aero.snapshot import create_snapshot, list_snapshots, restore_snapshot
+from aero.net import enable_bbr, set_dns, optimize_wifi_latency, DNS_PROVIDERS
 
 
 def print_banner():
@@ -61,6 +65,38 @@ def main():
     ai_pull.add_argument("model", help="Model name (e.g. llama3.2, deepseek-r1:8b, qwen2.5-coder)")
     ai_run = ai_sub.add_parser("run", help="Run an interactive session with a model")
     ai_run.add_argument("model", help="Model name (e.g. llama3.2, qwen2.5-coder)")
+
+    # Dev Environments
+    dev_parser = subparsers.add_parser("dev", help="Instant zero-pollution isolated dev workspaces")
+    dev_sub = dev_parser.add_subparsers(dest="dev_action", help="Dev subcommands")
+    dev_sub.add_parser("list", help="List all available isolated dev environments")
+    dev_run = dev_sub.add_parser("run", help="Run an isolated dev environment in current directory")
+    dev_run.add_argument("env", choices=list(ENVIRONMENTS.keys()), help="Environment name (node, python, rust, go, c, postgres, redis)")
+
+    # Package Manager Wrapper
+    pkg_parser = subparsers.add_parser("pkg", help="Unified fast package manager and cache pruner")
+    pkg_sub = pkg_parser.add_subparsers(dest="pkg_action", help="Package actions")
+    pkg_sub.add_parser("update", help="Update all APT and Flatpak repositories")
+    pkg_sub.add_parser("clean", help="Prune unused dependencies and clear package caches")
+    pkg_in = pkg_sub.add_parser("install", help="Install packages")
+    pkg_in.add_argument("packages", nargs="+", help="Package names to install")
+
+    # Snapshot & Rollback
+    snap_parser = subparsers.add_parser("snapshot", help="Zero-latency system restore snapshots")
+    snap_sub = snap_parser.add_subparsers(dest="snap_action", help="Snapshot subcommands")
+    snap_create = snap_sub.add_parser("create", help="Create a new restore snapshot")
+    snap_create.add_argument("name", nargs="?", default="", help="Optional snapshot label")
+    snap_sub.add_parser("list", help="List available restore points")
+    snap_rest = snap_sub.add_parser("restore", help="Restore system from a snapshot")
+    snap_rest.add_argument("name", help="Snapshot name/tag to restore")
+
+    # Network & DNS Optimizer
+    net_parser = subparsers.add_parser("net", help="Low-latency network, BBR TCP, and DNS optimizer")
+    net_sub = net_parser.add_subparsers(dest="net_action", help="Network actions")
+    net_sub.add_parser("bbr", help="Enable Google BBR TCP Congestion Control")
+    net_dns = net_sub.add_parser("dns", help="Set encrypted DNS-over-TLS provider")
+    net_dns.add_argument("provider", choices=list(DNS_PROVIDERS.keys()), help="DNS provider (cloudflare, quad9, google)")
+    net_sub.add_parser("wifi", help="Disable WiFi power-save mode for low jitter")
 
     args = parser.parse_args()
 
@@ -151,6 +187,40 @@ def main():
             run_model(args.model)
         else:
             ai_parser.print_help()
+
+    elif args.command == "dev":
+        if args.dev_action == "list" or not args.dev_action:
+            list_dev_environments()
+        elif args.dev_action == "run":
+            run_dev_environment(args.env)
+
+    elif args.command == "pkg":
+        if args.pkg_action == "update":
+            update_packages()
+        elif args.pkg_action == "clean":
+            clean_system()
+        elif args.pkg_action == "install":
+            install_packages(args.packages)
+        else:
+            pkg_parser.print_help()
+
+    elif args.command == "snapshot":
+        if args.snap_action == "create":
+            create_snapshot(args.name)
+        elif args.snap_action == "list" or not args.snap_action:
+            list_snapshots()
+        elif args.snap_action == "restore":
+            restore_snapshot(args.name)
+
+    elif args.command == "net":
+        if args.net_action == "bbr":
+            enable_bbr()
+        elif args.net_action == "dns":
+            set_dns(args.provider)
+        elif args.net_action == "wifi":
+            optimize_wifi_latency()
+        else:
+            net_parser.print_help()
 
 
 if __name__ == "__main__":

@@ -42,6 +42,23 @@ aero ai run deepseek-r1:8b  # Interactive prompt
 # Memory compaction & process inspection
 aero memory --optimize      # Compact zRAM and drop pagecaches
 aero memory --top           # List top memory consuming processes
+
+# Instant zero-pollution isolated dev workspaces
+aero dev list               # List containerized toolchains (Node, Python, Rust, Go, C, Postgres, Redis)
+aero dev run node           # Spin up Node.js 22 LTS workspace in current folder
+
+# Unified package manager & cache pruning
+aero pkg update             # Parallel update for APT and Flatpak
+aero pkg clean              # Prune orphaned packages and clean disk caches
+
+# Zero-latency system restore snapshots
+aero snapshot create        # Instant restore snapshot before driver/kernel updates
+aero snapshot list          # View restore points
+
+# Low-latency network & DNS optimization
+aero net bbr                # Enable Google BBR TCP congestion control
+aero net dns cloudflare     # Switch to encrypted DNS-over-TLS (Cloudflare/Quad9/Google)
+aero net wifi               # Disable WiFi power-saving jitter for low ping
 ```
 
 ---

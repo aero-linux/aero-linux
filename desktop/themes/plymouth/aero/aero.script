@@ -1,0 +1,23 @@
+# Aero Linux Plymouth Boot Splash Script
+# Deep dark background (#0a0b0e) with glowing cyan logo
+
+Window.SetBackgroundTopColor (0.04, 0.04, 0.05);
+Window.SetBackgroundBottomColor (0.04, 0.04, 0.05);
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+logo.image = Image("logo.png");
+if (logo.image) {
+    logo.sprite = Sprite(logo.image);
+    logo.x = screen_width / 2 - logo.image.GetWidth() / 2;
+    logo.y = screen_height / 2 - logo.image.GetHeight() / 2 - 20;
+    logo.sprite.SetPosition(logo.x, logo.y, 10);
+    logo.sprite.SetOpacity(1.0);
+}
+
+fun refresh_callback () {
+    # Smooth boot callback
+}
+
+Plymouth.SetRefreshFunction (refresh_callback);

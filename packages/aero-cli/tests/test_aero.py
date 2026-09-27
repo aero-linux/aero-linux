@@ -1,7 +1,10 @@
 import unittest
-from aero.doctor import run_doctor, get_cpu_info, get_memory_info
+from aero.doctor import run_doctor, get_cpu_info, get_memory_info, get_gpu_info
 from aero.power import PROFILES, get_current_profile
 from aero.memory import get_top_memory_processes
+from aero.dev import ENVIRONMENTS
+from aero.net import DNS_PROVIDERS
+from aero.ai import get_ai_status
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -39,6 +42,25 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIn("cpu", report)
         self.assertIn("memory", report)
         self.assertIn("ai_stack", report)
+
+    def test_dev_environments(self):
+        self.assertIn("node", ENVIRONMENTS)
+        self.assertIn("python", ENVIRONMENTS)
+        self.assertIn("rust", ENVIRONMENTS)
+        self.assertIn("go", ENVIRONMENTS)
+        self.assertIn("c", ENVIRONMENTS)
+        self.assertIn("postgres", ENVIRONMENTS)
+        self.assertIn("redis", ENVIRONMENTS)
+
+    def test_dns_providers(self):
+        self.assertIn("cloudflare", DNS_PROVIDERS)
+        self.assertIn("quad9", DNS_PROVIDERS)
+        self.assertIn("google", DNS_PROVIDERS)
+
+    def test_ai_status(self):
+        status = get_ai_status()
+        self.assertIn("ollama_installed", status)
+        self.assertIn("ollama_running", status)
 
 
 if __name__ == "__main__":
