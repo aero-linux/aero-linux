@@ -7,6 +7,7 @@ from aero.net import DNS_PROVIDERS
 from aero.ai import get_ai_status
 from aero.monitor import render_bar
 from aero.security import audit_security
+from aero.benchmark import cpu_worker
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -73,6 +74,10 @@ class TestAeroCLI(unittest.TestCase):
         sec = audit_security()
         self.assertIn("firewall_active", sec)
         self.assertIn("aslr_enabled", sec)
+
+    def test_cpu_worker(self):
+        res = cpu_worker(10)
+        self.assertEqual(res, sum(i * i for i in range(1, 10)))
 
 
 if __name__ == "__main__":

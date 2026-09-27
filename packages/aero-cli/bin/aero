@@ -19,6 +19,9 @@ from aero.monitor import run_live_monitor
 from aero.keys import list_keybinds
 from aero.backup import export_backup, import_backup
 from aero.security import audit_security, harden_system
+from aero.benchmark import run_benchmark
+from aero.gamemode import run_game
+from aero.logs import show_logs
 
 
 def print_banner():
@@ -121,6 +124,19 @@ def main():
     sec_sub = sec_parser.add_subparsers(dest="sec_action", help="Security actions")
     sec_sub.add_parser("audit", help="Run kernel and network security audit")
     sec_sub.add_parser("harden", help="Apply kernel lockdown and firewall hardening")
+
+    # Benchmark
+    subparsers.add_parser("benchmark", help="Run multi-core CPU, RAM bandwidth, and disk benchmark")
+
+    # GameMode
+    gm_parser = subparsers.add_parser("gamemode", help="Low-latency game and Wine/Proton launcher optimizer")
+    gm_sub = gm_parser.add_subparsers(dest="gm_action", help="GameMode subcommands")
+    gm_run = gm_sub.add_parser("run", help="Run command with GameMode optimizations")
+    gm_run.add_argument("command_to_run", nargs="+", help="Game executable or command")
+
+    # Logs
+    log_parser = subparsers.add_parser("logs", help="Analyze system errors, kernel panics, and boot timings")
+    log_parser.add_argument("type", nargs="?", default="error", choices=["error", "kernel", "boot", "all"], help="Log type to inspect")
 
     args = parser.parse_args()
 
@@ -265,6 +281,18 @@ def main():
             audit_security()
         elif args.sec_action == "harden":
             harden_system()
+
+    elif args.command == "benchmark":
+        run_benchmark()
+
+    elif args.command == "gamemode":
+        if args.gm_action == "run":
+            run_game(args.command_to_run)
+        else:
+            gm_parser.print_help()
+
+    elif args.command == "logs":
+        show_logs(args.type)
 
 
 if __name__ == "__main__":
