@@ -48,6 +48,22 @@ input "type:keyboard" {
     xkb_options "grp:win_space_toggle"
 }
 
+# Precision Touchpad Multi-Touch Gestures (Mac / Windows 11 Experience)
+input "type:touchpad" {
+    tap enabled
+    natural_scroll enabled
+    dwt enabled
+    middle_emulation enabled
+}
+
+# Touchpad Gestures
+bindgesture swipe:3:left workspace next
+bindgesture swipe:3:right workspace prev
+bindgesture swipe:3:up exec wofi --show window
+bindgesture swipe:3:down exec aero-quick-settings
+bindgesture swipe:4:up exec aero-monitor
+bindgesture swipe:4:down exec aero-welcome
+
 # Keybindings: System & Launchers
 bindsym $mod+Return exec $term
 bindsym $mod+d exec $menu

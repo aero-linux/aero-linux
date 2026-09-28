@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Open in Aero Terminal
+Comment=Open terminal at this directory
+Exec=alacritty --working-directory %F
+Icon-Name=utilities-terminal
+Selection=Any
+Extensions=nodirs;any;
+Quote=double

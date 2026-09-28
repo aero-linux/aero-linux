@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Compress to Aero ZIP
+Comment=Create a compressed ZIP archive from selection
+Exec=aero zip %F
+Icon-Name=archive-insert
+Selection=Any
+Extensions=any;
+Quote=double

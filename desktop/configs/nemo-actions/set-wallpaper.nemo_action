@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Set as Aero Desktop Wallpaper
+Comment=Set this image as current desktop background
+Exec=swaymsg "output * bg %F fill"
+Icon-Name=preferences-desktop-wallpaper
+Selection=s
+Extensions=png;jpg;jpeg;webp;svg;PNG;JPG;JPEG;
+Quote=double

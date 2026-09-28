@@ -97,6 +97,7 @@ from aero.autotile import start_autotiling, stop_autotiling, is_autotile_running
 from aero.wine_runner import run_windows_app
 from aero.gpu_switcher import get_current_gpu_mode, set_gpu_mode
 from aero.phone_connect import show_phone_status, send_file_to_phone
+from aero.accent_manager import apply_accent_color, list_accents
 
 
 def print_banner():
@@ -280,13 +281,15 @@ def main():
     trash_sub.add_parser("list", help="List files in Recycle Bin / Trash")
     trash_sub.add_parser("empty", help="Empty Recycle Bin / Trash")
 
-    # Themes
+    # Themes & Accent Color Studio
     theme_parser = subparsers.add_parser("theme", help="Desktop aesthetic and palette switcher")
     theme_sub = theme_parser.add_subparsers(dest="theme_action", help="Theme actions")
     theme_sub.add_parser("list", help="List available desktop themes")
     theme_sub.add_parser("auto", help="Auto-sync theme with day/night solar cycle & battery status")
     theme_set = theme_sub.add_parser("set", help="Apply a desktop theme")
     theme_set.add_argument("name", choices=list(THEMES.keys()), help="Theme name (cyber-cyan, tokyo-night, nord, gruvbox)")
+    theme_acc = theme_sub.add_parser("accent", help="Set desktop highlight accent color (cyan, purple, emerald, rose, amber, arctic)")
+    theme_acc.add_argument("color", nargs="?", default="cyan", help="Accent color name or HEX (default: cyan)")
 
     # SSH Tools
     ssh_parser = subparsers.add_parser("ssh", help="Ed25519 SSH key generation, copy, and auth test")
@@ -898,6 +901,8 @@ def main():
     elif args.command == "theme":
         if args.theme_action == "set":
             set_theme(args.name)
+        elif args.theme_action == "accent":
+            apply_accent_color(args.color)
         elif args.theme_action == "auto":
             auto_apply_dynamic_theme()
         else:

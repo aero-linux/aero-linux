@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Run with Aero Windows Compatibility (Proton/Wine)
+Comment=Launch Windows executable with GE-Proton & GameMode
+Exec=aero wine %F
+Icon-Name=application-x-ms-dos-executable
+Selection=s
+Extensions=exe;msi;EXE;MSI;
+Quote=double

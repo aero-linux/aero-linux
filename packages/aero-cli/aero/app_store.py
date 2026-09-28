@@ -68,6 +68,55 @@ APP_CATALOG: Dict[str, Dict[str, Any]] = {
         "cmd_install": "sudo apt-get install -y alacritty",
         "installed_check": "alacritty",
     },
+    "cursor": {
+        "name": "Cursor AI Code Editor",
+        "category": "Development",
+        "description": "AI-first code editor built for pair programming and deep agentic coding.",
+        "cmd_install": "flatpak install -y flathub com.cursor.Cursor || sudo snap install cursor --classic",
+        "installed_check": "cursor",
+    },
+    "chrome": {
+        "name": "Google Chrome",
+        "category": "Web Browsers",
+        "description": "Standard fast web browser with DevTools and Chrome extensions.",
+        "cmd_install": "wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo dpkg -i /tmp/chrome.deb && rm /tmp/chrome.deb",
+        "installed_check": "google-chrome",
+    },
+    "telegram": {
+        "name": "Telegram Desktop",
+        "category": "Communication",
+        "description": "Fast, cloud-based messaging client for developers and communities.",
+        "cmd_install": "flatpak install -y flathub org.telegram.desktop || sudo apt-get install -y telegram-desktop",
+        "installed_check": "telegram-desktop",
+    },
+    "spotify": {
+        "name": "Spotify Music",
+        "category": "Media & Audio",
+        "description": "Streaming music and developer lofi background audio.",
+        "cmd_install": "flatpak install -y flathub com.spotify.Client",
+        "installed_check": "spotify",
+    },
+    "vlc": {
+        "name": "VLC Media Player",
+        "category": "Media & Audio",
+        "description": "Universal open-source video and audio player supporting all formats.",
+        "cmd_install": "sudo apt-get install -y vlc",
+        "installed_check": "vlc",
+    },
+    "gimp": {
+        "name": "GIMP Image Editor",
+        "category": "Graphics & Design",
+        "description": "Professional image manipulation and graphic design suite.",
+        "cmd_install": "sudo apt-get install -y gimp",
+        "installed_check": "gimp",
+    },
+    "obs": {
+        "name": "OBS Studio",
+        "category": "Streaming & Video",
+        "description": "Live streaming and high-definition screen recording studio.",
+        "cmd_install": "sudo apt-get install -y obs-studio",
+        "installed_check": "obs",
+    },
 }
 
 

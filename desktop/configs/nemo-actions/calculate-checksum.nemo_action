@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Calculate SHA256 Checksum
+Comment=Compute and display SHA256 checksum of selected file
+Exec=alacritty -e bash -c "aero hash sha256 %F; echo ''; read -p 'Press Enter to close...' "
+Icon-Name=document-properties
+Selection=s
+Extensions=nodirs;any;
+Quote=double

@@ -93,11 +93,13 @@ exec python3 "${AERO_HOME}/bin/aero-updater" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-updater"
 
-# Install Desktop Icon & Man Pages
+# Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
+mkdir -p "${HOME}/.local/share/nemo/actions"
 cp "${INSTALL_DIR}/desktop/icons/aero-logo.svg" "${HOME}/.local/share/icons/hicolor/scalable/apps/aero.svg" 2>/dev/null || true
 cp "${INSTALL_DIR}/docs/man/aero.1" "${HOME}/.local/share/man/man1/aero.1" 2>/dev/null || true
+cp -r "${INSTALL_DIR}/desktop/configs/nemo-actions/"*.nemo_action "${HOME}/.local/share/nemo/actions/" 2>/dev/null || true
 
 # Register desktop application icon in Start Menu
 echo -e "${GREEN}• Creating Start Menu / Desktop Launcher entry...${NC}"

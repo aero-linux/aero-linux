@@ -64,6 +64,7 @@ from aero.autotile import is_autotile_running, stop_autotiling
 from aero.wine_runner import run_windows_app
 from aero.gpu_switcher import get_current_gpu_mode, GPU_MODES
 from aero.phone_connect import show_phone_status, get_phone_devices
+from aero.accent_manager import apply_accent_color, ACCENT_PRESETS
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -461,6 +462,12 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.access(mon_path, os.X_OK))
         self.assertTrue(os.path.exists(upd_path))
         self.assertTrue(os.access(upd_path, os.X_OK))
+
+    def test_accent_manager_studio(self):
+        self.assertIn("cyan", ACCENT_PRESETS)
+        self.assertIn("purple", ACCENT_PRESETS)
+        res = apply_accent_color("cyan")
+        self.assertEqual(res["status"], "applied")
 
 
 if __name__ == "__main__":
