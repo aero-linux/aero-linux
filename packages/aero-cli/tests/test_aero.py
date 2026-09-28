@@ -690,6 +690,11 @@ class TestAeroCLI(unittest.TestCase):
             self.assertTrue(os.path.exists(path), f"Missing {script}")
             self.assertTrue(os.access(path, os.X_OK), f"Not executable: {script}")
 
+    def test_firewall_gui_script(self):
+        fw_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-firewall-gui"
+        self.assertTrue(os.path.exists(fw_path))
+        self.assertTrue(os.access(fw_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
