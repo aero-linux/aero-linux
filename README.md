@@ -24,6 +24,22 @@
 
 ---
 
+## 📥 1-Command Instant Download & Install
+
+Install the global `aero` CLI and GTK3 Control Center directly into your Linux environment:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ronitgupta138/aero-linux/main/install.sh | bash
+```
+
+*Or install from local clone:*
+```bash
+git clone https://github.com/ronitgupta138/aero-linux.git
+cd aero-linux && ./install.sh
+```
+
+---
+
 ## 📊 Real Hardware Performance Benchmark
 
 Tested on identical physical hardware (**AMD Ryzen 5 5600H, 12 Cores, 15GB RAM, NVMe SSD**):
