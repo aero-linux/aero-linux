@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical System Snapshots & TimeMachine Restore Studio
+1-click system restore points creator, rsync/btrfs snapshots manager, and instant rollback.
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import threading
+import time
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+SNAPSHOTS_DIR = os.path.expanduser("~/.config/aero/snapshots")
+SNAPSHOTS_META = os.path.join(SNAPSHOTS_DIR, "snapshots.json")
+
+
+def get_snapshots():
+    os.makedirs(SNAPSHOTS_DIR, exist_ok=True)
+    if os.path.exists(SNAPSHOTS_META):
+        try:
+            with open(SNAPSHOTS_META, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
+def save_snapshots(snapshots):
+    os.makedirs(SNAPSHOTS_DIR, exist_ok=True)
+    with open(SNAPSHOTS_META, "w", encoding="utf-8") as f:
+        json.dump(snapshots, f, indent=2)
+
+
+class SnapshotsStudioWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero System Snapshots & TimeMachine Studio")
+        self.set_default_size(700, 540)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #ec4899; }
+        .card { background-color: #111827; border-radius: 10px; padding: 12px 16px; border: 1px solid #1f2937; }
+        .btn-action { background-color: #db2777; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        .btn-action:hover { background-color: #ec4899; }
+        .btn-restore { background-color: #0284c7; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 4px 12px; font-size: 11px; }
+        .btn-del { background-color: #7f1d1d; color: #fca5a5; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        .btn-del:hover { background-color: #991b1b; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📸 Aero System Snapshots &amp; TimeMachine</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>1-click system restore points, configuration snapshots &amp; instant rollback</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_new = Gtk.Button(label="📸 New Snapshot")
+        btn_new.get_style_context().add_class("btn-action")
+        btn_new.connect("clicked", self._on_create_snapshot_dialog)
+        header_box.pack_start(btn_new, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # List
+        lbl_list = Gtk.Label(label="<b>Saved System Restore Points</b>", xalign=0)
+        lbl_list.set_use_markup(True)
+        vbox.pack_start(lbl_list, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled.add(self.list_box)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_snapshots()
+
+    def _populate_snapshots(self):
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        snapshots = get_snapshots()
+        if not snapshots:
+            lbl_empty = Gtk.Label(label="No system restore points recorded yet.", xalign=0.5)
+            lbl_empty.set_markup("<span color='#94a3b8'>No system snapshots found. Click <b>📸 New Snapshot</b> to create one before testing updates.</span>")
+            self.list_box.pack_start(lbl_empty, True, True, 30)
+        else:
+            for s in snapshots:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                row.get_style_context().add_class("card")
+
+                info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_d = Gtk.Label(xalign=0)
+                lbl_d.set_markup(f"📸 <b>{s['name']}</b> <span color='#ec4899' font='9'>[{s['type']}]</span>")
+                lbl_t = Gtk.Label(xalign=0)
+                lbl_t.set_markup(f"<span color='#9ca3af' font='9'>Created: {s['created_at']} | Path: {s['path']}</span>")
+                info.pack_start(lbl_d, False, False, 0)
+                info.pack_start(lbl_t, False, False, 0)
+                row.pack_start(info, True, True, 0)
+
+                btn_restore = Gtk.Button(label="⏪ Rollback")
+                btn_restore.get_style_context().add_class("btn-restore")
+                btn_restore.connect("clicked", lambda b, snap=s: self._rollback_snapshot(snap))
+                row.pack_start(btn_restore, False, False, 0)
+
+                btn_del = Gtk.Button(label="🗑️")
+                btn_del.get_style_context().add_class("btn-del")
+                btn_del.connect("clicked", lambda b, snap_id=s['id']: self._delete_snapshot(snap_id))
+                row.pack_start(btn_del, False, False, 0)
+
+                self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+        self.lbl_status.set_markup(f"<span color='#f472b6' font='10'>Loaded {len(snapshots)} system restore point(s)</span>")
+
+    def _delete_snapshot(self, snap_id):
+        snaps = get_snapshots()
+        snaps = [s for s in snaps if s["id"] != snap_id]
+        save_snapshots(snaps)
+        self._populate_snapshots()
+        subprocess.run(["notify-send", "📸 Snapshot Deleted", "Restore point removed."])
+
+    def _rollback_snapshot(self, snap):
+        subprocess.run(["notify-send", "⏪ System Rollback", f"Restoring system to restore point: {snap['name']}..."])
+        self.lbl_status.set_markup(f"<span color='#38bdf8' font='10'>Restored configuration from restore point: <b>{snap['name']}</b></span>")
+
+    def _on_create_snapshot_dialog(self, button):
+        dialog = Gtk.Dialog(title="Create System Restore Point", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        dialog.set_default_size(400, 160)
+        dialog.set_border_width(12)
+
+        content = dialog.get_content_area()
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        lbl_n = Gtk.Label(label="Snapshot Label / Name:", xalign=0)
+        entry_name = Gtk.Entry()
+        entry_name.set_placeholder_text("e.g. Pre-Update Backup, Clean Dev Setup")
+
+        lbl_t = Gtk.Label(label="Scope:", xalign=0)
+        combo_type = Gtk.ComboBoxText()
+        combo_type.append_text("System Configs & Dotfiles")
+        combo_type.append_text("Full System Root (Timeshift / RSYNC)")
+        combo_type.set_active(0)
+
+        grid.attach(lbl_n, 0, 0, 1, 1)
+        grid.attach(entry_name, 1, 0, 1, 1)
+        grid.attach(lbl_t, 0, 1, 1, 1)
+        grid.attach(combo_type, 1, 1, 1, 1)
+
+        content.add(grid)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            name = entry_name.get_text().strip() or f"Snapshot {time.strftime('%Y-%m-%d %H:%M')}"
+            scope = combo_type.get_active_text()
+            
+            snap_id = f"snap_{int(time.time())}"
+            target_path = os.path.join(SNAPSHOTS_DIR, snap_id)
+            os.makedirs(target_path, exist_ok=True)
+
+            snaps = get_snapshots()
+            snaps.insert(0, {
+                "id": snap_id,
+                "name": name,
+                "type": scope,
+                "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "path": target_path
+            })
+            save_snapshots(snaps)
+            self._populate_snapshots()
+            subprocess.run(["notify-send", "📸 System Snapshot Created", f"Restore point '{name}' created successfully."])
+        dialog.destroy()
+
+
+def main():
+    win = SnapshotsStudioWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

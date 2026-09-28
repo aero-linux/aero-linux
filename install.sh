@@ -365,6 +365,14 @@ exec python3 "${AERO_HOME}/bin/aero-workspaces-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-workspaces-gui"
 
+# Create global executable wrapper for aero-snapshots-gui
+cat << 'EOF' > "${BIN_DIR}/aero-snapshots-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-snapshots-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-snapshots-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -791,6 +799,17 @@ Icon=preferences-desktop-workspaces
 Terminal=false
 Type=Application
 Categories=Settings;DesktopSettings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-snapshots.desktop"
+[Desktop Entry]
+Name=Aero TimeMachine Snapshots
+Comment=Aero Linux System Restore Points & TimeMachine Backups
+Exec=${BIN_DIR}/aero-snapshots-gui
+Icon=document-revert
+Terminal=false
+Type=Application
+Categories=System;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
