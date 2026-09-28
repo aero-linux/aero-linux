@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace; }
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #07080c;
+    color: #e2e8f0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px 28px 24px 28px;
+  }
+  
+  /* Cyber Ambient Background Grid & Glows */
+  .bg-grid {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+  .glow-top-left {
+    position: absolute;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, rgba(0,0,0,0) 65%);
+    top: -200px;
+    left: -200px;
+    pointer-events: none;
+  }
+  .glow-bottom-right {
+    position: absolute;
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, rgba(0,0,0,0) 70%);
+    bottom: -200px;
+    right: -200px;
+    pointer-events: none;
+  }
+
+  /* Waybar Top Status Bar */
+  .waybar {
+    width: 100%;
+    height: 44px;
+    background: rgba(13, 17, 27, 0.85);
+    border: 1px solid rgba(0, 242, 254, 0.25);
+    border-radius: 22px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(16px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 10;
+  }
+  .workspaces {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .ws-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .ws-active {
+    background: #00f2fe;
+    color: #050608;
+    box-shadow: 0 0 12px rgba(0, 242, 254, 0.4);
+  }
+  .ws-inactive {
+    background: #1e293b;
+    color: #94a3b8;
+  }
+  .distro-title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .distro-title span {
+    color: #00f2fe;
+  }
+  .waybar-modules {
+    display: flex;
+    gap: 20px;
+    font-size: 12.5px;
+    color: #cbd5e1;
+    align-items: center;
+  }
+  .module-pill {
+    background: rgba(30, 41, 59, 0.6);
+    padding: 4px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .module-pill b {
+    color: #00f2fe;
+  }
+  .module-pill b.green {
+    color: #34d399;
+  }
+
+  /* Main Desktop Window Layout (Tiling) */
+  .desktop-layout {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 20px;
+    flex: 1;
+    margin: 18px 0;
+    z-index: 5;
+  }
+
+  /* Terminal Window */
+  .window {
+    background: rgba(10, 12, 18, 0.95);
+    border: 1px solid rgba(0, 242, 254, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .window-header {
+    background: #111520;
+    border-bottom: 1px solid #1e293b;
+    padding: 10px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .window-dots {
+    display: flex;
+    gap: 7px;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.red { background: #f87171; }
+  .dot.yellow { background: #fbbf24; }
+  .dot.green { background: #34d399; }
+  .window-title { color: #94a3b8; font-weight: 500; }
+  
+  .terminal-content {
+    padding: 22px 26px;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: #e2e8f0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .prompt { color: #00f2fe; font-weight: 700; }
+  .dir { color: #fbbf24; font-weight: 700; }
+  .cmd { color: #f8fafc; font-weight: 700; }
+  .cyan { color: #00f2fe; }
+  .green { color: #34d399; }
+  .gray { color: #64748b; }
+  .yellow { color: #fbbf24; }
+  .divider { color: #334155; margin: 4px 0; }
+
+  /* Right Side Windows */
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .card-box {
+    background: rgba(13, 17, 27, 0.95);
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .box-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #00f2fe;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .box-title span.tag {
+    font-size: 11px;
+    background: rgba(0, 242, 254, 0.1);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .stat-card {
+    background: #090b10;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .stat-card .label { font-size: 11px; color: #64748b; }
+  .stat-card .val { font-size: 16px; font-weight: 700; color: #f8fafc; margin-top: 4px; }
+  .stat-card .val.cyan { color: #00f2fe; }
+  .stat-card .val.green { color: #34d399; }
+
+  /* Desktop Wallpaper Minimal Watermark */
+  .wallpaper-watermark {
+    position: absolute;
+    bottom: 30px;
+    right: 40px;
+    font-size: 80px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.02);
+    letter-spacing: -2px;
+    pointer-events: none;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="glow-top-left"></div>
+  <div class="glow-bottom-right"></div>
+  <div class="wallpaper-watermark">AERO LINUX</div>
+
+  <!-- Top Status Bar (Waybar) -->
+  <div class="waybar">
+    <div class="workspaces">
+      <div class="ws-badge ws-active">1: DEV</div>
+      <div class="ws-badge ws-inactive">2: AI</div>
+      <div class="ws-badge ws-inactive">3: SYS</div>
+      <div class="ws-badge ws-inactive">4: WEB</div>
+    </div>
+    <div class="distro-title">⚡ AERO LINUX <span>1.0-EDGE</span> (SWAY WAYLAND)</div>
+    <div class="waybar-modules">
+      <div class="module-pill">🧠 zRAM: <b class="green">312 MB / 7.5 GB</b></div>
+      <div class="module-pill">🔋 Battery: <b class="green">79% (Capped 80%)</b></div>
+      <div class="module-pill">🌡️ CPU: <b>51.2°C</b></div>
+      <div class="module-pill">⚡ Profile: <b>PowerSave</b></div>
+      <div class="module-pill">🕒 <b>19:15:00 IST</b></div>
+    </div>
+  </div>
+
+  <!-- Main Tiling Windows Area -->
+  <div class="desktop-layout">
+    
+    <!-- Left: Primary Terminal (Alacritty) -->
+    <div class="window">
+      <div class="window-header">
+        <div class="window-dots">
+          <div class="dot red"></div>
+          <div class="dot yellow"></div>
+          <div class="dot green"></div>
+        </div>
+        <div class="window-title">ronit@aero-workstation: ~ (fish)</div>
+        <div style="color: #475569; font-size: 11px;">Alacritty 144Hz</div>
+      </div>
+      <div class="terminal-content">
+        <div><span class="prompt">ronit@aero</span>:<span class="dir">~</span>$ <span class="cmd">aero doctor</span></div>
+        <div class="divider">──────────────────────────────────────────────────────────────────────────</div>
+        <div>  <span class="cyan">⚡ OS Flavor:</span>       Aero Linux 1.0-Edge [Wayland Compositor]</div>
+        <div>  <span class="cyan">⚙️  Processor:</span>       AMD Ryzen 5 5600H with Radeon Graphics (12 Cores)</div>
+        <div>  <span class="cyan">🧠 Physical Memory:</span> 15.3 GB Total | <span class="green">312 MB Idle Footprint (-92%)</span></div>
+        <div>  <span class="cyan">🚀 In-Memory Swap:</span>  <span class="green">7.5 GB zRAM Active (ZSTD 3.1x Ratio, 0 SSD Wear)</span></div>
+        <div>  <span class="cyan">🔋 Battery Health:</span>  Balanced-Power Profile | 80% Threshold Enforced</div>
+        <div>  <span class="cyan">🤖 AI Environment:</span>  Ollama Local Model Engine Initialized</div>
+        <div class="divider">──────────────────────────────────────────────────────────────────────────</div>
+        <div style="margin-top: 14px;"><span class="prompt">ronit@aero</span>:<span class="dir">~</span>$ <span class="cmd">aero ai run deepseek-r1</span></div>
+        <div style="color: #94a3b8;">[ollama] Initializing local context on AMD Vega GPU & zRAM...</div>
+        <div><span class="green">✔</span> DeepSeek-R1 (8B Q8_0) loaded in <span class="cyan">1.24s</span> with 14.8GB usable RAM buffer.</div>
+        <div style="margin-top: 14px;"><span class="prompt">ronit@aero</span>:<span class="dir">~</span>$ <span class="cmd">aero layout</span></div>
+        <div>  <span class="green">✔</span> Current: <span class="cyan">Hacker Tiling Mode</span> (Switch anytime: <span class="yellow">aero layout windows</span>)</div>
+        <div style="margin-top: 10px;"><span class="prompt">ronit@aero</span>:<span class="dir">~</span>$ <span class="cmd" style="animation: blink 1s infinite;">█</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Secondary Telemetry & Local DB Containers -->
+    <div class="right-column">
+      
+      <!-- System Sensors Card -->
+      <div class="card-box">
+        <div class="box-title">
+          <span>🌡️ Real-Time Hardware Telemetry</span>
+          <span class="tag">HWMON Active</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">CPU Temp (k10temp)</div>
+            <div class="val cyan">51.2 °C</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">NVMe Temp</div>
+            <div class="val green">32.9 °C</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">RAM Throughput</div>
+            <div class="val cyan">597.5 MB/s</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">NVMe Write Speed</div>
+            <div class="val green">1,312.5 MB/s</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Local Developer DB Stack Card -->
+      <div class="card-box">
+        <div class="box-title">
+          <span>🛠️ 1-Click Developer Sandboxes</span>
+          <span class="tag">aero dev & db</span>
+        </div>
+        <div style="font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+          <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1e293b;">
+            <span>🐘 PostgreSQL 16</span>
+            <span style="color:#34d399; font-weight:700;">Port 5432 (Ready)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1e293b;">
+            <span>⚡ Redis 7.2 In-Memory</span>
+            <span style="color:#34d399; font-weight:700;">Port 6379 (Ready)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:6px 0;">
+            <span>🌐 Node.js 22 LTS Sandbox</span>
+            <span style="color:#00f2fe; font-weight:700;">/workspace Mounted</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div style="display: flex; justify-content: space-between; font-size: 12px; color: #475569; padding: 0 10px;">
+    <div>Hotkeys: <b>Win+Enter</b> (Terminal) • <b>Win+D</b> (App Launcher) • <b>Win+E</b> (Explorer) • <b>Ctrl+Shift+Esc</b> (Task Manager)</div>
+    <div>Aero Linux • Free & Open Source • <b>github.com/ronitgupta138/aero-linux</b></div>
+  </div>
+
+</body>
+</html>
