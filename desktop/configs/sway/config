@@ -51,9 +51,13 @@ input "type:keyboard" {
 # Precision Touchpad Multi-Touch Gestures (Mac / Windows 11 Experience)
 input "type:touchpad" {
     tap enabled
+    tap_button_map "lrm"
     natural_scroll enabled
     dwt enabled
     middle_emulation enabled
+    accel_profile "adaptive"
+    pointer_accel 0.15
+    scroll_factor 1.0
 }
 
 # Touchpad Gestures
@@ -63,6 +67,8 @@ bindgesture swipe:3:up exec wofi --show window
 bindgesture swipe:3:down exec aero-quick-settings
 bindgesture swipe:4:up exec aero-monitor
 bindgesture swipe:4:down exec aero-welcome
+bindgesture pinch:3:inward exec aero-quick-settings
+bindgesture pinch:3:outward exec aero layout tiling
 
 # Keybindings: System & Launchers
 bindsym $mod+Return exec $term

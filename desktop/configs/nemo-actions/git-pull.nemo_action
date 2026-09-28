@@ -1,0 +1,9 @@
+[Nemo Action]
+Name=Git Pull (Update Codebase)
+Comment=Fetch and rebase remote git commits
+Exec=alacritty --working-directory %F -e bash -c "git pull --rebase; echo ''; read -p 'Press Enter to close...' "
+Icon-Name=vcs-update
+Selection=Any
+Extensions=any;
+Conditions=dbus org.freedesktop.FileManager1;
+Quote=double

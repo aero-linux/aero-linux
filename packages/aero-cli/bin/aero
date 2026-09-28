@@ -98,6 +98,7 @@ from aero.wine_runner import run_windows_app
 from aero.gpu_switcher import get_current_gpu_mode, set_gpu_mode
 from aero.phone_connect import show_phone_status, send_file_to_phone
 from aero.accent_manager import apply_accent_color, list_accents
+from aero.appimage_mgr import integrate_appimage
 
 
 def print_banner():
@@ -677,6 +678,10 @@ def main():
     phone_share = phone_sub.add_parser("share", help="Beam a file wirelessly to phone")
     phone_share.add_argument("file", help="File to send to phone")
 
+    # AppImage Package Manager & Desktop Integrator
+    appimg_p = subparsers.add_parser("appimage", help="Install and integrate portable AppImage packages into Start Menu")
+    appimg_p.add_argument("file", help="Path to .AppImage package file")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1213,6 +1218,9 @@ def main():
             send_file_to_phone(args.file)
         else:
             show_phone_status()
+
+    elif args.command == "appimage":
+        integrate_appimage(args.file)
 
 
 if __name__ == "__main__":

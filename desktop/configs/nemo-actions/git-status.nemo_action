@@ -1,0 +1,9 @@
+[Nemo Action]
+Name=Git Status & Telemetry
+Comment=Inspect git branch status and recent commits
+Exec=alacritty --working-directory %F -e bash -c "aero git; echo ''; read -p 'Press Enter to close...' "
+Icon-Name=git
+Selection=Any
+Extensions=any;
+Conditions=dbus org.freedesktop.FileManager1;
+Quote=double
