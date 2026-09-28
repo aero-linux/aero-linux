@@ -1,4 +1,4 @@
-.TH AERO 1 "September 2026" "Aero Linux 1.0-Edge" "User Commands"
+.TH AERO 1 "September 2026" "Aero Linux 1.2-Titan" "User Commands"
 .SH NAME
 aero \- The Ultra-Lean AI & High-Performance Developer Linux Control Engine
 .SH SYNOPSIS
@@ -8,7 +8,7 @@ aero \- The Ultra-Lean AI & High-Performance Developer Linux Control Engine
 .B aero
 is the primary systems engineering, performance tuning, and local AI orchestration suite for Aero Linux.
 It provides hardware telemetry, dynamic zRAM compaction, local LLM serving, containerized sandboxes,
-encrypted keyrings, network latency tracers, and desktop layout switching.
+encrypted keyrings, network latency tracers, desktop layout switching, and a complete 15-app graphical suite.
 
 .SH CORE COMMANDS
 .TP
@@ -33,6 +33,9 @@ Terminal-native local AI coding and shell command assistant.
 .B dev run \fI[node|python|rust|go|c]\fR
 Launch isolated containerized developer sandboxes in the current directory.
 .TP
+.B dev setup \fI[node|rust|python|java|docker|c]\fR
+1-click native developer toolchain and SDK installer.
+.TP
 .B db \fI[start|stop|ui] <name>\fR
 Manage local background databases (Postgres, Redis, MySQL, Mongo, ClickHouse) and web studio.
 .TP
@@ -45,8 +48,17 @@ Expose local development port to instant public HTTPS tunnel.
 .B turbo \fI[mount|status|unmount]\fR
 Mount high-speed tmpfs RAM-disk for zero-wear 10GB/s compilation acceleration.
 .TP
-.B store \fI[list|install <app>]\fR
-1-click developer software center (VS Code, Brave, Docker, Postman, Obsidian).
+.B store \fI[list|install <app> | search <query>]\fR
+1-click developer software center (VS Code, Brave, Docker, Postman, Obsidian) and multi-source search.
+.TP
+.B wine \fI<app.exe>\fR
+Launch standalone Windows applications with GE-Proton and GameMode acceleration.
+.TP
+.B connect \fI[status | send <file>]\fR
+Wireless mobile device synchronization and file beaming.
+.TP
+.B zoom \fI[in | out | reset | peek]\fR
+High-precision display magnification and momentary 2-finger peek zoom.
 .TP
 .B trace \fI[ping <host> | dns]\fR
 Measure network socket connect, TLS handshake, and DNS resolution latency.
