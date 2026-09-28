@@ -29,12 +29,13 @@ from aero.logs import show_logs
 from aero.port import list_ports, kill_port
 from aero.docker_tools import prune_docker, show_docker_stats
 from aero.env_mgr import check_sdk_environment
-from aero.display import show_display_info
+from aero.display import show_display_info, set_night_light
 from aero.shell_repl import run_aero_shell
 from aero.thermals import show_thermals
 from aero.git_tools import check_git_status, clean_merged_branches
 from aero.cron_mgr import show_cron_status, enable_auto_maintenance
-from aero.clipboard import clear_clipboard
+from aero.clipboard import clear_clipboard, show_clipboard_menu
+from aero.trash import list_trash_contents, empty_trash_bin
 from aero.themes import list_themes, set_theme, THEMES
 from aero.ssh_tools import check_ssh_status, generate_ed25519_key, copy_public_key, test_github_auth
 from aero.disk_tools import find_large_files, clean_node_modules
@@ -230,7 +231,12 @@ def main():
     env_sub.add_parser("check", help="Check versions of Node, Python, C, Rust, Go, Java, Docker")
 
     # Display & Wayland
-    subparsers.add_parser("display", help="Query Wayland output resolutions, refresh rates, and monitors")
+    disp_parser = subparsers.add_parser("display", help="Query Wayland output resolutions, refresh rates, and monitors")
+    disp_sub = disp_parser.add_subparsers(dest="display_action", help="Display actions")
+    disp_sub.add_parser("status", help="Show active monitors and Wayland session")
+    night_p = disp_sub.add_parser("night", help="Toggle Blue Light Eye Protection (Night Light)")
+    night_p.add_argument("state", nargs="?", choices=["on", "off"], default="on", help="Night light state (default: on)")
+    night_p.add_argument("--temp", type=int, default=4500, help="Color temperature in Kelvin (default: 4500)")
 
     # Interactive Shell
     subparsers.add_parser("shell", help="Launch interactive Aero developer shell")
@@ -256,6 +262,14 @@ def main():
     clip_parser = subparsers.add_parser("clip", help="Wayland clipboard manager")
     clip_sub = clip_parser.add_subparsers(dest="clip_action", help="Clipboard actions")
     clip_sub.add_parser("clear", help="Clear all clipboard buffers")
+    clip_sub.add_parser("menu", help="Open visual searchable clipboard history menu (Win+V)")
+    clip_sub.add_parser("history", help="List recent clipboard history")
+
+    # Recycle Bin / Trash
+    trash_parser = subparsers.add_parser("trash", help="Recycle bin and deleted files manager")
+    trash_sub = trash_parser.add_subparsers(dest="trash_action", help="Trash actions")
+    trash_sub.add_parser("list", help="List files in Recycle Bin / Trash")
+    trash_sub.add_parser("empty", help="Empty Recycle Bin / Trash")
 
     # Themes
     theme_parser = subparsers.add_parser("theme", help="Desktop aesthetic and palette switcher")
@@ -774,7 +788,10 @@ def main():
         check_sdk_environment()
 
     elif args.command == "display":
-        show_display_info()
+        if getattr(args, "display_action", None) == "night":
+            set_night_light(enable=(args.state == "on"), temp_k=args.temp)
+        else:
+            show_display_info()
 
     elif args.command == "shell":
         run_aero_shell()
@@ -801,8 +818,18 @@ def main():
     elif args.command == "clip":
         if args.clip_action == "clear":
             clear_clipboard()
+        elif args.clip_action == "menu":
+            show_clipboard_menu()
+        elif args.clip_action == "history":
+            show_clipboard_menu()
         else:
             clip_parser.print_help()
+
+    elif args.command == "trash":
+        if args.trash_action == "empty":
+            empty_trash_bin()
+        else:
+            list_trash_contents()
 
     elif args.command == "theme":
         if args.theme_action == "set":

@@ -52,6 +52,8 @@ from aero.ai_tools import audit_ai_memory_footprint, PROMPT_TEMPLATES
 from aero.hardware_tuning import get_hardware_fan_status, FAN_PROFILES
 from aero.dev_utils import convert_color, time_execution
 from aero.osd import handle_osd_action
+from aero.trash import get_trash_items, empty_trash_bin
+from aero.display import set_night_light
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -380,6 +382,13 @@ class TestAeroCLI(unittest.TestCase):
         self.assertEqual(r2["action"], "brightness-up")
         r3 = handle_osd_action("mute")
         self.assertEqual(r3["action"], "mute")
+
+    def test_trash_and_night_light(self):
+        trash = get_trash_items()
+        self.assertIsInstance(trash, list)
+        self.assertTrue(empty_trash_bin())
+        res_nl = set_night_light(False)
+        self.assertFalse(res_nl)
 
 
 if __name__ == "__main__":

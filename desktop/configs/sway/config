@@ -55,6 +55,7 @@ bindsym Shift+Print exec mkdir -p ~/Pictures/Screenshots && grim -g "$(slurp)" ~
 
 # Windows-Friendly Familiar Shortcuts
 bindsym $mod+a exec aero-quick-settings
+bindsym $mod+v exec aero clip menu
 bindsym $mod+e exec nemo ~ || thunar ~ || pcmanfm ~
 bindsym Control+Shift+Escape exec xfce4-taskmanager || gnome-system-monitor || lxtask || $term -e aero monitor
 bindsym Mod1+Tab focus next
