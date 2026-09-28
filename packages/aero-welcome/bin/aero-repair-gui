@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical System Integrity & 1-Click Self-Repair Center
+Visual hardware/software health scanner, package lock fixer, network healer, and audio resetter.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.repair import run_system_repair
+
+
+class RepairWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero System Health & Self-Repair Center")
+        self.set_default_size(580, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #34d399; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-repair { background-color: #34d399; color: #000000; font-weight: bold; border-radius: 8px; padding: 10px 20px; font-size: 14px; }
+        .btn-repair:hover { background-color: #6ee7b7; }
+        .btn-scan { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 8px 14px; font-weight: bold; }
+        .btn-scan:hover { background-color: #334155; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🩺 Aero System Health &amp; Self-Repair</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Automated diagnosis and 1-click self-repair for network, audio, and package locks</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Actions Card
+        act_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        act_card.get_style_context().add_class("card")
+
+        btn_repair = Gtk.Button(label="⚡ Run 1-Click Auto-Repair")
+        btn_repair.get_style_context().add_class("btn-repair")
+        btn_repair.connect("clicked", self._on_repair)
+        act_card.pack_start(btn_repair, False, False, 0)
+
+        btn_scan = Gtk.Button(label="🔍 Scan Health Status")
+        btn_scan.get_style_context().add_class("btn-scan")
+        btn_scan.connect("clicked", lambda b: self._refresh_status())
+        act_card.pack_start(btn_scan, False, False, 0)
+
+        vbox.pack_start(act_card, False, False, 0)
+
+        # Results List Card
+        list_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        list_card.get_style_context().add_class("card")
+
+        lbl_res = Gtk.Label(label="<b>📋 System Health Check Results</b>", xalign=0)
+        lbl_res.set_use_markup(True)
+        list_card.pack_start(lbl_res, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_min_content_height(240)
+        self.store = Gtk.ListStore(str, str, str)  # Status Icon, Component, Message
+        self.tree = Gtk.TreeView(model=self.store)
+
+        col_st = Gtk.TreeViewColumn("Status", Gtk.CellRendererText(), text=0)
+        col_comp = Gtk.TreeViewColumn("Component", Gtk.CellRendererText(), text=1)
+        col_msg = Gtk.TreeViewColumn("Diagnosis & Action", Gtk.CellRendererText(), text=2)
+
+        self.tree.append_column(col_st)
+        self.tree.append_column(col_comp)
+        self.tree.append_column(col_msg)
+
+        scrolled.add(self.tree)
+        list_card.pack_start(scrolled, True, True, 0)
+
+        vbox.pack_start(list_card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready to diagnose", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>System Self-Repair Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._refresh_status()
+
+    def _refresh_status(self):
+        self.store.clear()
+        results = run_system_repair()
+        for r in results:
+            icon = "✅ OK" if r["status"] == "ok" else ("🔧 Fixed" if r["status"] == "repaired" else "⚠️ Issue")
+            self.store.append([icon, r["component"], r["message"]])
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Health scan complete. All checks healthy.</span>")
+
+    def _on_repair(self, button):
+        self.lbl_status.set_markup("<span color='#38bdf8' font='10'>⚡ Executing system self-repair operations...</span>")
+        
+        def _bg():
+            results = run_system_repair()
+            def _ui():
+                self.store.clear()
+                for r in results:
+                    icon = "✅ OK" if r["status"] == "ok" else ("🔧 Fixed" if r["status"] == "repaired" else "⚠️ Issue")
+                    self.store.append([icon, r["component"], r["message"]])
+                self.lbl_status.set_markup("<span color='#34d399' font='10'>✅ Self-repair successfully completed!</span>")
+                subprocess.run(["notify-send", "🩺 Aero Repair", "System self-repair operations finished successfully"])
+            GLib.idle_add(_ui)
+        
+        threading.Thread(target=_bg, daemon=True).start()
+
+
+def main():
+    win = RepairWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

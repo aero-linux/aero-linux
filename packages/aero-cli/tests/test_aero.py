@@ -591,6 +591,11 @@ class TestAeroCLI(unittest.TestCase):
             self.assertIn("status", r)
             self.assertIn("message", r)
 
+    def test_repair_gui_script(self):
+        rep_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-repair-gui"
+        self.assertTrue(os.path.exists(rep_path))
+        self.assertTrue(os.access(rep_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
