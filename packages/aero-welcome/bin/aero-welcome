@@ -52,6 +52,11 @@ class AeroWelcomeApp(Gtk.Window):
         title_box.pack_start(lbl_sub, False, False, 0)
         header_box.pack_start(title_box, True, True, 0)
 
+        btn_about = Gtk.Button(label="ℹ️ System Specs")
+        btn_about.get_style_context().add_class("btn-quick")
+        btn_about.connect("clicked", lambda b: self.run_cmd("aero-about-gui"))
+        header_box.pack_start(btn_about, False, False, 0)
+
         btn_doc = Gtk.Button(label="🩺 1-Click Self-Repair")
         btn_doc.get_style_context().add_class("btn-primary-action")
         btn_doc.connect("clicked", lambda b: self.run_cmd("aero-repair-gui"))
@@ -88,6 +93,8 @@ class AeroWelcomeApp(Gtk.Window):
             ("🔄 Update Manager (Patches)", "aero-updater", 1, 2),
             ("🔋 Battery Studio & Fan Curves", "aero-power-gui", 0, 3),
             ("🌙 Night Light Studio", "aero-nightlight-gui", 1, 3),
+            ("⚡ Quick Action Center", "aero-quick-settings", 0, 4),
+            ("🚀 Network Speed & Latency", "aero-speed-gui", 1, 4),
         ]
 
         for text, cmd, col, row in q_tools:
@@ -118,11 +125,12 @@ class AeroWelcomeApp(Gtk.Window):
             ("🚀 Spotlight Search (Alt+Space)", "aero-spotlight", 0, 0),
             ("📝 Floating Scratchpad (Win+N)", "aero-notes-gui", 1, 0),
             ("🎨 Color Dropper (Win+P)", "aero-color-gui", 0, 1),
-            ("📸 Snipping Tool (Win+Shift+S)", "aero-screenshot", 1, 1),
+            ("📸 Snipping Tool (Win+Shift+S)", "aero-screenshot-gui || aero-screenshot", 1, 1),
             ("🔤 Typography & Font Studio", "aero-font-gui", 0, 2),
             ("🔌 Dev Server & Port Inspector", "aero-ports-gui", 1, 2),
-            ("⌨️ Keyboard Shortcuts Guide", "aero-shortcuts-gui", 0, 3),
+            ("🌿 Git Workspace & Repos", "aero-git-gui", 0, 3),
             ("🔒 Developer Secrets Vault", "aero-vault-gui", 1, 3),
+            ("⌨️ Keyboard Shortcuts Guide", "aero-shortcuts-gui", 0, 4),
         ]
 
         for text, cmd, col, row in dev_tools:

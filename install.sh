@@ -317,6 +317,14 @@ exec python3 "${AERO_HOME}/bin/aero-speed-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-speed-gui"
 
+# Create global executable wrapper for aero-git-gui
+cat << 'EOF' > "${BIN_DIR}/aero-git-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-git-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-git-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -677,6 +685,17 @@ Icon=network-wireless
 Terminal=false
 Type=Application
 Categories=System;Network;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-git.desktop"
+[Desktop Entry]
+Name=Aero Git Dashboard
+Comment=Aero Linux Local Git Workspace & Repository Monitor
+Exec=${BIN_DIR}/aero-git-gui
+Icon=git
+Terminal=false
+Type=Application
+Categories=Development;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

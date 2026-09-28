@@ -71,6 +71,7 @@ from aero.store_engine import search_universal_store
 from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
 from aero.power_daemon import get_ac_power_status, apply_power_state
 from aero.repair import run_system_repair
+from aero.git_tools import scan_local_git_workspaces, print_git_workspaces
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -655,6 +656,39 @@ class TestAeroCLI(unittest.TestCase):
         speed_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-speed-gui"
         self.assertTrue(os.path.exists(speed_path))
         self.assertTrue(os.access(speed_path, os.X_OK))
+
+    def test_git_gui_script(self):
+        git_gui_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-git-gui"
+        self.assertTrue(os.path.exists(git_gui_path))
+        self.assertTrue(os.access(git_gui_path, os.X_OK))
+
+    def test_git_workspace_scanner(self):
+        repos = scan_local_git_workspaces(scan_roots=["/home/ronit138/aero-linux"])
+        self.assertIsInstance(repos, list)
+        self.assertGreaterEqual(len(repos), 1)
+        aero_repo = next((r for r in repos if r["name"] == "aero-linux"), None)
+        self.assertIsNotNone(aero_repo)
+        if aero_repo is not None:
+            self.assertEqual(aero_repo["branch"], "main")
+        printed = print_git_workspaces(scan_roots=["/home/ronit138/aero-linux"])
+        self.assertIsInstance(printed, list)
+
+    def test_quick_settings_gui_script(self):
+        qs_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-quick-settings"
+        self.assertTrue(os.path.exists(qs_path))
+        self.assertTrue(os.access(qs_path, os.X_OK))
+
+    def test_audio_bt_wifi_displays_gui_scripts(self):
+        for script in ["aero-audio", "aero-bluetooth", "aero-wifi", "aero-displays"]:
+            path = f"/home/ronit138/aero-linux/packages/aero-welcome/bin/{script}"
+            self.assertTrue(os.path.exists(path), f"Missing {script}")
+            self.assertTrue(os.access(path, os.X_OK), f"Not executable: {script}")
+
+    def test_gamehub_connect_monitor_updater_gui_scripts(self):
+        for script in ["aero-gamehub", "aero-connect-gui", "aero-monitor", "aero-updater"]:
+            path = f"/home/ronit138/aero-linux/packages/aero-welcome/bin/{script}"
+            self.assertTrue(os.path.exists(path), f"Missing {script}")
+            self.assertTrue(os.access(path, os.X_OK), f"Not executable: {script}")
 
 
 if __name__ == "__main__":

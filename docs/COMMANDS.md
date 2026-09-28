@@ -57,7 +57,7 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 * `aero api bench <url>`: Run concurrent HTTP load tests (req/sec, p95/p99 latency).
 * `aero share [path]`: Zero-config local network HTTP file sharing server.
 * `aero ssh [status|gen|copy|test]`: Ed25519 SSH key management and GitHub auth test.
-* `aero git [status|clean|graph|churn]`: Branch tracking, ASCII commit graph, and code churn analyzer.
+* `aero git [status|scan|clean|graph|churn]`: Workspace status, multi-repo scanner, ASCII commit graph, and code churn analyzer.
 
 ---
 

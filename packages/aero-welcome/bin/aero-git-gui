@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Git Workspace & Multi-Repo Dashboard
+Real-time status scanner for local Git repositories, branch viewer, dirty status tracker, and 1-click sync.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+def scan_local_git_repos():
+    repos = []
+    scan_roots = [os.path.expanduser("~")]
+    
+    area51 = "/media/ronit138/Area 51"
+    if os.path.exists(area51):
+        scan_roots.append(area51)
+
+    for root_dir in scan_roots:
+        for root, dirs, files in os.walk(root_dir):
+            # Skip hidden deep directories except top-level
+            if "/." in root and not root.endswith("/.") and ".config" not in root:
+                continue
+            if root.count(os.sep) - root_dir.count(os.sep) > 3:
+                dirs[:] = []
+                continue
+            if ".git" in dirs:
+                dirs.remove(".git")
+                repo_path = root
+                try:
+                    # Branch
+                    res_b = subprocess.run(["git", "-C", repo_path, "branch", "--show-current"], capture_output=True, text=True)
+                    branch = res_b.stdout.strip() or "HEAD (detached)"
+
+                    # Status
+                    res_s = subprocess.run(["git", "-C", repo_path, "status", "--porcelain"], capture_output=True, text=True)
+                    modified_count = len([line for line in res_s.stdout.splitlines() if line.strip()])
+                    is_clean = (modified_count == 0)
+
+                    # Ahead count
+                    ahead = 0
+                    res_a = subprocess.run(["git", "-C", repo_path, "rev-list", "--count", "@{u}..HEAD"], capture_output=True, text=True)
+                    if res_a.returncode == 0 and res_a.stdout.strip().isdigit():
+                        ahead = int(res_a.stdout.strip())
+
+                    repos.append({
+                        "name": os.path.basename(repo_path),
+                        "path": repo_path,
+                        "branch": branch,
+                        "is_clean": is_clean,
+                        "modified_count": modified_count,
+                        "ahead": ahead
+                    })
+                except Exception:
+                    pass
+
+    return repos
+
+
+class GitDashboardWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Git Workspace Dashboard")
+        self.set_default_size(680, 540)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #f97316; }
+        .card { background-color: #111827; border-radius: 10px; padding: 12px 16px; border: 1px solid #1f2937; }
+        .btn-action { background-color: #1e293b; color: #38bdf8; font-weight: bold; border-radius: 6px; padding: 6px 12px; font-size: 11px; }
+        .btn-action:hover { background-color: #334155; }
+        .btn-refresh { background-color: #f97316; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🌿 Aero Git Workspace Dashboard</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Local repositories scanner, branch tracker &amp; dirty tree monitor</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_ref = Gtk.Button(label="🔄 Refresh Repos")
+        btn_ref.get_style_context().add_class("btn-refresh")
+        btn_ref.connect("clicked", self._on_refresh)
+        header_box.pack_start(btn_ref, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Scrolled List of Repositories
+        scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled.add(self.list_box)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Scanning workspaces...", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._load_repos()
+
+    def _on_refresh(self, button):
+        self._load_repos()
+
+    def _load_repos(self):
+        self.lbl_status.set_markup("<span color='#f97316' font='10'>Scanning local drives for Git repositories...</span>")
+        
+        def run():
+            repos = scan_local_git_repos()
+            GLib.idle_add(self._display_repos, repos)
+
+        threading.Thread(target=run, daemon=True).start()
+
+    def _display_repos(self, repos):
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        if not repos:
+            lbl_empty = Gtk.Label(label="No Git repositories found in scan path.", xalign=0.5)
+            self.list_box.pack_start(lbl_empty, True, True, 20)
+        else:
+            for r in repos:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                row.get_style_context().add_class("card")
+
+                # Clean / Dirty dot
+                dot_color = "#10b981" if r["is_clean"] else "#f43f5e"
+                
+                info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_n = Gtk.Label(xalign=0)
+                lbl_n.set_markup(f"<span color='{dot_color}'>●</span> <b>{r['name']}</b> <span color='#38bdf8' font='10'>[🌱 {r['branch']}]</span>")
+                
+                stat_text = "Clean working tree" if r["is_clean"] else f"{r['modified_count']} modified/untracked file(s)"
+                ahead_text = f" • ⬆️ {r['ahead']} unpushed commit(s)" if r["ahead"] > 0 else ""
+                lbl_d = Gtk.Label(xalign=0)
+                lbl_d.set_markup(f"<span color='#9ca3af' font='9'>{stat_text}{ahead_text} — <code>{r['path']}</code></span>")
+                info.pack_start(lbl_n, False, False, 0)
+                info.pack_start(lbl_d, False, False, 0)
+                row.pack_start(info, True, True, 0)
+
+                # Actions
+                btn_pull = Gtk.Button(label="📥 Pull")
+                btn_pull.get_style_context().add_class("btn-action")
+                btn_pull.connect("clicked", lambda b, p=r['path']: self._pull_repo(p))
+                row.pack_start(btn_pull, False, False, 0)
+
+                btn_code = Gtk.Button(label="💻 Code")
+                btn_code.get_style_context().add_class("btn-action")
+                btn_code.connect("clicked", lambda b, p=r['path']: self._open_code(p))
+                row.pack_start(btn_code, False, False, 0)
+
+                self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Found {len(repos)} active Git repository/repositories</span>")
+
+    def _pull_repo(self, path):
+        res = subprocess.run(["git", "-C", path, "pull", "--rebase"], capture_output=True, text=True)
+        out = res.stdout.strip() or res.stderr.strip()
+        subprocess.run(["notify-send", "🌿 Git Pull", f"{os.path.basename(path)}: {out[:80]}"])
+        self._load_repos()
+
+    def _open_code(self, path):
+        subprocess.run(["code", path])
+
+
+def main():
+    win = GitDashboardWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

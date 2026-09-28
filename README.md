@@ -12,7 +12,7 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-80%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-101%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
 [![Release](https://img.shields.io/badge/Release-v1.2.0--Titan-00f2fe.svg)](https://github.com/ronitgupta138/aero-linux/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
@@ -148,7 +148,7 @@ aero api bench http://localhost:3000  # Concurrent HTTP load tester (req/sec, p9
 aero layout [windows|tiling]    # 1-click layout switcher
 aero kernel [audit|profile]     # Low-latency vs throughput kernel scheduler
 aero wallpaper [set|generate]   # Procedural vector cyber wallpapers
-aero git [status|clean|graph|churn] # ASCII branch graph & code churn analyzer
+aero git [status|scan|clean|graph|churn] # Workspace status, multi-repo scanner & branch graph
 aero theme auto                 # Auto-sync theme with day/night solar cycle & battery
 aero theme set [cyber-cyan|tokyo-night|nord|gruvbox] # Desktop palette switcher
 aero font install jetbrains-mono # 1-click Nerd Font installation
@@ -164,12 +164,14 @@ aero ssh [status|gen|copy|test] # Ed25519 SSH key management
 
 ## 🎛️ Complete Zero-Terminal Graphical Application Suite
 
-Aero Linux includes **15 dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
+Aero Linux includes **24+ dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
 
 | Application | Command / Shortcut | Description |
 | :--- | :--- | :--- |
 | **Aero Spotlight** | `Alt + Space` / `aero-spotlight` | Floating Raycast-style command palette, inline math evaluator & app launcher |
-| **Aero Control Center** | `aero-welcome` | 7-tab central hardware, power, theme, and store management hub |
+| **Aero Control Center** | `aero-welcome` | 6-tab central hardware, developer suite, maintenance, power, theme, and store hub |
+| **Aero Git Dashboard** | `aero-git-gui` | Multi-repository workspace status monitor, branch tracker & 1-click fetch/pull |
+| **Aero Action Center** | `aero-quick-settings` | Frosted-glass quick tiles, sliders & system toggles |
 | **Aero Task Manager** | `Ctrl + Shift + Esc` / `aero-monitor` | Live Cairo vector CPU waveform graph & memory gauges |
 | **Aero Update Manager** | `aero-updater` | Asynchronous system & security patch installer |
 | **Aero Wi-Fi Center** | `aero-wifi` | Spectrum scanner, signal strength monitor & 1-click connect |
@@ -184,6 +186,12 @@ Aero Linux includes **15 dedicated native GTK3 graphical management tools**, ens
 | **Aero System Cleaner** | `aero-cleaner-gui` | 1-Click package cache, pip, npm & journal log de-bloater |
 | **Aero TimeMachine** | `aero-snapshot-gui` | System restore points & 1-click rollback |
 | **Aero Vault** | `aero-vault-gui` | Local encrypted developer secrets, API tokens & `.env` exporter |
+| **Aero Snipping Tool** | `Win + Shift + S` / `aero-screenshot-gui` | Screen capture with instant crop and clipboard export |
+| **Aero Font Studio** | `aero-font-gui` | Developer Nerd Font catalog and previewer |
+| **Aero Port Inspector**| `aero-ports-gui` | Active listening dev ports, process viewer and kill tool |
+| **Aero Speedtest** | `aero-speed-gui` | Real-time network throughput and latency profiler |
+| **Aero Self-Repair** | `aero-repair-gui` | 1-Click automated DNS, package, and service repair |
+| **Aero About System** | `aero-about-gui` | Hardware specifications, kernel info, and Aero build badge |
 
 ---
 
