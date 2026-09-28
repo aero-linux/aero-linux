@@ -117,7 +117,7 @@ class QuickSettingsWindow(Gtk.Window):
         self.btn_wifi = Gtk.Button(label="📶 Wi-Fi\n<span font='9' color='#34d399'>Connected</span>")
         self.btn_wifi.get_child().set_use_markup(True)
         self.btn_wifi.get_style_context().add_class("action-tile")
-        self.btn_wifi.connect("clicked", lambda b: self.run_cmd("nm-connection-editor || alacritty -e nmtui"))
+        self.btn_wifi.connect("clicked", lambda b: self.run_cmd("aero-wifi || nm-connection-editor || alacritty -e nmtui"))
         grid.attach(self.btn_wifi, 0, 0, 1, 1)
 
         self.btn_bt = Gtk.Button(label="🎧 Bluetooth\n<span font='9' color='#8b949e'>Ready</span>")
@@ -161,8 +161,6 @@ class QuickSettingsWindow(Gtk.Window):
         self.btn_power.get_style_context().add_class("action-tile")
         self.btn_power.connect("clicked", lambda b: self.run_cmd("aero power --threshold 80 && notify-send 'Battery Guard' '80% threshold applied'"))
         grid.attach(self.btn_power, 1, 3, 1, 1)
-        self.btn_power.connect("clicked", lambda b: self.run_cmd("aero power --threshold 80 && notify-send 'Battery Guard' '80% threshold applied'"))
-        grid.attach(self.btn_power, 1, 2, 1, 1)
 
         vbox.pack_start(grid, False, False, 0)
 

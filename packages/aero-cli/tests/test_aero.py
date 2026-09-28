@@ -68,6 +68,7 @@ from aero.accent_manager import apply_accent_color, ACCENT_PRESETS
 from aero.appimage_mgr import integrate_appimage, list_appimages, remove_appimage
 from aero.store_engine import search_universal_store
 from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
+from aero.power_daemon import get_ac_power_status, apply_power_state
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -499,6 +500,20 @@ class TestAeroCLI(unittest.TestCase):
         self.assertEqual(res_rst["percent"], 100)
         peek_res = zoom_peek(scale=1.30, duration=0.1)
         self.assertEqual(peek_res["status"], "peeking")
+
+    def test_autonomous_power_daemon(self):
+        ac_status = get_ac_power_status()
+        self.assertIsInstance(ac_status, bool)
+        res = apply_power_state(ac_status)
+        self.assertEqual(res["status"], "applied")
+
+    def test_wifi_and_snapshot_gui_scripts(self):
+        wifi_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-wifi"
+        snap_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-snapshot-gui"
+        self.assertTrue(os.path.exists(wifi_path))
+        self.assertTrue(os.access(wifi_path, os.X_OK))
+        self.assertTrue(os.path.exists(snap_path))
+        self.assertTrue(os.access(snap_path, os.X_OK))
 
 
 if __name__ == "__main__":

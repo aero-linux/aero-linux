@@ -93,6 +93,22 @@ exec python3 "${AERO_HOME}/bin/aero-updater" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-updater"
 
+# Create global executable wrapper for aero-wifi GUI
+cat << 'EOF' > "${BIN_DIR}/aero-wifi"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-wifi" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-wifi"
+
+# Create global executable wrapper for aero-snapshot-gui
+cat << 'EOF' > "${BIN_DIR}/aero-snapshot-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-snapshot-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-snapshot-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -145,6 +161,28 @@ Icon=utilities-terminal
 Terminal=false
 Type=Application
 Categories=System;TerminalEmulator;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-wifi.desktop"
+[Desktop Entry]
+Name=Aero Wi-Fi Center
+Comment=Aero Linux Wireless & Network Manager
+Exec=${BIN_DIR}/aero-wifi
+Icon=network-wireless
+Terminal=false
+Type=Application
+Categories=System;Settings;Network;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-snapshot.desktop"
+[Desktop Entry]
+Name=Aero TimeMachine
+Comment=Aero Linux System Restore Points & Rollback
+Exec=${BIN_DIR}/aero-snapshot-gui
+Icon=system-software-update
+Terminal=false
+Type=Application
+Categories=System;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

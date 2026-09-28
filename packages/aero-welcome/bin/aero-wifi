@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Wi-Fi & Network Center
+Visual wireless network scanner, signal strength monitor, and 1-click connection dialog.
+"""
+
+import os
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+class WifiManagerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Wi-Fi & Network Center")
+        self.set_default_size(520, 580)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Cyber Dark Styling
+        css = b"""
+        window { background-color: #0a0b10; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #00f2fe; }
+        .header-subtitle { font-size: 12px; color: #94a3b8; }
+        .card { background-color: #12141c; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; }
+        .btn-connect { background-color: #00f2fe; color: #000000; font-weight: bold; border-radius: 6px; padding: 6px 14px; }
+        .btn-connect:hover { background-color: #4facfe; }
+        .btn-refresh { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 6px 12px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📡 Wi-Fi & Wireless Networks</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span class='header-subtitle'>Scan, pair, and connect to high-speed wireless networks</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        self.btn_refresh = Gtk.Button(label="🔄 Rescan")
+        self.btn_refresh.get_style_context().add_class("btn-refresh")
+        self.btn_refresh.connect("clicked", lambda b: self.start_scan())
+        header_box.pack_start(self.btn_refresh, False, False, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Network List in ScrolledWindow
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_min_content_height(400)
+        
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.listbox.get_style_context().add_class("card")
+        scrolled.add(self.listbox)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status Bar
+        self.lbl_status = Gtk.Label(label="Scanning wireless spectrum...", xalign=0)
+        self.lbl_status.set_markup("<span color='#94a3b8' font='10'>Scanning wireless spectrum...</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self.start_scan()
+
+    def start_scan(self):
+        self.btn_refresh.set_sensitive(False)
+        self.lbl_status.set_markup("<span color='#00f2fe' font='10'>📡 Scanning for available Wi-Fi access points...</span>")
+        threading.Thread(target=self._scan_worker, daemon=True).start()
+
+    def _scan_worker(self):
+        networks = []
+        try:
+            res = subprocess.run(
+                ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY,BARS", "dev", "wifi", "list"],
+                capture_output=True, text=True, timeout=8
+            )
+            for line in res.stdout.splitlines():
+                parts = line.split(":")
+                if len(parts) >= 4:
+                    in_use = parts[0] == "*"
+                    ssid = parts[1].strip()
+                    signal = parts[2].strip()
+                    security = parts[3].strip() if parts[3] else "Open"
+                    if ssid:
+                        networks.append({
+                            "in_use": in_use,
+                            "ssid": ssid,
+                            "signal": signal,
+                            "security": security,
+                        })
+        except Exception:
+            pass
+
+        GLib.idle_add(self._update_ui, networks)
+
+    def _update_ui(self, networks):
+        # Clear existing rows
+        for child in self.listbox.get_children():
+            self.listbox.remove(child)
+
+        if not networks:
+            row = Gtk.ListBoxRow()
+            lbl = Gtk.Label(label="No Wi-Fi networks found or Wi-Fi is disabled.", xalign=0)
+            lbl.set_margin_top(20)
+            lbl.set_margin_bottom(20)
+            row.add(lbl)
+            self.listbox.add(row)
+        else:
+            for net in networks:
+                row = Gtk.ListBoxRow()
+                hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                hbox.set_margin_top(8)
+                hbox.set_margin_bottom(8)
+                hbox.set_margin_start(10)
+                hbox.set_margin_end(10)
+
+                # Signal icon & text
+                sig_val = int(net["signal"]) if net["signal"].isdigit() else 50
+                sig_color = "#34d399" if sig_val > 65 else ("#fbbf24" if sig_val > 35 else "#f87171")
+                
+                vbox_info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_name = Gtk.Label(xalign=0)
+                active_tag = " <span color='#34d399' font='9'>[Connected]</span>" if net["in_use"] else ""
+                lbl_name.set_markup(f"<b>{GLib.markup_escape_text(net['ssid'])}</b>{active_tag}")
+                
+                lbl_sec = Gtk.Label(xalign=0)
+                lbl_sec.set_markup(f"<span color='#94a3b8' font='9'>Signal: <span color='{sig_color}'>{sig_val}%</span> • Security: {net['security']}</span>")
+                
+                vbox_info.pack_start(lbl_name, False, False, 0)
+                vbox_info.pack_start(lbl_sec, False, False, 0)
+                hbox.pack_start(vbox_info, True, True, 0)
+
+                if not net["in_use"]:
+                    btn_conn = Gtk.Button(label="Connect")
+                    btn_conn.get_style_context().add_class("btn-connect")
+                    btn_conn.connect("clicked", self._make_connect_handler(net["ssid"], net["security"]))
+                    hbox.pack_start(btn_conn, False, False, 0)
+
+                row.add(hbox)
+                self.listbox.add(row)
+
+        self.listbox.show_all()
+        self.btn_refresh.set_sensitive(True)
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Scan completed. Found {len(networks)} networks.</span>")
+
+    def _make_connect_handler(self, ssid, security):
+        def handler(button):
+            if "WPA" in security or "WEP" in security or "802.1X" in security:
+                self._prompt_password(ssid)
+            else:
+                self._connect_network(ssid, "")
+        return handler
+
+    def _prompt_password(self, ssid):
+        dialog = Gtk.Dialog(title=f"Connect to {ssid}", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, "Connect", Gtk.ResponseType.OK)
+        dialog.set_default_size(320, 150)
+        box = dialog.get_content_area()
+        box.set_spacing(10)
+        box.set_margin_start(15)
+        box.set_margin_end(15)
+        box.set_margin_top(15)
+
+        lbl = Gtk.Label(label=f"Enter Wi-Fi password for '{ssid}':", xalign=0)
+        entry = Gtk.Entry()
+        entry.set_visibility(False)
+        box.add(lbl)
+        box.add(entry)
+        dialog.show_all()
+
+        response = dialog.run()
+        password = entry.get_text()
+        dialog.destroy()
+
+        if response == Gtk.ResponseType.OK:
+            self._connect_network(ssid, password)
+
+    def _connect_network(self, ssid, password):
+        self.lbl_status.set_markup(f"<span color='#00f2fe' font='10'>Connecting to {ssid}...</span>")
+        threading.Thread(target=self._connect_worker, args=(ssid, password), daemon=True).start()
+
+    def _connect_worker(self, ssid, password):
+        cmd = ["nmcli", "dev", "wifi", "connect", ssid]
+        if password:
+            cmd.extend(["password", password])
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0:
+            GLib.idle_add(self._notify_success, ssid)
+        else:
+            GLib.idle_add(self._notify_failure, ssid, res.stderr)
+
+    def _notify_success(self, ssid):
+        subprocess.run(["notify-send", "📡 Wi-Fi Connected", f"Successfully connected to {ssid}"])
+        self.start_scan()
+
+    def _notify_failure(self, ssid, error):
+        subprocess.run(["notify-send", "❌ Wi-Fi Connection Failed", f"Could not connect to {ssid}: {error[:50]}"])
+        self.lbl_status.set_markup(f"<span color='#f87171' font='10'>Failed to connect to {ssid}</span>")
+
+
+def main():
+    win = WifiManagerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
