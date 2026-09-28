@@ -70,6 +70,10 @@ from aero.app_store import list_apps, install_app
 from aero.theme_scheduler import auto_apply_dynamic_theme
 from aero.flasher import list_usb_drives, flash_iso
 from aero.dotfiles_mgr import export_dotfiles, import_dotfiles
+from aero.tunnel import start_tunnel
+from aero.turbo_build import mount_turbo_ramdisk, unmount_turbo_ramdisk, get_active_turbo_mounts
+from aero.db_ui import launch_db_ui
+from aero.snippets import list_snippets, search_snippets
 
 
 def print_banner():
@@ -312,6 +316,9 @@ def main():
     db_start.add_argument("name", choices=list(DATABASES.keys()), help="Database name")
     db_stop = db_sub.add_parser("stop", help="Stop a database container")
     db_stop.add_argument("name", choices=list(DATABASES.keys()), help="Database name")
+    db_ui_p = db_sub.add_parser("ui", help="Launch browser-based database management studio")
+    db_ui_p.add_argument("name", nargs="?", default="postgres", choices=list(DATABASES.keys()), help="Database name (default: postgres)")
+    db_ui_p.add_argument("--port", "-p", type=int, default=8081, help="Studio port (default: 8081)")
 
     # API Benchmarking
     api_parser = subparsers.add_parser("api", help="API load testing and benchmarking")
@@ -467,6 +474,28 @@ def main():
     d_exp.add_argument("--out", default=".", help="Output directory")
     d_imp = dot_sub.add_parser("import", help="Restore dotfiles from tarball archive")
     d_imp.add_argument("archive", help="Path to tarball archive")
+
+    # Instant Public HTTPS Tunnel
+    tun_parser = subparsers.add_parser("tunnel", help="Instant public HTTPS tunnel for local dev ports")
+    tun_parser.add_argument("port", nargs="?", type=int, default=3000, help="Local port to forward (default: 3000)")
+
+    # Compilation Turbo RAM-Disk Accelerator
+    turbo_parser = subparsers.add_parser("turbo", help="High-speed tmpfs RAM-disk compilation accelerator")
+    turbo_sub = turbo_parser.add_subparsers(dest="turbo_action", help="Turbo actions")
+    t_mount = turbo_sub.add_parser("mount", help="Mount high-throughput RAM-disk at build directory")
+    t_mount.add_argument("path", nargs="?", default="./target", help="Build directory path (default: ./target)")
+    t_mount.add_argument("--size", "-s", type=int, default=4096, help="RAM-disk size in MB (default: 4096)")
+    t_umount = turbo_sub.add_parser("unmount", help="Unmount RAM-disk")
+    t_umount.add_argument("path", nargs="?", default="./target", help="Build directory path")
+    turbo_sub.add_parser("status", help="Show active Turbo RAM-disk mounts")
+
+    # Developer Snippets & One-Liners
+    snip_parser = subparsers.add_parser("snippet", help="Developer command one-liner cheatsheet and search engine")
+    snip_sub = snip_parser.add_subparsers(dest="snippet_action", help="Snippet actions")
+    s_list = snip_sub.add_parser("list", help="List all developer one-liners")
+    s_list.add_argument("--category", "-c", default="", help="Filter by category")
+    s_find = snip_sub.add_parser("search", help="Search one-liners by keyword")
+    s_find.add_argument("query", help="Search keyword (e.g. docker, git, ffmpeg)")
 
     args = parser.parse_args()
 
@@ -739,6 +768,8 @@ def main():
             start_database(args.name)
         elif args.db_action == "stop":
             stop_database(args.name)
+        elif args.db_action == "ui":
+            launch_db_ui(args.name, args.port)
         else:
             list_databases()
 
@@ -855,6 +886,29 @@ def main():
             import_dotfiles(args.archive)
         else:
             export_dotfiles(args.out)
+
+    elif args.command == "tunnel":
+        start_tunnel(args.port)
+
+    elif args.command == "turbo":
+        if args.turbo_action == "mount":
+            mount_turbo_ramdisk(args.path, args.size)
+        elif args.turbo_action == "unmount":
+            unmount_turbo_ramdisk(args.path)
+        else:
+            mounts = get_active_turbo_mounts()
+            print("\n🚀 Active Turbo RAM-Disk Mounts:")
+            for m in mounts:
+                print(f" • {m['mountpoint']}: {m['device']} ({m['options']})")
+            if not mounts:
+                print(" • No active Turbo RAM-Disk mounts.")
+            print("")
+
+    elif args.command == "snippet":
+        if args.snippet_action == "search":
+            search_snippets(args.query)
+        else:
+            list_snippets(args.category)
 
 
 if __name__ == "__main__":

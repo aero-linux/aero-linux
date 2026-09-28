@@ -39,6 +39,8 @@ from aero.app_store import APP_CATALOG
 from aero.theme_scheduler import auto_apply_dynamic_theme
 from aero.flasher import list_usb_drives
 from aero.dotfiles_mgr import export_dotfiles, import_dotfiles
+from aero.turbo_build import get_active_turbo_mounts
+from aero.snippets import DEFAULT_SNIPPETS
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -269,6 +271,15 @@ class TestAeroCLI(unittest.TestCase):
             os.remove(tar)
         if os.path.exists("/tmp/aero_test_dotfiles"):
             os.rmdir("/tmp/aero_test_dotfiles")
+
+    def test_turbo_mounts(self):
+        mounts = get_active_turbo_mounts()
+        self.assertIsInstance(mounts, list)
+
+    def test_snippet_vault(self):
+        self.assertIn("docker-prune", DEFAULT_SNIPPETS)
+        self.assertIn("git-undo-commit", DEFAULT_SNIPPETS)
+        self.assertIn("port-find", DEFAULT_SNIPPETS)
 
 
 if __name__ == "__main__":
