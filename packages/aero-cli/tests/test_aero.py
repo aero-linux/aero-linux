@@ -65,7 +65,8 @@ from aero.wine_runner import run_windows_app
 from aero.gpu_switcher import get_current_gpu_mode, GPU_MODES
 from aero.phone_connect import show_phone_status, get_phone_devices
 from aero.accent_manager import apply_accent_color, ACCENT_PRESETS
-from aero.appimage_mgr import integrate_appimage
+from aero.appimage_mgr import integrate_appimage, list_appimages, remove_appimage
+from aero.store_engine import search_universal_store
 from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
 
 
@@ -475,6 +476,15 @@ class TestAeroCLI(unittest.TestCase):
         # Non-existent file test
         res = integrate_appimage("/tmp/non_existent_app.AppImage")
         self.assertEqual(res["status"], "error")
+        apps = list_appimages()
+        self.assertIsInstance(apps, list)
+        rem = remove_appimage("non_existent_slug")
+        self.assertEqual(rem["status"], "not_found")
+
+    def test_store_search_engine(self):
+        results = search_universal_store("code")
+        self.assertIsInstance(results, list)
+        self.assertTrue(any("VS Code" in r["name"] or "code" in r["id"].lower() for r in results))
 
     def test_zoom_manager(self):
         res = set_zoom(1.25)

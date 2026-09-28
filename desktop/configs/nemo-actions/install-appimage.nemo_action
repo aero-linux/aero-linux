@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Integrate & Pin to Start Menu (AppImage)
+Comment=Extract metadata, icon, and install to Start Menu
+Exec=aero appimage %F
+Icon-Name=application-x-executable
+Selection=s
+Extensions=AppImage;appimage;APPIMAGE;
+Quote=double

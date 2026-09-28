@@ -98,7 +98,8 @@ from aero.wine_runner import run_windows_app
 from aero.gpu_switcher import get_current_gpu_mode, set_gpu_mode
 from aero.phone_connect import show_phone_status, send_file_to_phone
 from aero.accent_manager import apply_accent_color, list_accents
-from aero.appimage_mgr import integrate_appimage
+from aero.appimage_mgr import integrate_appimage, list_appimages, remove_appimage
+from aero.store_engine import search_universal_store, print_store_search_results
 from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
 
 
@@ -497,6 +498,8 @@ def main():
     store_sub = store_parser.add_subparsers(dest="store_action", help="Store actions")
     s_list = store_sub.add_parser("list", help="List available developer software")
     s_list.add_argument("--category", "-c", default="", help="Filter by category")
+    s_srch = store_sub.add_parser("search", help="Search software catalog across APT, Flathub & AppImages")
+    s_srch.add_argument("query", help="Search keyword (e.g. rust, blender, ide, browser)")
     s_inst = store_sub.add_parser("install", help="Install software by ID")
     s_inst.add_argument("app", help="Application ID (e.g. vscode, brave, docker, obsidian)")
 
@@ -680,8 +683,14 @@ def main():
     phone_share.add_argument("file", help="File to send to phone")
 
     # AppImage Package Manager & Desktop Integrator
-    appimg_p = subparsers.add_parser("appimage", help="Install and integrate portable AppImage packages into Start Menu")
-    appimg_p.add_argument("file", help="Path to .AppImage package file")
+    appimg_p = subparsers.add_parser("appimage", help="Install, list, and integrate portable AppImages into Start Menu")
+    appimg_sub = appimg_p.add_subparsers(dest="appimage_action", help="AppImage actions")
+    appimg_inst = appimg_sub.add_parser("install", help="Extract metadata, icon, and install AppImage")
+    appimg_inst.add_argument("file", help="Path to .AppImage package file")
+    appimg_sub.add_parser("list", help="List integrated AppImages")
+    appimg_rem = appimg_sub.add_parser("remove", help="Uninstall and remove AppImage launcher")
+    appimg_rem.add_argument("slug", help="AppImage slug/name to remove")
+    appimg_p.add_argument("file_fallback", nargs="?", default="", help="Path to .AppImage (shorthand)")
 
     # Screen Magnifier Zoom Engine
     zoom_p = subparsers.add_parser("zoom", help="Desktop screen magnifier and UI scale controller")
@@ -1079,6 +1088,8 @@ def main():
     elif args.command == "store":
         if args.store_action == "install":
             install_app(args.app)
+        elif args.store_action == "search":
+            print_store_search_results(args.query)
         else:
             list_apps(args.category)
 
@@ -1233,7 +1244,22 @@ def main():
             show_phone_status()
 
     elif args.command == "appimage":
-        integrate_appimage(args.file)
+        if args.appimage_action == "list":
+            apps = list_appimages()
+            print("\n📦 Integrated Portable AppImages:")
+            for a in apps:
+                print(f" • {a['name']} ➔ {a['file']}")
+            if not apps:
+                print(" • No AppImages registered yet.")
+            print("")
+        elif args.appimage_action == "remove":
+            remove_appimage(args.slug)
+        else:
+            target = getattr(args, "file", None) or getattr(args, "file_fallback", None)
+            if target:
+                integrate_appimage(target)
+            else:
+                appimg_p.print_help()
 
     elif args.command == "zoom":
         if args.zoom_action == "in":
