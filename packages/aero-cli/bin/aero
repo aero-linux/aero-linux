@@ -3,8 +3,12 @@
 Aero Linux System & AI Control CLI
 """
 import argparse
-import sys
 import json
+import os
+import sys
+
+# Ensure aero module is always resolvable regardless of invocation directory
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from aero.doctor import run_doctor
 from aero.power import set_profile, get_current_profile, PROFILES, set_charge_threshold
@@ -50,6 +54,10 @@ from aero.kernel_mgr import audit_kernel_scheduler, apply_kernel_profile, PROFIL
 from aero.vault import vault_set, vault_get, vault_list, vault_delete, vault_export_env
 from aero.live_server import run_live_dashboard
 from aero.wallpaper import generate_wallpaper_svg, set_desktop_wallpaper
+from aero.agent import ask_local_agent
+from aero.perf_tools import profile_cpu_load, audit_io_scheduler
+from aero.sandbox import run_in_sandbox
+from aero.git_tools import show_git_graph, show_git_churn
 
 
 def print_banner():
@@ -206,6 +214,8 @@ def main():
     git_sub = git_parser.add_subparsers(dest="git_action", help="Git actions")
     git_sub.add_parser("status", help="Inspect active repository and uncommitted changes")
     git_sub.add_parser("clean", help="Prune merged local Git branches")
+    git_sub.add_parser("graph", help="Show colorized ASCII commit topology graph")
+    git_sub.add_parser("churn", help="Show top changed files in recent repository history")
 
     # Cron & Timers
     cron_parser = subparsers.add_parser("cron", help="Manage automated background maintenance timers")
@@ -348,6 +358,28 @@ def main():
     w_gen = wall_sub.add_parser("generate", help="Generate wallpaper SVG file")
     w_gen.add_argument("--palette", default="cyber-cyan", help="Color palette")
     w_gen.add_argument("--out", default="", help="Output SVG path")
+
+    # Local AI Assistant / Terminal Agent
+    agent_parser = subparsers.add_parser("agent", help="Local AI coding assistant & terminal query engine")
+    agent_parser.add_argument("prompt", help="Question, code request, or error to analyze")
+    agent_parser.add_argument("--model", help="Override local model name")
+    agent_parser.add_argument("--shell", "-s", action="store_true", help="Return command-only answer for shell execution")
+
+    # Low-Level Kernel & CPU Profiler
+    perf_parser = subparsers.add_parser("perf", help="Low-level CPU context-switch and I/O scheduler profiler")
+    perf_sub = perf_parser.add_subparsers(dest="perf_action", help="Perf actions")
+    p_cpu = perf_sub.add_parser("cpu", help="Sample per-core CPU load and context switch rate")
+    p_cpu.add_argument("--time", "-t", type=float, default=1.0, help="Sampling duration in seconds")
+    perf_sub.add_parser("io", help="Audit NVMe/SSD queue schedulers and rotational flags")
+
+    # Namespace Micro-Sandbox
+    sand_parser = subparsers.add_parser("sandbox", help="Run untrusted scripts/packages in isolated Linux namespace jail")
+    sand_sub = sand_parser.add_subparsers(dest="sandbox_action", help="Sandbox actions")
+    s_run = sand_sub.add_parser("run", help="Run command in micro-jail")
+    s_run.add_argument("cmd", nargs="+", help="Command and arguments to execute inside sandbox")
+    s_run.add_argument("--offline", action="store_true", help="Unshare network stack")
+    s_run.add_argument("--rw", action="store_true", help="Allow read-write in current directory")
+    s_run.add_argument("--ram", type=int, default=2048, help="Memory limit in MB (default: 2048)")
 
     args = parser.parse_args()
 
@@ -538,6 +570,10 @@ def main():
     elif args.command == "git":
         if args.git_action == "clean":
             clean_merged_branches()
+        elif args.git_action == "graph":
+            show_git_graph()
+        elif args.git_action == "churn":
+            show_git_churn()
         else:
             check_git_status()
 
@@ -660,6 +696,19 @@ def main():
             generate_wallpaper_svg(args.palette, args.out)
         else:
             set_desktop_wallpaper("cyber-cyan")
+
+    elif args.command == "agent":
+        ask_local_agent(args.prompt, args.model, args.shell)
+
+    elif args.command == "perf":
+        if args.perf_action == "io":
+            audit_io_scheduler()
+        else:
+            profile_cpu_load(args.time)
+
+    elif args.command == "sandbox":
+        code = run_in_sandbox(args.cmd, args.offline, not args.rw, args.ram)
+        sys.exit(code)
 
 
 if __name__ == "__main__":

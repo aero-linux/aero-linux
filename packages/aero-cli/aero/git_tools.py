@@ -11,7 +11,6 @@ def check_git_status():
         print("ℹ️ Current directory is not a Git repository.")
         return
 
-    # Current branch & status
     try:
         branch = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
         status = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout.strip()
@@ -39,3 +38,40 @@ def clean_merged_branches():
         print("✅ Stale merged branches pruned.")
     except Exception as e:
         print(f"Branch cleanup: {e}")
+
+
+def show_git_graph(limit: int = 15):
+    if not os.path.exists(".git"):
+        print("ℹ️ Not a git repository.")
+        return
+    print("\n🌲 \033[1;36mAERO GIT BRANCH TOPOLOGY GRAPH\033[0m")
+    print("═" * 55)
+    try:
+        cmd = [
+            "git", "log", "--graph", "--abbrev-commit", "--decorate",
+            "--format=format:%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)",
+            f"-n{limit}", "--all"
+        ]
+        subprocess.run(cmd)
+    except Exception as e:
+        print(f"Error rendering git graph: {e}")
+    print("═" * 55 + "\n")
+
+
+def show_git_churn():
+    if not os.path.exists(".git"):
+        print("ℹ️ Not a git repository.")
+        return
+    print("\n🔥 \033[1;36mAERO GIT CODE CHURN (Top Changed Files)\033[0m")
+    print("═" * 55)
+    try:
+        cmd = "git log --name-only --format='' -n 50 | sort | grep -v '^$' | uniq -c | sort -rn | head -n 10"
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        if res.stdout.strip():
+            for line in res.stdout.strip().split("\n"):
+                print(f"   {line}")
+        else:
+            print("   (No commit churn history found)")
+    except Exception as e:
+        print(f"Error: {e}")
+    print("═" * 55 + "\n")

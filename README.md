@@ -12,7 +12,7 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-28%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-30%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
@@ -99,22 +99,27 @@ aero ai pull deepseek-r1:8b     # Download local LLM model weights
 aero ai run deepseek-r1:8b      # Launch interactive local AI prompt
 aero ai calc --params 8 --quant q4_k_m # Calculate weights, KV cache, and RAM fit
 aero ai bench deepseek-r1:8b    # Measure TTFT and tokens/sec throughput
+aero agent "explain epoll"      # Local AI coding & terminal assistant
+aero agent -s "kill port 8080"  # Generate exact shell commands
 aero gpu setup                  # Auto-configure CUDA / ROCm GPU drivers
 
 # 🛠️ Developer Sandboxes & Local Databases
 aero dev run [node|python|rust|go|c]  # Isolated containerized workspaces
 aero db start [postgres|redis|mysql|mongo|clickhouse]  # 1-command local DBs
+aero sandbox run --offline ./script.sh # Micro-jail Linux namespace sandbox
 aero vault [set|get|list|export] # Encrypted local secret & .env keyring
 aero live --port 8080           # Real-time web telemetry streaming dashboard
+aero perf [cpu|io]              # Low-level CPU context-switch & NVMe profiler
 aero port list                  # Active listening developer port inspector
 aero port kill 3000             # Terminate process listening on specific port
 aero env check                  # Audit installed SDKs (Node, Python, C, Rust, Go, Java)
 aero api bench http://localhost:3000  # Concurrent HTTP load tester (req/sec, p99)
 
-# 🎨 Desktop & Networking
+# 🎨 Desktop, Git & Networking
 aero layout [windows|tiling]    # 1-click layout switcher
 aero kernel [audit|profile]     # Low-latency vs throughput kernel scheduler
 aero wallpaper [set|generate]   # Procedural vector cyber wallpapers
+aero git [status|clean|graph|churn] # ASCII branch graph & code churn analyzer
 aero theme set [cyber-cyan|tokyo-night|nord|gruvbox] # Desktop palette switcher
 aero font install jetbrains-mono # 1-click Nerd Font installation
 aero net bbr                    # Enable Google BBR TCP congestion control

@@ -59,6 +59,27 @@ def get_battery_health() -> Dict[str, Any]:
     else:
         info["cycle_count"] = "N/A"
 
+    # Real-time power draw in Watts
+    power_w = 0.0
+    for p_name in ["power_now", "current_now"]:
+        p_path = os.path.join(bat_path, p_name)
+        if os.path.exists(p_path):
+            try:
+                with open(p_path) as f:
+                    val = int(f.read().strip())
+                if p_name == "power_now":
+                    power_w = round(val / 1_000_000.0, 2)
+                else: # current in uA * voltage in uV
+                    v_path = os.path.join(bat_path, "voltage_now")
+                    if os.path.exists(v_path):
+                        with open(v_path) as vf:
+                            volt = int(vf.read().strip())
+                        power_w = round((val * volt) / 1_000_000_000_000.0, 2)
+            except Exception:
+                pass
+            break
+    info["power_draw_watts"] = power_w
+
     return info
 
 
@@ -76,6 +97,8 @@ def show_battery_health():
     if "energy_full_wh" in health:
         print(f" • Usable Capacity:   {health['energy_full_wh']} Wh (Original: {health['energy_design_wh']} Wh)")
     print(f" • Charge Cycles:     {health.get('cycle_count')}")
+    if health.get("power_draw_watts", 0) > 0:
+        print(f" • Real-Time Draw:    \033[1;36m{health.get('power_draw_watts')} W\033[0m")
 
     # Charge threshold check
     thresh_file = "/sys/class/power_supply/BAT0/charge_control_end_threshold"

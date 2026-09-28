@@ -25,6 +25,8 @@ from aero.kernel_mgr import PROFILES as KERNEL_PROFILES, audit_kernel_scheduler
 from aero.vault import vault_set, vault_get, vault_delete, _load_vault
 from aero.wallpaper import generate_wallpaper_svg, PALETTES
 from aero.memory import get_memory_stats
+from aero.perf_tools import get_cpu_stat_snapshot
+from aero.sandbox import check_namespace_support
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -179,6 +181,14 @@ class TestAeroCLI(unittest.TestCase):
         stats = get_memory_stats()
         self.assertIn("total_mb", stats)
         self.assertIn("percent_used", stats)
+
+    def test_perf_cpu_stat(self):
+        snap = get_cpu_stat_snapshot()
+        self.assertIn("cpu", snap)
+
+    def test_sandbox_support(self):
+        res = check_namespace_support()
+        self.assertIsInstance(res, bool)
 
 
 if __name__ == "__main__":
