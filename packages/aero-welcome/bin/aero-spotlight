@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Universal Spotlight & Command Palette (Raycast / PowerToys Style)
+Instant keyboard-driven application launcher, math evaluator, file search & system action center.
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.calc import calculate_expression
+
+
+class AeroSpotlightWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(type=Gtk.WindowType.TOPLEVEL)
+        self.set_title("Aero Spotlight")
+        self.set_default_size(640, 420)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_decorated(False)
+        self.set_resizable(False)
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+        self.set_keep_above(True)
+
+        # Frosted Acrylic Cyber CSS Styling
+        css = b"""
+        window {
+            background-color: rgba(10, 11, 16, 0.94);
+            border-radius: 14px;
+            border: 1px solid #00f2fe;
+            box-shadow: 0 10px 30px rgba(0, 242, 254, 0.25);
+        }
+        entry {
+            background-color: #12141e;
+            color: #f8fafc;
+            font-size: 18px;
+            font-family: 'Inter', sans-serif;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            padding: 12px 16px;
+            caret-color: #00f2fe;
+        }
+        entry:focus {
+            border: 1px solid #00f2fe;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+        list {
+            background-color: transparent;
+        }
+        row {
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 2px 6px;
+        }
+        row:selected {
+            background-color: rgba(0, 242, 254, 0.15);
+            border-left: 3px solid #00f2fe;
+        }
+        .action-title { font-size: 14px; font-weight: bold; color: #f8fafc; }
+        .action-desc { font-size: 11px; color: #94a3b8; }
+        .action-badge { font-size: 10px; font-weight: bold; color: #00f2fe; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        vbox.set_margin_top(14)
+        vbox.set_margin_bottom(14)
+        vbox.set_margin_start(14)
+        vbox.set_margin_end(14)
+        self.add(vbox)
+
+        # Search Entry Input Box
+        self.entry = Gtk.Entry()
+        self.entry.set_placeholder_text("🔍 Search apps, calculate (= 256*1024), or type a command...")
+        self.entry.connect("changed", self._on_search_changed)
+        self.entry.connect("activate", self._on_activate_selected)
+        vbox.pack_start(self.entry, False, False, 0)
+
+        # Result Listbox in ScrolledWindow
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_min_content_height(320)
+        
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.connect("row-activated", self._on_row_clicked)
+        scrolled.add(self.listbox)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        self.connect("key-press-event", self._on_key_press)
+        self.current_items = []
+        self._populate_default_actions()
+
+    def _on_key_press(self, widget, event):
+        if event.keyval == Gdk.KEY_Escape:
+            self.destroy()
+            return True
+        elif event.keyval == Gdk.KEY_Down:
+            idx = self.listbox.get_selected_row().get_index() if self.listbox.get_selected_row() else -1
+            if idx + 1 < len(self.current_items):
+                self.listbox.select_row(self.listbox.get_row_at_index(idx + 1))
+            return True
+        elif event.keyval == Gdk.KEY_Up:
+            idx = self.listbox.get_selected_row().get_index() if self.listbox.get_selected_row() else 0
+            if idx > 0:
+                self.listbox.select_row(self.listbox.get_row_at_index(idx - 1))
+            return True
+        return False
+
+    def _populate_default_actions(self):
+        defaults = [
+            {"title": "Visual Control Center", "desc": "Quick Settings, Layout & Hardware Preferences", "badge": "AERO GUI", "cmd": "aero-welcome"},
+            {"title": "System Monitor & Task Manager", "desc": "Live CPU waveform and task killer", "badge": "MONITOR", "cmd": "aero-monitor"},
+            {"title": "Wi-Fi & Wireless Networks", "desc": "Scan and connect to Wi-Fi access points", "badge": "NETWORK", "cmd": "aero-wifi"},
+            {"title": "Bluetooth & Devices", "desc": "Pair headphones, mice, and controllers", "badge": "BLUETOOTH", "cmd": "aero-bluetooth"},
+            {"title": "Aero TimeMachine", "desc": "Create or restore system snapshot restore points", "badge": "BACKUP", "cmd": "aero-snapshot-gui"},
+            {"title": "Sound & Audio Switcher", "desc": "Switch speaker, headphone, and HDMI outputs", "badge": "AUDIO", "cmd": "aero-audio"},
+            {"title": "Terminal Doctor", "desc": "Run full system diagnostic & performance audit", "badge": "DIAGNOSTIC", "cmd": "alacritty -e aero doctor"},
+            {"title": "Lock Desktop", "desc": "Lock screen securely (swaylock)", "badge": "SYSTEM", "cmd": "swaylock"},
+            {"title": "Layout: Windows Mode", "desc": "Bottom taskbar, Start Menu & floating windows", "badge": "LAYOUT", "cmd": "aero layout windows"},
+            {"title": "Layout: Hacker Tiling", "desc": "Dynamic golden-ratio tiling with zero borders", "badge": "LAYOUT", "cmd": "aero layout tiling"},
+        ]
+        self._render_results(defaults)
+
+    def _on_search_changed(self, entry):
+        q = entry.get_text().strip()
+        if not q:
+            self._populate_default_actions()
+            return
+
+        items = []
+
+        # 1. Math Evaluation (= 1024*16 or sqrt(256))
+        if q.startswith("=") or any(op in q for op in ["+", "-", "*", "/", "^", "sqrt", "sin"]):
+            math_expr = q.lstrip("=").strip()
+            res = calculate_expression(math_expr)
+            if res.get("status") == "ok":
+                items.append({
+                    "title": f"Result: {res['result']}",
+                    "desc": f"Math Expression: {math_expr} ({res.get('kb', '')} KB)",
+                    "badge": "CALCULATOR",
+                    "cmd": f"notify-send '🧮 Result' '{res['result']}'"
+                })
+
+        # 2. Web Query (? query)
+        if q.startswith("?"):
+            search_query = q.lstrip("?").strip()
+            items.append({
+                "title": f"Search Web for '{search_query}'",
+                "desc": "Open search in default web browser",
+                "badge": "WEB SEARCH",
+                "cmd": f"xdg-open 'https://duckduckgo.com/?q={search_query}'"
+            })
+
+        # 3. System & App Search Matching
+        candidates = [
+            {"title": "Visual Control Center", "desc": "Aero settings, app store & layout", "badge": "APP", "cmd": "aero-welcome", "keys": "settings control welcome store aero"},
+            {"title": "System Monitor", "desc": "Live CPU waveform and task manager", "badge": "APP", "cmd": "aero-monitor", "keys": "task manager monitor cpu ram process top kill"},
+            {"title": "Wi-Fi Center", "desc": "Wireless network scanner and manager", "badge": "NETWORK", "cmd": "aero-wifi", "keys": "wifi wireless network internet ssid"},
+            {"title": "Bluetooth Center", "desc": "Device pairing and headset center", "badge": "BLUETOOTH", "cmd": "aero-bluetooth", "keys": "bluetooth bt pair headphones airpods"},
+            {"title": "Audio Center", "desc": "PipeWire sound mixer and sink switcher", "badge": "AUDIO", "cmd": "aero-audio", "keys": "audio sound volume speaker pavucontrol"},
+            {"title": "TimeMachine Snapshots", "desc": "System restore points and rollback", "badge": "BACKUP", "cmd": "aero-snapshot-gui", "keys": "backup restore snapshot timeshift"},
+            {"title": "Display Settings", "desc": "Resolution, refresh rate (144Hz) & HiDPI", "badge": "DISPLAY", "cmd": "aero-displays", "keys": "display resolution 144hz scale monitor screen"},
+            {"title": "Files & Folders (Nemo)", "desc": "Explore filesystem and local files", "badge": "FILES", "cmd": "nemo ~", "keys": "files file explorer folder nemo nautilus"},
+            {"title": "Visual Studio Code", "desc": "Code editor and workspace", "badge": "DEV", "cmd": "code", "keys": "vscode code editor dev"},
+            {"title": "Cursor AI Editor", "desc": "AI pair programming code editor", "badge": "DEV", "cmd": "cursor", "keys": "cursor ai editor"},
+            {"title": "Brave Web Browser", "desc": "Fast private web browser", "badge": "WEB", "cmd": "brave-browser || brave", "keys": "brave browser web internet"},
+            {"title": "Google Chrome", "desc": "Fast web browser with DevTools", "badge": "WEB", "cmd": "google-chrome", "keys": "chrome google browser"},
+            {"title": "Clean Caches & Junk", "desc": "Purge npm, docker, pip and journal caches", "badge": "MAINTENANCE", "cmd": "alacritty -e aero clean", "keys": "clean purge disk free trash bloat"},
+            {"title": "Memory Optimization", "desc": "Purge caches and compact zRAM pool", "badge": "MEMORY", "cmd": "aero memory --optimize", "keys": "ram memory optimize compact drop"},
+            {"title": "Toggle Night Light", "desc": "Enable 4500K blue-light eye filter", "badge": "DISPLAY", "cmd": "aero display night on", "keys": "night light blue warm gamma"},
+            {"title": "Lock Screen", "desc": "Lock current session with swaylock", "badge": "POWER", "cmd": "swaylock", "keys": "lock screen swaylock"},
+            {"title": "Shutdown Computer", "desc": "Safely turn off laptop/PC", "badge": "POWER", "cmd": "systemctl poweroff", "keys": "shutdown poweroff exit turnoff off"},
+            {"title": "Reboot System", "desc": "Restart computer", "badge": "POWER", "cmd": "systemctl reboot", "keys": "reboot restart"},
+        ]
+
+        q_lower = q.lower()
+        for cand in candidates:
+            if q_lower in cand["title"].lower() or q_lower in cand["desc"].lower() or q_lower in cand["keys"].lower():
+                items.append(cand)
+
+        self._render_results(items)
+
+    def _render_results(self, items):
+        self.current_items = items
+        for child in self.listbox.get_children():
+            self.listbox.remove(child)
+
+        if not items:
+            row = Gtk.ListBoxRow()
+            lbl = Gtk.Label(label="No matching apps or commands found.", xalign=0)
+            lbl.set_margin_top(14)
+            lbl.set_margin_bottom(14)
+            row.add(lbl)
+            self.listbox.add(row)
+        else:
+            for item in items:
+                row = Gtk.ListBoxRow()
+                hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                hbox.set_margin_top(6)
+                hbox.set_margin_bottom(6)
+                hbox.set_margin_start(8)
+                hbox.set_margin_end(8)
+
+                vbox_info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_title = Gtk.Label(xalign=0)
+                lbl_title.set_markup(f"<span class='action-title'>{GLib.markup_escape_text(item['title'])}</span>")
+                lbl_desc = Gtk.Label(xalign=0)
+                lbl_desc.set_markup(f"<span class='action-desc'>{GLib.markup_escape_text(item['desc'])}</span>")
+                vbox_info.pack_start(lbl_title, False, False, 0)
+                vbox_info.pack_start(lbl_desc, False, False, 0)
+                hbox.pack_start(vbox_info, True, True, 0)
+
+                lbl_badge = Gtk.Label(xalign=1)
+                lbl_badge.set_markup(f"<span class='action-badge'>[{item['badge']}]</span>")
+                hbox.pack_start(lbl_badge, False, False, 0)
+
+                row.add(hbox)
+                self.listbox.add(row)
+
+            # Select first item by default
+            self.listbox.select_row(self.listbox.get_row_at_index(0))
+
+        self.listbox.show_all()
+
+    def _on_activate_selected(self, entry):
+        row = self.listbox.get_selected_row()
+        if row:
+            self._execute_index(row.get_index())
+
+    def _on_row_clicked(self, listbox, row):
+        if row:
+            self._execute_index(row.get_index())
+
+    def _execute_index(self, index):
+        if 0 <= index < len(self.current_items):
+            cmd = self.current_items[index]["cmd"]
+            self.destroy()
+            subprocess.Popen(cmd, shell=True)
+
+
+def main():
+    win = AeroSpotlightWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

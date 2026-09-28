@@ -526,6 +526,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(disp_path))
         self.assertTrue(os.access(disp_path, os.X_OK))
 
+    def test_spotlight_gui_helper(self):
+        spot_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-spotlight"
+        self.assertTrue(os.path.exists(spot_path))
+        self.assertTrue(os.access(spot_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

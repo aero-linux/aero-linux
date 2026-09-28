@@ -133,6 +133,14 @@ exec python3 "${AERO_HOME}/bin/aero-displays" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-displays"
 
+# Create global executable wrapper for aero-spotlight GUI
+cat << 'EOF' > "${BIN_DIR}/aero-spotlight"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-spotlight" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-spotlight"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -240,6 +248,17 @@ Icon=video-display
 Terminal=false
 Type=Application
 Categories=System;Settings;HardwareSettings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-spotlight.desktop"
+[Desktop Entry]
+Name=Aero Spotlight
+Comment=Aero Linux Universal Raycast Search & Command Palette
+Exec=${BIN_DIR}/aero-spotlight
+Icon=system-search
+Terminal=false
+Type=Application
+Categories=System;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

@@ -73,7 +73,8 @@ bindgesture pinch:3:inward exec aero zoom reset
 
 # Keybindings: System & Launchers
 bindsym $mod+Return exec $term
-bindsym $mod+d exec $menu
+bindsym $mod+d exec aero-spotlight || $menu
+bindsym Mod1+space exec aero-spotlight || $menu
 bindsym $mod+Shift+q kill
 bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Aero Sway?' -B 'Shutdown' 'systemctl poweroff' -B 'Reboot' 'systemctl reboot' -B 'Logout' 'swaymsg exit'
 bindsym $mod+l exec $lock
