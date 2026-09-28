@@ -36,7 +36,7 @@
           Engineered for engineers. Sub-350MB idle RAM, low-latency kernel scheduler, dynamic zRAM ZSTD compression, and 1-click local LLM serving out of the box.
         </p>
         <div class="hero-actions">
-          <a href="#download" class="btn btn-primary btn-lg">Download Aero 1.0 (amd64)</a>
+          <a href="#download" class="btn btn-primary btn-lg">Download Aero 1.2-Titan (amd64)</a>
           <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="btn btn-secondary btn-lg">View Source Code</a>
         </div>
         <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; padding: 12px 20px; font-family: monospace; font-size: 14px; color: #34d399; margin-bottom: 25px; display: inline-block;">
@@ -53,11 +53,12 @@
           <div class="terminal-tabs">
             <button class="tab-btn active" onclick="showTab('doctor')">aero doctor</button>
             <button class="tab-btn" onclick="showTab('ai')">aero ai</button>
+            <button class="tab-btn" onclick="showTab('vault')">aero vault</button>
             <button class="tab-btn" onclick="showTab('dev')">aero dev</button>
             <button class="tab-btn" onclick="showTab('net')">aero net</button>
           </div>
           <pre id="tab-doctor"><code><span class="prompt">$</span> aero doctor
-<span class="text-cyan">OS:</span> Aero Linux (Rolling Edge) [Kernel: 6.8-lowlatency]
+<span class="text-cyan">OS:</span> Aero Linux 1.2-Titan [Kernel: 7.0-generic]
 <span class="text-cyan">Memory:</span> 312MB used / 15.2GB total [zRAM ZSTD Active]
 <span class="text-cyan">Governor:</span> powersave (Quiet Fan Profile)
 <span class="text-cyan">Battery:</span> 79% (Hardware Charge Threshold: 80% Active)
@@ -69,10 +70,14 @@
 <span class="text-white">zRAM compresses memory pages into a dynamic RAM block device at nanosecond speeds.
 Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.</span></code></pre>
 
-          <pre id="tab-dev" style="display: none;"><code><span class="prompt">$</span> aero dev run node
-<span class="text-green">🚀 Launching node environment (node:22-alpine)...</span>
-<span class="text-cyan">Mounted:</span> /home/user/my-app ➔ /workspace
-<span class="text-white">node -v ➔ v22.9.0 | npm -v ➔ 10.8.3 | TypeScript Ready</span></code></pre>
+          <pre id="tab-vault" style="display: none;"><code><span class="prompt">$</span> aero vault set OPENAI_API_KEY sk-proj-aero...
+<span class="text-green">🔒 Secret 'OPENAI_API_KEY' safely encrypted in AES-256 local vault.</span>
+<span class="prompt">$</span> aero vault export .env
+<span class="text-cyan">✅ Exported 4 encrypted keys directly to .env</span></code></pre>
+
+          <pre id="tab-dev" style="display: none;"><code><span class="prompt">$</span> aero dev setup node
+<span class="text-green">🚀 1-Click Installing Node.js 22 LTS, npm &amp; TypeScript...</span>
+<span class="text-cyan">node:</span> v22.9.0 | <span class="text-cyan">npm:</span> 10.8.3 | <span class="text-cyan">corepack:</span> 0.29.3 Ready</code></pre>
 
           <pre id="tab-net" style="display: none;"><code><span class="prompt">$</span> aero net bbr
 <span class="text-green">⚡ Enabling Google BBR TCP Congestion Control...</span>
