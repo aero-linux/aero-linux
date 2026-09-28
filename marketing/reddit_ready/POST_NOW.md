@@ -7,7 +7,7 @@ Everything below is ready to copy and paste right now.
 ## 🎯 Post 1: r/LocalLLaMA (Highest Technical Conversion)
 
 * **Subreddit:** `r/LocalLLaMA` (https://reddit.com/r/LocalLLaMA)
-* **Image to Attach:** `/home/ronit138/aero-linux/marketing/reddit_ready/images/card_localllama.png`
+* **Real Screenshot to Attach:** `/home/ronit138/aero-linux/marketing/reddit_ready/images/real_terminal_doctor.png` (or `card_localllama.png`)
 * **Flair / Tag:** Discussion / Project / Tools
 
 ### Title (Copy this exactly):
