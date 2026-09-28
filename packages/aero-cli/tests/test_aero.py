@@ -1,6 +1,7 @@
 import unittest
 import os
 import shutil
+import subprocess
 from aero.doctor import run_doctor, get_cpu_info, get_memory_info, get_gpu_info
 from aero.power import PROFILES, get_current_profile
 from aero.memory import get_top_memory_processes
@@ -572,6 +573,13 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.access(abt_path, os.X_OK))
         self.assertTrue(os.path.exists(scr_path))
         self.assertTrue(os.access(scr_path, os.X_OK))
+
+    def test_iso_builder_script(self):
+        bld_path = "/home/ronit138/aero-linux/build/build.sh"
+        self.assertTrue(os.path.exists(bld_path))
+        self.assertTrue(os.access(bld_path, os.X_OK))
+        res = subprocess.run(["bash", "-n", bld_path], capture_output=True)
+        self.assertEqual(res.returncode, 0)
 
 
 if __name__ == "__main__":
