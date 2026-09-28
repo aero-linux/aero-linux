@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Shortcut & Hotkey Guide
+Interactive cheatsheet and shortcut manager for Aero Linux desktop shortcuts and gestures.
+"""
+
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+SHORTCUTS = [
+    {"key": "Alt + Space", "category": "Productivity", "desc": "Launch Aero Spotlight Search, App Launcher & Calculator"},
+    {"key": "Win + N", "category": "Productivity", "desc": "Open Floating Developer Scratchpad & Markdown Notes"},
+    {"key": "Win + P", "category": "Developer Tools", "desc": "Pixel-accurate Screen Color Dropper & HEX/RGB Studio"},
+    {"key": "Win + Shift + S", "category": "Productivity", "desc": "Interactive Snipping Tool & Region Screenshot"},
+    {"key": "Ctrl + Shift + Esc", "category": "System", "desc": "Aero Task Manager with real-time Cairo CPU graph"},
+    {"key": "Win + E", "category": "Navigation", "desc": "Open Nemo File Manager"},
+    {"key": "Win + A", "category": "System", "desc": "Open Quick Settings Panel (Wi-Fi, BT, Night Light, Dark Mode)"},
+    {"key": "Win + V", "category": "Productivity", "desc": "Open Clipboard History Manager"},
+    {"key": "Win + Left / Right", "category": "Window Management", "desc": "Snap window to Left or Right Half-Screen"},
+    {"key": "Win + Up", "category": "Window Management", "desc": "Toggle Window Fullscreen / Maximize"},
+    {"key": "Win + Down", "category": "Window Management", "desc": "Toggle Floating Window mode"},
+    {"key": "Win + + / -", "category": "Accessibility", "desc": "Zoom In / Zoom Out Desktop Magnifier (125% - 200%)"},
+    {"key": "Win + 0", "category": "Accessibility", "desc": "Reset Desktop Magnifier zoom level to 100%"},
+]
+
+
+class ShortcutsGuideWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Keyboard Shortcuts & Hotkey Guide")
+        self.set_default_size(600, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #a855f7; }
+        .card { background-color: #111827; border-radius: 8px; padding: 10px 14px; border: 1px solid #1f2937; }
+        .kbd-badge { background-color: #1e1b4b; color: #c084fc; border: 1px solid #4338ca; border-radius: 6px; padding: 4px 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: bold; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>⌨️ Aero Desktop Keyboard Shortcuts</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Fast access to all built-in productivity, window management &amp; dev tool shortcuts</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Search / Filter Entry
+        self.entry_search = Gtk.Entry()
+        self.entry_search.set_placeholder_text("🔍 Filter shortcuts (e.g. spotlight, screenshot, tile, zoom)...")
+        self.entry_search.connect("changed", self._on_search_changed)
+        vbox.pack_start(self.entry_search, False, False, 0)
+
+        # Scrolled List
+        scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        scrolled.add(self.list_box)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        self._populate_list("")
+
+    def _on_search_changed(self, entry):
+        self._populate_list(entry.get_text().strip().lower())
+
+    def _populate_list(self, query):
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        for s in SHORTCUTS:
+            if query and query not in s["key"].lower() and query not in s["desc"].lower() and query not in s["category"].lower():
+                continue
+
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            row.get_style_context().add_class("card")
+
+            lbl_k = Gtk.Label(xalign=0)
+            lbl_k.get_style_context().add_class("kbd-badge")
+            lbl_k.set_text(s["key"])
+            row.pack_start(lbl_k, False, False, 0)
+
+            info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            lbl_d = Gtk.Label(xalign=0)
+            lbl_d.set_markup(f"<b>{s['desc']}</b>")
+            lbl_c = Gtk.Label(xalign=0)
+            lbl_c.set_markup(f"<span color='#9ca3af' font='9'>{s['category']}</span>")
+            info.pack_start(lbl_d, False, False, 0)
+            info.pack_start(lbl_c, False, False, 0)
+            row.pack_start(info, True, True, 0)
+
+            self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+
+
+def main():
+    win = ShortcutsGuideWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

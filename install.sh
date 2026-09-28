@@ -237,6 +237,30 @@ exec python3 "${AERO_HOME}/bin/aero-color-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-color"
 
+# Create global executable wrapper for aero-font-gui
+cat << 'EOF' > "${BIN_DIR}/aero-font-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-font-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-font-gui"
+
+# Create global executable wrapper for aero-ports-gui
+cat << 'EOF' > "${BIN_DIR}/aero-ports-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-ports-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-ports-gui"
+
+# Create global executable wrapper for aero-shortcuts-gui
+cat << 'EOF' > "${BIN_DIR}/aero-shortcuts-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-shortcuts-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-shortcuts-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -487,6 +511,39 @@ Icon=color-picker
 Terminal=false
 Type=Application
 Categories=Graphics;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-font.desktop"
+[Desktop Entry]
+Name=Aero Typography Studio
+Comment=Aero Linux Font Manager & Ligature Previewer
+Exec=${BIN_DIR}/aero-font-gui
+Icon=font-x-generic
+Terminal=false
+Type=Application
+Categories=Settings;DesktopSettings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-ports.desktop"
+[Desktop Entry]
+Name=Aero Port Inspector
+Comment=Aero Linux Dev Server & Listening Port Manager
+Exec=${BIN_DIR}/aero-ports-gui
+Icon=network-server
+Terminal=false
+Type=Application
+Categories=Development;System;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-shortcuts.desktop"
+[Desktop Entry]
+Name=Aero Keyboard Shortcuts
+Comment=Aero Linux Keyboard Shortcuts & Hotkey Guide
+Exec=${BIN_DIR}/aero-shortcuts-gui
+Icon=input-keyboard
+Terminal=false
+Type=Application
+Categories=Utility;Help;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

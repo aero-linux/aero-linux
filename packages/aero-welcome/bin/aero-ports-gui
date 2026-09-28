@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Developer Port & Live Server Inspector
+Real-time dashboard of listening TCP/UDP ports, running Node/Python/Docker servers, and 1-click process manager.
+"""
+
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+def get_listening_ports():
+    ports = []
+    if shutil.which("ss"):
+        res = subprocess.run(["ss", "-tulnp"], capture_output=True, text=True)
+        for line in res.stdout.splitlines()[1:]:
+            parts = line.split()
+            if len(parts) >= 5:
+                proto = parts[0]
+                local_addr = parts[4]
+                port_str = local_addr.split(":")[-1]
+                proc_info = parts[6] if len(parts) > 6 else "-"
+                ports.append({
+                    "proto": proto,
+                    "port": port_str,
+                    "address": local_addr,
+                    "process": proc_info
+                })
+    return ports
+
+
+class PortsInspectorWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Live Port & Server Inspector")
+        self.set_default_size(620, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #10b981; }
+        .card { background-color: #111827; border-radius: 10px; padding: 12px; border: 1px solid #1f2937; }
+        .btn-refresh { background-color: #10b981; color: #000000; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        .btn-open { background-color: #1e293b; color: #38bdf8; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: bold; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔌 Aero Dev Server &amp; Port Inspector</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Monitor listening ports, local dev servers (Node, FastAPI, Vite) &amp; manage sockets</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_ref = Gtk.Button(label="🔄 Refresh")
+        btn_ref.get_style_context().add_class("btn-refresh")
+        btn_ref.connect("clicked", self._on_refresh)
+        header_box.pack_start(btn_ref, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Ports List
+        self.scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.scrolled.add(self.list_box)
+        vbox.pack_start(self.scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_ports()
+
+    def _on_refresh(self, button):
+        self._populate_ports()
+
+    def _populate_ports(self):
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        ports = get_listening_ports()
+        if not ports:
+            lbl_empty = Gtk.Label(label="No listening network ports found.", xalign=0.5)
+            self.list_box.pack_start(lbl_empty, True, True, 20)
+        else:
+            for p in ports:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                row.get_style_context().add_class("card")
+
+                info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_p = Gtk.Label(xalign=0)
+                lbl_p.set_markup(f"<span color='#10b981' font='bold 12'>Port {p['port']}</span> ({p['proto'].upper()}) ➔ <span color='#94a3b8'>{p['address']}</span>")
+                lbl_proc = Gtk.Label(xalign=0)
+                lbl_proc.set_markup(f"<span color='#cbd5e1' font='10'>Process: {p['process']}</span>")
+                info.pack_start(lbl_p, False, False, 0)
+                info.pack_start(lbl_proc, False, False, 0)
+                row.pack_start(info, True, True, 0)
+
+                # Open browser button for standard http ports
+                port_num = p['port']
+                if port_num.isdigit():
+                    btn_browse = Gtk.Button(label="🌐 Open")
+                    btn_browse.get_style_context().add_class("btn-open")
+                    btn_browse.connect("clicked", lambda b, port=port_num: self._open_browser(port))
+                    row.pack_start(btn_browse, False, False, 0)
+
+                self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+        self.lbl_status.set_markup(f"<span color='#10b981' font='10'>Active Listeners: {len(ports)} socket(s)</span>")
+
+    def _open_browser(self, port):
+        url = f"http://localhost:{port}"
+        subprocess.run(["xdg-open", url])
+
+
+def main():
+    win = PortsInspectorWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

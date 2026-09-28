@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Font & Typography Studio
+Install, preview, and switch system & developer programming fonts with ligatures and subpixel hinting.
+"""
+
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+POPULAR_FONTS = [
+    {"name": "JetBrains Mono", "pkg": "fonts-jetbrains-mono", "desc": "Top developer font with crisp ligatures"},
+    {"name": "Fira Code", "pkg": "fonts-firacode", "desc": "Famous programmer font with beautiful symbol ligatures"},
+    {"name": "Cascadia Code", "pkg": "fonts-cascadia-code", "desc": "Microsoft Windows Terminal & VS Code modern typeface"},
+    {"name": "Hack", "pkg": "fonts-hack", "desc": "Clean, highly readable open-source monospace font"},
+    {"name": "Inter", "pkg": "fonts-inter", "desc": "Silky smooth modern UI typography for desktops"},
+]
+
+
+class FontStudioWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Typography & Font Studio")
+        self.set_default_size(520, 500)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #38bdf8; }
+        .card { background-color: #111827; border-radius: 10px; padding: 12px; border: 1px solid #1f2937; }
+        .font-preview { background-color: #0d1117; border-radius: 8px; padding: 12px; border: 1px solid #30363d; color: #58a6ff; }
+        .btn-apply { background-color: #0284c7; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        .btn-apply:hover { background-color: #0ea5e9; }
+        .btn-install { background-color: #1e293b; color: #38bdf8; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: bold; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔤 Aero Typography Studio</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Configure system and developer programming fonts with ligatures</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Live Preview Card
+        prev_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        prev_card.get_style_context().add_class("card")
+
+        lbl_pv_title = Gtk.Label(label="<b>👀 Interactive Ligature Preview</b>", xalign=0)
+        lbl_pv_title.set_use_markup(True)
+        prev_card.pack_start(lbl_pv_title, False, False, 0)
+
+        self.lbl_preview = Gtk.Label(xalign=0)
+        self.lbl_preview.get_style_context().add_class("font-preview")
+        self.lbl_preview.set_text("const calculate = (a: number) => a != 0 && a === 42;\n// Ligatures: != >= <= => === !== <!-- -->")
+        prev_card.pack_start(self.lbl_preview, False, False, 0)
+
+        # Size slider
+        size_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        lbl_s = Gtk.Label(label="Font Size:", xalign=0)
+        self.scale_size = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 10, 24, 1)
+        self.scale_size.set_value(13)
+        self.scale_size.connect("value-changed", self._on_size_changed)
+        size_box.pack_start(lbl_s, False, False, 0)
+        size_box.pack_start(self.scale_size, True, True, 0)
+        prev_card.pack_start(size_box, False, False, 0)
+
+        vbox.pack_start(prev_card, False, False, 0)
+
+        # Available Fonts List
+        lbl_avail = Gtk.Label(label="<b>📚 Developer Typography Library</b>", xalign=0)
+        lbl_avail.set_use_markup(True)
+        vbox.pack_start(lbl_avail, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_min_content_height(180)
+        list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled.add(list_box)
+
+        for f in POPULAR_FONTS:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.get_style_context().add_class("card")
+
+            f_info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            lbl_fn = Gtk.Label(xalign=0)
+            lbl_fn.set_markup(f"<b>{f['name']}</b>")
+            lbl_fd = Gtk.Label(xalign=0)
+            lbl_fd.set_markup(f"<span color='#9ca3af' font='9'>{f['desc']}</span>")
+            f_info.pack_start(lbl_fn, False, False, 0)
+            f_info.pack_start(lbl_fd, False, False, 0)
+            row.pack_start(f_info, True, True, 0)
+
+            btn_set = Gtk.Button(label="Apply Font")
+            btn_set.get_style_context().add_class("btn-apply")
+            btn_set.connect("clicked", lambda b, name=f['name']: self._apply_font(name))
+            row.pack_start(btn_set, False, False, 0)
+
+            list_box.pack_start(row, False, False, 0)
+
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>System Typography Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _on_size_changed(self, scale):
+        sz = int(scale.get_value())
+        self.lbl_preview.set_markup(f"<span font='{sz}'>const calculate = (a: number) =&gt; a != 0 &amp;&amp; a === 42;\n// Ligatures: != &gt;= &lt;= =&gt; === !==</span>")
+
+    def _apply_font(self, font_name):
+        sz = int(self.scale_size.get_value())
+        subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "monospace-font-name", f"{font_name} {sz}"], capture_output=True)
+        subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "font-name", f"{font_name} 11"], capture_output=True)
+        self.lbl_status.set_markup(f"<span color='#38bdf8' font='10'>Applied {font_name} as default desktop typography!</span>")
+        subprocess.run(["notify-send", "🔤 Font Applied", f"{font_name} is now your default monospace & system font"])
+
+
+def main():
+    win = FontStudioWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

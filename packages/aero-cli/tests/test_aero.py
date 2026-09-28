@@ -606,6 +606,21 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(col_path))
         self.assertTrue(os.access(col_path, os.X_OK))
 
+    def test_font_gui_script(self):
+        f_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-font-gui"
+        self.assertTrue(os.path.exists(f_path))
+        self.assertTrue(os.access(f_path, os.X_OK))
+
+    def test_ports_gui_script(self):
+        p_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-ports-gui"
+        self.assertTrue(os.path.exists(p_path))
+        self.assertTrue(os.access(p_path, os.X_OK))
+
+    def test_shortcuts_gui_script(self):
+        s_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-shortcuts-gui"
+        self.assertTrue(os.path.exists(s_path))
+        self.assertTrue(os.access(s_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
