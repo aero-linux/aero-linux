@@ -93,6 +93,7 @@ from aero.recorder import start_recording, stop_recording, is_recording_active
 from aero.archive_tools import compress_archive, extract_archive
 from aero.file_search import search_files_by_name, search_text_content
 from aero.nvme_wear import get_ssd_wear_stats
+from aero.autotile import start_autotiling, stop_autotiling, is_autotile_running
 
 
 def print_banner():
@@ -651,6 +652,13 @@ def main():
     # NVMe SSD Wear Level & Lifespan Forecaster
     subparsers.add_parser("wear", help="Audit NVMe/SSD TBW wear levels and estimated lifespan")
 
+    # Dynamic Auto-Tiling Engine
+    tile_parser = subparsers.add_parser("autotile", help="Dynamic BSP / Golden-Ratio automatic window tiling daemon")
+    tile_sub = tile_parser.add_subparsers(dest="autotile_action", help="Auto-tile actions")
+    tile_sub.add_parser("start", help="Start background auto-tiling daemon")
+    tile_sub.add_parser("stop", help="Stop auto-tiling daemon")
+    tile_sub.add_parser("status", help="Check if auto-tiling daemon is active")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1167,6 +1175,15 @@ def main():
 
     elif args.command == "wear":
         get_ssd_wear_stats()
+
+    elif args.command == "autotile":
+        if args.autotile_action == "stop":
+            stop_autotiling()
+        elif args.autotile_action == "status":
+            running = is_autotile_running()
+            print(f"Auto-tiling Daemon Active: {'✅ Yes' if running else '❌ No'}")
+        else:
+            start_autotiling()
 
 
 if __name__ == "__main__":

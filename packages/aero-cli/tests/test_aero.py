@@ -60,6 +60,7 @@ from aero.battery_daemon import check_battery_alerts
 from aero.archive_tools import compress_archive, extract_archive
 from aero.file_search import search_files_by_name, search_text_content
 from aero.nvme_wear import get_ssd_wear_stats
+from aero.autotile import is_autotile_running, stop_autotiling
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -428,6 +429,12 @@ class TestAeroCLI(unittest.TestCase):
     def test_nvme_wear_stats(self):
         wear = get_ssd_wear_stats()
         self.assertIn("drives", wear)
+
+    def test_autotiling_support(self):
+        running = is_autotile_running()
+        self.assertIsInstance(running, bool)
+        stop_res = stop_autotiling()
+        self.assertIn("status", stop_res)
 
 
 if __name__ == "__main__":
