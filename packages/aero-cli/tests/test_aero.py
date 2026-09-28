@@ -531,6 +531,14 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(spot_path))
         self.assertTrue(os.access(spot_path, os.X_OK))
 
+    def test_gamehub_and_connect_gui_scripts(self):
+        gh_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-gamehub"
+        cn_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-connect-gui"
+        self.assertTrue(os.path.exists(gh_path))
+        self.assertTrue(os.access(gh_path, os.X_OK))
+        self.assertTrue(os.path.exists(cn_path))
+        self.assertTrue(os.access(cn_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

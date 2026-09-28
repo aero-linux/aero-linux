@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Game Hub & Proton Optimizer
+GameMode launcher, MangoHud FPS overlay toggles, AMD FSR upscaling & Proton bottle management.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+class GameHubWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Game Hub & Proton Center")
+        self.set_default_size(580, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Gaming Cyber CSS Styling
+        css = b"""
+        window { background-color: #0a0b12; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #a855f7; }
+        .card { background-color: #121320; border-radius: 10px; padding: 14px; border: 1px solid #2e1065; }
+        .btn-play { background-color: #a855f7; color: #ffffff; font-weight: bold; border-radius: 8px; padding: 10px 20px; font-size: 15px; }
+        .btn-play:hover { background-color: #c084fc; }
+        .btn-toggle { background-color: #1e1b4b; color: #e9d5ff; border-radius: 6px; padding: 6px 12px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🎮 Aero Game Hub & Proton Center</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#a1a1aa' font='10'>GameMode CPU boost, MangoHud FPS overlays & GE-Proton compatibility</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Optimizations Card
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        card.get_style_context().add_class("card")
+
+        lbl_sec = Gtk.Label(label="<b>🚀 Performance & Graphics Optimizations</b>", xalign=0)
+        lbl_sec.set_use_markup(True)
+        card.pack_start(lbl_sec, False, False, 0)
+
+        # 1. GameMode Toggle
+        self.chk_gamemode = Gtk.CheckButton(label="⚡ Enable Feral GameMode (CPU Governor & GPU Clock Priority)")
+        self.chk_gamemode.set_active(True)
+        card.pack_start(self.chk_gamemode, False, False, 0)
+
+        # 2. MangoHud FPS Overlay
+        self.chk_mangohud = Gtk.CheckButton(label="📊 Enable MangoHud (Real-time FPS, GPU/CPU Thermals & VRAM)")
+        self.chk_mangohud.set_active(True)
+        card.pack_start(self.chk_mangohud, False, False, 0)
+
+        # 3. AMD FSR Upscaling
+        self.chk_fsr = Gtk.CheckButton(label="✨ Enable AMD FidelityFX Super Resolution (FSR) Upscaling")
+        self.chk_fsr.set_active(True)
+        card.pack_start(self.chk_fsr, False, False, 0)
+
+        # 4. Proton Flavor
+        lbl_p = Gtk.Label(label="Select Proton / Wine Compatibility Engine:", xalign=0)
+        self.combo_proton = Gtk.ComboBoxText()
+        self.combo_proton.append("ge-proton", "GE-Proton 11-7 (Highest Game Compatibility)")
+        self.combo_proton.append("wine-staging", "Wine Staging (Standard Windows Apps)")
+        self.combo_proton.append("native", "Native Linux Executable")
+        self.combo_proton.set_active(0)
+        card.pack_start(lbl_p, False, False, 0)
+        card.pack_start(self.combo_proton, False, False, 0)
+
+        vbox.pack_start(card, False, False, 0)
+
+        # Game Launcher Card
+        launch_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        launch_card.get_style_context().add_class("card")
+
+        lbl_lc = Gtk.Label(label="<b>🕹️ Launch Windows Game or Application</b>", xalign=0)
+        lbl_lc.set_use_markup(True)
+        launch_card.pack_start(lbl_lc, False, False, 0)
+
+        btn_choose = Gtk.Button(label="📁 Choose .exe or Game Binary to Launch")
+        btn_choose.get_style_context().add_class("btn-play")
+        btn_choose.connect("clicked", self._on_choose_game)
+        launch_card.pack_start(btn_choose, False, False, 0)
+
+        vbox.pack_start(launch_card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready to boost games", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Ready to boost games</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _on_choose_game(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Select Game or Executable",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+
+        # Add filters
+        filter_exe = Gtk.FileFilter()
+        filter_exe.set_name("Windows Executables (*.exe, *.msi)")
+        filter_exe.add_pattern("*.exe")
+        filter_exe.add_pattern("*.EXE")
+        filter_exe.add_pattern("*.msi")
+        dialog.add_filter(filter_exe)
+
+        filter_all = Gtk.FileFilter()
+        filter_all.set_name("All Files")
+        filter_all.add_pattern("*")
+        dialog.add_filter(filter_all)
+
+        resp = dialog.run()
+        file_path = dialog.get_filename()
+        dialog.destroy()
+
+        if resp == Gtk.ResponseType.OK and file_path:
+            self._launch_game(file_path)
+
+    def _launch_game(self, file_path):
+        env_vars = os.environ.copy()
+        if self.chk_mangohud.get_active():
+            env_vars["MANGOHUD"] = "1"
+        if self.chk_fsr.get_active():
+            env_vars["WINE_FULLSCREEN_FSR"] = "1"
+
+        use_gm = self.chk_gamemode.get_active()
+        self.lbl_status.set_markup(f"<span color='#a855f7' font='10'>🚀 Launching: {os.path.basename(file_path)}...</span>")
+
+        cmd = []
+        if use_gm and shutil.which("gamemoderun"):
+            cmd.append("gamemoderun")
+
+        cmd.extend(["aero", "wine", file_path])
+
+        def _run():
+            subprocess.run(cmd, env=env_vars)
+
+        threading.Thread(target=_run, daemon=True).start()
+        subprocess.run(["notify-send", "🎮 Game Launched", f"Running {os.path.basename(file_path)} with GameMode & Proton"])
+
+
+def main():
+    win = GameHubWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

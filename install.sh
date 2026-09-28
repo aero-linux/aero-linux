@@ -141,6 +141,22 @@ exec python3 "${AERO_HOME}/bin/aero-spotlight" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-spotlight"
 
+# Create global executable wrapper for aero-gamehub GUI
+cat << 'EOF' > "${BIN_DIR}/aero-gamehub"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-gamehub" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-gamehub"
+
+# Create global executable wrapper for aero-connect-gui
+cat << 'EOF' > "${BIN_DIR}/aero-connect-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-connect-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-connect-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -259,6 +275,28 @@ Icon=system-search
 Terminal=false
 Type=Application
 Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-gamehub.desktop"
+[Desktop Entry]
+Name=Aero Game Hub
+Comment=Aero Linux Proton & GameMode Optimizer
+Exec=${BIN_DIR}/aero-gamehub
+Icon=applications-games
+Terminal=false
+Type=Application
+Categories=Game;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-connect.desktop"
+[Desktop Entry]
+Name=Aero Phone Link
+Comment=Aero Linux Wireless Drop & Phone Link
+Exec=${BIN_DIR}/aero-connect-gui
+Icon=phone
+Terminal=false
+Type=Application
+Categories=Network;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

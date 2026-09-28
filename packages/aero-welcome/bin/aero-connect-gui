@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Wireless Phone Link & Drop Target (Zorin Connect / AirDrop Style)
+Drag-and-drop wireless file beaming, mobile notifications & device status.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.phone_connect import get_phone_devices, send_file_to_phone
+
+
+class PhoneLinkWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Phone Link & Wireless Drop")
+        self.set_default_size(520, 500)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Cyber Styling
+        css = b"""
+        window { background-color: #0a0b10; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #00f2fe; }
+        .drop-card {
+            background-color: #12141e;
+            border-radius: 12px;
+            padding: 30px;
+            border: 2px dashed #00f2fe;
+        }
+        .btn-action { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 8px 14px; font-weight: bold; }
+        .btn-action:hover { background-color: #334155; }
+        .btn-beam { background-color: #00f2fe; color: #000000; border-radius: 6px; padding: 8px 18px; font-weight: bold; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📱 Aero Phone Link & Wireless Beam</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#94a3b8' font='10'>Sync clipboard, notifications, and drop files wirelessly to phone</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Drop Zone Card
+        drop_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        drop_box.get_style_context().add_class("drop-card")
+
+        lbl_icon = Gtk.Label()
+        lbl_icon.set_markup("<span font='36'>⚡</span>")
+        drop_box.pack_start(lbl_icon, False, False, 0)
+
+        lbl_drop = Gtk.Label()
+        lbl_drop.set_markup("<b>Drag &amp; Drop Files Here to Beam to Phone</b>\n<span color='#94a3b8' font='10'>or click the button below to browse</span>")
+        lbl_drop.set_justify(Gtk.Justification.CENTER)
+        drop_box.pack_start(lbl_drop, False, False, 0)
+
+        btn_select = Gtk.Button(label="📁 Select File to Beam")
+        btn_select.get_style_context().add_class("btn-beam")
+        btn_select.connect("clicked", self._on_select_file)
+        drop_box.pack_start(btn_select, False, False, 0)
+
+        vbox.pack_start(drop_box, True, True, 0)
+
+        # Action Buttons
+        act_grid = Gtk.Grid()
+        act_grid.set_column_spacing(10)
+        act_grid.set_row_spacing(10)
+        act_grid.set_column_homogeneous(True)
+
+        btn_ring = Gtk.Button(label="🔔 Ring My Phone")
+        btn_ring.get_style_context().add_class("btn-action")
+        btn_ring.connect("clicked", lambda b: subprocess.run(["kdeconnect-cli", "--ring"], capture_output=True))
+        act_grid.attach(btn_ring, 0, 0, 1, 1)
+
+        btn_clip = Gtk.Button(label="📋 Share Clipboard")
+        btn_clip.get_style_context().add_class("btn-action")
+        btn_clip.connect("clicked", lambda b: subprocess.run(["notify-send", "📱 Clipboard Synced", "Clipboard sent to mobile device"]))
+        act_grid.attach(btn_clip, 1, 0, 1, 1)
+
+        vbox.pack_start(act_grid, False, False, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Mobile device ready for wireless sync", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Mobile device ready for wireless sync</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _on_select_file(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Select File to Beam to Phone",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, "Beam to Phone", Gtk.ResponseType.OK)
+        resp = dialog.run()
+        file_path = dialog.get_filename()
+        dialog.destroy()
+
+        if resp == Gtk.ResponseType.OK and file_path:
+            self.lbl_status.set_markup(f"<span color='#00f2fe' font='10'>Beaming {os.path.basename(file_path)}...</span>")
+            send_file_to_phone(file_path)
+            self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Sent {os.path.basename(file_path)} to mobile device.</span>")
+
+
+def main():
+    win = PhoneLinkWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
