@@ -16,3 +16,6 @@ build/
 
 # Logs
 *.log
+
+# Internal Launch & Marketing Assets
+marketing/
