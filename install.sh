@@ -69,6 +69,12 @@ exec python3 "${AERO_HOME}/bin/aero-welcome" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-welcome"
 
+# Install Desktop Icon & Man Pages
+mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
+mkdir -p "${HOME}/.local/share/man/man1"
+cp "${INSTALL_DIR}/desktop/icons/aero-logo.svg" "${HOME}/.local/share/icons/hicolor/scalable/apps/aero.svg" 2>/dev/null || true
+cp "${INSTALL_DIR}/docs/man/aero.1" "${HOME}/.local/share/man/man1/aero.1" 2>/dev/null || true
+
 # Register desktop application icon in Start Menu
 echo -e "${GREEN}• Creating Start Menu / Desktop Launcher entry...${NC}"
 cat << EOF > "${HOME}/.local/share/applications/aero-welcome.desktop"
@@ -76,10 +82,21 @@ cat << EOF > "${HOME}/.local/share/applications/aero-welcome.desktop"
 Name=Aero Control Center
 Comment=Aero Linux Quick Setup & Telemetry GUI
 Exec=${BIN_DIR}/aero-welcome
-Icon=utilities-system-monitor
+Icon=aero
 Terminal=false
 Type=Application
 Categories=System;Settings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-terminal.desktop"
+[Desktop Entry]
+Name=Aero Terminal
+Comment=Aero Linux High-Performance GPU-Accelerated Terminal
+Exec=alacritty -e ${BIN_DIR}/aero doctor
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=System;TerminalEmulator;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

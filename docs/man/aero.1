@@ -1,0 +1,66 @@
+.TH AERO 1 "September 2026" "Aero Linux 1.0-Edge" "User Commands"
+.SH NAME
+aero \- The Ultra-Lean AI & High-Performance Developer Linux Control Engine
+.SH SYNOPSIS
+.B aero
+[\fIOPTIONS\fR] \fICOMMAND\fR [\fIARGS\fR...]
+.SH DESCRIPTION
+.B aero
+is the primary systems engineering, performance tuning, and local AI orchestration suite for Aero Linux.
+It provides hardware telemetry, dynamic zRAM compaction, local LLM serving, containerized sandboxes,
+encrypted keyrings, network latency tracers, and desktop layout switching.
+
+.SH CORE COMMANDS
+.TP
+.B doctor
+Run real-time hardware diagnostics (CPU, GPU, RAM, zRAM, Thermals, Battery).
+.TP
+.B layout \fI[windows|tiling]\fR
+Switch desktop between Windows-friendly taskbar mode and Hacker Tiling mode.
+.TP
+.B memory \fI[--optimize]\fR
+Audit RAM allocation, per-process usage, and compact zRAM compression buffers.
+.TP
+.B power \fI[--set <profile> | --threshold <80>]\fR
+Manage TLP power profiles and hardware battery charging thresholds.
+.TP
+.B ai \fI[init | pull <model> | run <model> | calc | bench]\fR
+1-click local LLM inference via Ollama with RAM footprint calculation and TTFT benchmarks.
+.TP
+.B agent \fI"<prompt>" [--shell]\fR
+Terminal-native local AI coding and shell command assistant.
+.TP
+.B dev run \fI[node|python|rust|go|c]\fR
+Launch isolated containerized developer sandboxes in the current directory.
+.TP
+.B db \fI[start|stop|ui] <name>\fR
+Manage local background databases (Postgres, Redis, MySQL, Mongo, ClickHouse) and web studio.
+.TP
+.B vault \fI[set|get|list|export]\fR
+Encrypted developer secret keyring and environment variable store.
+.TP
+.B tunnel \fI<port>\fR
+Expose local development port to instant public HTTPS tunnel.
+.TP
+.B turbo \fI[mount|status|unmount]\fR
+Mount high-speed tmpfs RAM-disk for zero-wear 10GB/s compilation acceleration.
+.TP
+.B store \fI[list|install <app>]\fR
+1-click developer software center (VS Code, Brave, Docker, Postman, Obsidian).
+.TP
+.B trace \fI[ping <host> | dns]\fR
+Measure network socket connect, TLS handshake, and DNS resolution latency.
+.TP
+.B clean \fI[--dry-run]\fR
+Deep system cache and developer de-bloater cleaner (npm, pip, apt, docker).
+.TP
+.B flash \fI[drives | write <iso> <dev>]\fR
+Safe live USB media flasher.
+.TP
+.B dotfiles \fI[export | import <tar>]\fR
+Backup and restore desktop configs and developer dotfiles.
+
+.SH AUTHORS
+Ronit Gupta (Lead Architect), Nous Research (Hermes Agent).
+.SH COPYRIGHT
+MIT License. Copyright (c) 2026 Ronit Gupta.
