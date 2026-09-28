@@ -93,12 +93,16 @@ bindsym $mod+Shift+5 move container to workspace number 5
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
 
-# Audio & Brightness Controls
-bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
-bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
-bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
-bindsym XF86MonBrightnessUp exec brightnessctl set +5%
-bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+# Laptop Hardware Fn Keys & Graphical OSD Popups
+bindsym XF86AudioRaiseVolume exec aero osd volume-up
+bindsym XF86AudioLowerVolume exec aero osd volume-down
+bindsym XF86AudioMute exec aero osd mute
+bindsym XF86AudioMicMute exec aero osd mic-mute
+bindsym XF86MonBrightnessUp exec aero osd brightness-up
+bindsym XF86MonBrightnessDown exec aero osd brightness-down
+bindsym XF86AudioPlay exec aero osd play-pause
+bindsym XF86AudioNext exec aero osd next
+bindsym XF86AudioPrev exec aero osd prev
 
 # Bar integration
 bar {

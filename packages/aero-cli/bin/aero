@@ -86,6 +86,7 @@ from aero.net_diagnostics import dns_dig, ping_host
 from aero.ai_tools import audit_ai_memory_footprint, show_prompt_template
 from aero.hardware_tuning import get_hardware_fan_status, set_fan_profile
 from aero.dev_utils import convert_color, time_execution
+from aero.osd import handle_osd_action
 
 
 def print_banner():
@@ -591,6 +592,10 @@ def main():
     time_parser = subparsers.add_parser("time", help="High-precision command execution stopwatch")
     time_parser.add_argument("cmd", help="Command to time")
 
+    # On-Screen Display (OSD) Controller
+    osd_parser = subparsers.add_parser("osd", help="Trigger hardware On-Screen Display (OSD) volume and brightness overlays")
+    osd_parser.add_argument("action", choices=["volume-up", "volume-down", "mute", "mic-mute", "brightness-up", "brightness-down", "play-pause", "next", "prev"], help="OSD action to trigger")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1062,6 +1067,9 @@ def main():
 
     elif args.command == "time":
         time_execution(args.cmd)
+
+    elif args.command == "osd":
+        handle_osd_action(args.action)
 
 
 if __name__ == "__main__":

@@ -51,6 +51,7 @@ from aero.net_diagnostics import dns_dig, ping_host
 from aero.ai_tools import audit_ai_memory_footprint, PROMPT_TEMPLATES
 from aero.hardware_tuning import get_hardware_fan_status, FAN_PROFILES
 from aero.dev_utils import convert_color, time_execution
+from aero.osd import handle_osd_action
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -371,6 +372,14 @@ class TestAeroCLI(unittest.TestCase):
         res = time_execution("echo test")
         self.assertEqual(res["exit_code"], 0)
         self.assertTrue(res["elapsed_sec"] >= 0)
+
+    def test_osd_actions(self):
+        r1 = handle_osd_action("volume-up")
+        self.assertEqual(r1["action"], "volume-up")
+        r2 = handle_osd_action("brightness-up")
+        self.assertEqual(r2["action"], "brightness-up")
+        r3 = handle_osd_action("mute")
+        self.assertEqual(r3["action"], "mute")
 
 
 if __name__ == "__main__":
