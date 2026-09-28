@@ -1,4 +1,5 @@
 import unittest
+import os
 from aero.doctor import run_doctor, get_cpu_info, get_memory_info, get_gpu_info
 from aero.power import PROFILES, get_current_profile
 from aero.memory import get_top_memory_processes
@@ -19,6 +20,11 @@ from aero.fonts import NERD_FONTS
 from aero.db_tools import DATABASES
 from aero.vm import check_kvm
 from aero.layout import set_desktop_layout
+from aero.ai import calc_model_memory
+from aero.kernel_mgr import PROFILES as KERNEL_PROFILES, audit_kernel_scheduler
+from aero.vault import vault_set, vault_get, vault_delete, _load_vault
+from aero.wallpaper import generate_wallpaper_svg, PALETTES
+from aero.memory import get_memory_stats
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -140,6 +146,39 @@ class TestAeroCLI(unittest.TestCase):
     def test_desktop_layout(self):
         res = set_desktop_layout("windows")
         self.assertTrue(res)
+
+    def test_ai_calc_model_memory(self):
+        res = calc_model_memory(8.0, "q4_k_m", 4096)
+        self.assertEqual(res["params_b"], 8.0)
+        self.assertTrue(res["weights_gb"] > 3.0)
+        self.assertIsInstance(res["fits_with_aero_zram"], bool)
+
+    def test_kernel_profiles(self):
+        self.assertIn("lowlatency", KERNEL_PROFILES)
+        self.assertIn("throughput", KERNEL_PROFILES)
+        self.assertIn("powersave", KERNEL_PROFILES)
+
+    def test_vault_crud(self):
+        vault_set("TEST_SECRET_KEY", "ultra_secret_123")
+        val = vault_get("TEST_SECRET_KEY")
+        self.assertEqual(val, "ultra_secret_123")
+        vault_delete("TEST_SECRET_KEY")
+        self.assertNotIn("TEST_SECRET_KEY", _load_vault())
+
+    def test_wallpaper_generation(self):
+        out = generate_wallpaper_svg("cyber-cyan", "/tmp/test_aero_wall.svg")
+        self.assertTrue(os.path.exists(out))
+        with open(out) as f:
+            content = f.read()
+            self.assertIn("<svg", content)
+            self.assertIn("AERO LINUX", content)
+        if os.path.exists(out):
+            os.remove(out)
+
+    def test_memory_stats(self):
+        stats = get_memory_stats()
+        self.assertIn("total_mb", stats)
+        self.assertIn("percent_used", stats)
 
 
 if __name__ == "__main__":

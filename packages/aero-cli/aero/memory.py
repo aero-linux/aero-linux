@@ -49,6 +49,47 @@ def compact_memory() -> dict:
     return result
 
 
+def get_memory_stats() -> dict:
+    total_mb, avail_mb, free_mb = 0, 0, 0
+    try:
+        with open("/proc/meminfo", "r") as f:
+            for line in f:
+                parts = line.split()
+                if line.startswith("MemTotal:"):
+                    total_mb = int(parts[1]) // 1024
+                elif line.startswith("MemAvailable:"):
+                    avail_mb = int(parts[1]) // 1024
+                elif line.startswith("MemFree:"):
+                    free_mb = int(parts[1]) // 1024
+    except Exception:
+        pass
+
+    used_mb = max(0, total_mb - avail_mb)
+    pct = round((used_mb / total_mb * 100), 1) if total_mb > 0 else 0
+
+    zram_total, zram_used = 0, 0
+    if os.path.exists("/sys/block/zram0/disksize"):
+        try:
+            with open("/sys/block/zram0/disksize") as f:
+                zram_total = int(f.read().strip()) // (1024 * 1024)
+            with open("/sys/block/zram0/mem_used_total") as f:
+                zram_used = int(f.read().strip()) // (1024 * 1024)
+        except Exception:
+            pass
+
+    zram_pct = round((zram_used / zram_total * 100), 1) if zram_total > 0 else 0
+
+    return {
+        "total_mb": total_mb,
+        "available_mb": avail_mb,
+        "used_mb": used_mb,
+        "percent_used": pct,
+        "zram_total_mb": zram_total,
+        "zram_used_mb": zram_used,
+        "zram_percent": zram_pct,
+    }
+
+
 def get_top_memory_processes(limit: int = 10) -> list:
     processes = []
     try:

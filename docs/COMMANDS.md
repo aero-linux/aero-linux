@@ -35,6 +35,8 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 * `aero ai status`: Check daemon health and installed model weights.
 * `aero ai pull <model>`: Download models (e.g. `deepseek-r1:8b`, `llama3.2`, `qwen2.5-coder`).
 * `aero ai run <model>`: Start interactive terminal prompt with local LLM.
+* `aero ai calc --params <N> --quant <Q>`: Calculate model weights, KV cache, and RAM/zRAM requirements.
+* `aero ai bench [model]`: Measure time-to-first-token (TTFT) and token/sec inference throughput.
 * `aero gpu setup`: Automated CUDA driver / ROCm setup with Wayland modesetting.
 
 ---
@@ -43,6 +45,8 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 * `aero dev list`: List available containerized sandboxes.
 * `aero dev run [node|python|rust|go|c]`: Spin up isolated workspace in current directory.
 * `aero db start [postgres|redis|mysql|mongo|clickhouse]`: 1-command local background database.
+* `aero vault [set|get|list|delete|export]`: Local encrypted developer keyring & .env manager.
+* `aero live [--port 8080]`: Real-time developer web telemetry streaming dashboard.
 * `aero port list`: Show active listening developer ports and bound processes.
 * `aero port kill <port>`: Terminate process listening on a specific port.
 * `aero env check`: Audit installed SDKs (Node, Python, C, Rust, Go, Java, Docker).
@@ -53,7 +57,10 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 
 ---
 
-### 6. Desktop Customization & Networking
+### 6. Desktop Customization & Kernel
+* `aero layout [windows|tiling]`: 1-click toggle between Windows Start taskbar and Hacker Tiling.
+* `aero kernel [audit|profile <name>]`: Low-latency vs throughput kernel scheduler tuning.
+* `aero wallpaper [set|generate]`: Procedural vector cyber wallpapers (`cyber-cyan`, `tokyo-night`, `nord`, `gruvbox`).
 * `aero theme [list|set <name>]`: Switch themes (`cyber-cyan`, `tokyo-night`, `nord`, `gruvbox`).
 * `aero font install [jetbrains-mono|fira-code|hack]`: 1-click Nerd Font installation.
 * `aero net bbr`: Enable Google BBR TCP congestion control.

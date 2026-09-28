@@ -45,6 +45,11 @@ from aero.api_bench import bench_url
 from aero.vm import run_iso_in_vm
 from aero.system_updater import check_system_kernel, update_aero_os
 from aero.layout import set_desktop_layout
+from aero.ai import print_memory_calc, benchmark_model_speed
+from aero.kernel_mgr import audit_kernel_scheduler, apply_kernel_profile, PROFILES as KERNEL_PROFILES
+from aero.vault import vault_set, vault_get, vault_list, vault_delete, vault_export_env
+from aero.live_server import run_live_dashboard
+from aero.wallpaper import generate_wallpaper_svg, set_desktop_wallpaper
 
 
 def print_banner():
@@ -95,6 +100,14 @@ def main():
     ai_pull.add_argument("model", help="Model name (e.g. llama3.2, deepseek-r1:8b, qwen2.5-coder)")
     ai_run = ai_sub.add_parser("run", help="Run an interactive session with a model")
     ai_run.add_argument("model", help="Model name (e.g. llama3.2, qwen2.5-coder)")
+    
+    ai_calc = ai_sub.add_parser("calc", help="Calculate RAM/zRAM requirements for a model size and quantization")
+    ai_calc.add_argument("--params", type=float, default=8.0, help="Model parameters in billions (e.g. 7, 8, 14, 32, 70)")
+    ai_calc.add_argument("--quant", default="q4_k_m", help="Quantization (fp16, q8_0, q6_k, q5_k_m, q4_k_m, q3_k_m, q2_k)")
+    ai_calc.add_argument("--ctx", type=int, default=4096, help="Context window token size (default: 4096)")
+
+    ai_bench = ai_sub.add_parser("bench", help="Benchmark local inference speed and tok/s throughput")
+    ai_bench.add_argument("model", nargs="?", default="deepseek-r1:8b", help="Model to benchmark")
 
     # Dev Environments
     dev_parser = subparsers.add_parser("dev", help="Instant zero-pollution isolated dev workspaces")
@@ -303,6 +316,39 @@ def main():
     layout_parser = subparsers.add_parser("layout", help="Switch between Windows-Friendly and Tiling desktop layouts")
     layout_parser.add_argument("mode", choices=["windows", "tiling"], help="Desktop layout mode (windows or tiling)")
 
+    # Kernel & Sysctl Tuning
+    ker_parser = subparsers.add_parser("kernel", help="Kernel scheduler & low-latency sysctl management")
+    ker_sub = ker_parser.add_subparsers(dest="kernel_action", help="Kernel actions")
+    ker_sub.add_parser("audit", help="Audit active memory, scheduler, and network sysctl parameters")
+    ker_prof = ker_sub.add_parser("profile", help="Apply kernel scheduler profile")
+    ker_prof.add_argument("name", choices=list(KERNEL_PROFILES.keys()), help="Profile name (lowlatency, throughput, powersave)")
+
+    # Developer Vault & Secrets Keyring
+    vault_parser = subparsers.add_parser("vault", help="Encrypted local developer keyring & secrets manager")
+    vault_sub = vault_parser.add_subparsers(dest="vault_action", help="Vault actions")
+    v_set = vault_sub.add_parser("set", help="Store encrypted secret")
+    v_set.add_argument("key", help="Secret variable name (e.g. DATABASE_URL)")
+    v_set.add_argument("value", help="Secret value")
+    v_get = vault_sub.add_parser("get", help="Retrieve decrypted secret")
+    v_get.add_argument("key", help="Secret variable name")
+    vault_sub.add_parser("list", help="List all stored keys (values masked)")
+    v_del = vault_sub.add_parser("delete", help="Delete secret from vault")
+    v_del.add_argument("key", help="Secret variable name")
+    vault_sub.add_parser("export", help="Export secrets as .env shell export commands")
+
+    # Live Web Telemetry Dashboard
+    live_parser = subparsers.add_parser("live", help="Start real-time web telemetry dashboard server")
+    live_parser.add_argument("--port", type=int, default=8080, help="Port to listen on (default: 8080)")
+
+    # Procedural Wallpaper & Lockscreen Generator
+    wall_parser = subparsers.add_parser("wallpaper", help="Generate and set procedural cyber wallpapers")
+    wall_sub = wall_parser.add_subparsers(dest="wallpaper_action", help="Wallpaper actions")
+    w_set = wall_sub.add_parser("set", help="Set desktop wallpaper palette")
+    w_set.add_argument("palette", choices=["cyber-cyan", "tokyo-night", "nord", "gruvbox"], help="Color palette")
+    w_gen = wall_sub.add_parser("generate", help="Generate wallpaper SVG file")
+    w_gen.add_argument("--palette", default="cyber-cyan", help="Color palette")
+    w_gen.add_argument("--out", default="", help="Output SVG path")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -390,6 +436,10 @@ def main():
             pull_model(args.model)
         elif args.ai_action == "run":
             run_model(args.model)
+        elif args.ai_action == "calc":
+            print_memory_calc(args.params, args.quant, args.ctx)
+        elif args.ai_action == "bench":
+            benchmark_model_speed(args.model)
         else:
             ai_parser.print_help()
 
@@ -581,6 +631,35 @@ def main():
 
     elif args.command == "layout":
         set_desktop_layout(args.mode)
+
+    elif args.command == "kernel":
+        if args.kernel_action == "profile":
+            apply_kernel_profile(args.name)
+        else:
+            audit_kernel_scheduler()
+
+    elif args.command == "vault":
+        if args.vault_action == "set":
+            vault_set(args.key, args.value)
+        elif args.vault_action == "get":
+            vault_get(args.key)
+        elif args.vault_action == "delete":
+            vault_delete(args.key)
+        elif args.vault_action == "export":
+            vault_export_env()
+        else:
+            vault_list()
+
+    elif args.command == "live":
+        run_live_dashboard(args.port)
+
+    elif args.command == "wallpaper":
+        if args.wallpaper_action == "set":
+            set_desktop_wallpaper(args.palette)
+        elif args.wallpaper_action == "generate":
+            generate_wallpaper_svg(args.palette, args.out)
+        else:
+            set_desktop_wallpaper("cyber-cyan")
 
 
 if __name__ == "__main__":
