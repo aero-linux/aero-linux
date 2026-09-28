@@ -15,7 +15,7 @@ from aero.power import set_profile, get_current_profile, PROFILES, set_charge_th
 from aero.memory import compact_memory, get_top_memory_processes
 from aero.ai import install_ollama, get_ai_status, pull_model, run_model
 from aero.gpu import setup_nvidia_driver, setup_rocm_driver
-from aero.dev import list_dev_environments, run_dev_environment, ENVIRONMENTS
+from aero.dev import list_dev_environments, run_dev_environment, install_native_stack, ENVIRONMENTS, NATIVE_STACKS
 from aero.pkg import update_packages, clean_system, install_packages
 from aero.snapshot import create_snapshot, list_snapshots, restore_snapshot
 from aero.net import enable_bbr, set_dns, optimize_wifi_latency, DNS_PROVIDERS
@@ -160,12 +160,14 @@ def main():
     ai_bench = ai_sub.add_parser("bench", help="Benchmark local inference speed and tok/s throughput")
     ai_bench.add_argument("model", nargs="?", default="deepseek-r1:8b", help="Model to benchmark")
 
-    # Dev Environments
-    dev_parser = subparsers.add_parser("dev", help="Instant zero-pollution isolated dev workspaces")
+    # Dev Environments & Stacks
+    dev_parser = subparsers.add_parser("dev", help="Instant zero-pollution isolated dev workspaces & stack installers")
     dev_sub = dev_parser.add_subparsers(dest="dev_action", help="Dev subcommands")
     dev_sub.add_parser("list", help="List all available isolated dev environments")
     dev_run = dev_sub.add_parser("run", help="Run an isolated dev environment in current directory")
-    dev_run.add_argument("env", choices=list(ENVIRONMENTS.keys()), help="Environment name (node, python, rust, go, c, postgres, redis)")
+    dev_run.add_argument("env", choices=list(ENVIRONMENTS.keys()), help="Environment name (node, python, rust, go, c, java, ai, postgres, redis)")
+    dev_setup = dev_sub.add_parser("setup", help="1-Click native developer toolchain installer")
+    dev_setup.add_argument("stack", choices=list(NATIVE_STACKS.keys()), help="Stack name (node, rust, python, java, docker, c)")
 
     # Package Manager Wrapper
     pkg_parser = subparsers.add_parser("pkg", help="Unified fast package manager and cache pruner")
@@ -803,6 +805,8 @@ def main():
             list_dev_environments()
         elif args.dev_action == "run":
             run_dev_environment(args.env)
+        elif args.dev_action == "setup":
+            install_native_stack(args.stack)
 
     elif args.command == "pkg":
         if args.pkg_action == "update":

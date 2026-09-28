@@ -4,7 +4,7 @@ import shutil
 from aero.doctor import run_doctor, get_cpu_info, get_memory_info, get_gpu_info
 from aero.power import PROFILES, get_current_profile
 from aero.memory import get_top_memory_processes
-from aero.dev import ENVIRONMENTS
+from aero.dev import ENVIRONMENTS, NATIVE_STACKS
 from aero.net import DNS_PROVIDERS
 from aero.ai import get_ai_status
 from aero.monitor import render_bar
@@ -112,8 +112,13 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIn("rust", ENVIRONMENTS)
         self.assertIn("go", ENVIRONMENTS)
         self.assertIn("c", ENVIRONMENTS)
+        self.assertIn("java", ENVIRONMENTS)
+        self.assertIn("ai", ENVIRONMENTS)
         self.assertIn("postgres", ENVIRONMENTS)
         self.assertIn("redis", ENVIRONMENTS)
+        self.assertIn("node", NATIVE_STACKS)
+        self.assertIn("rust", NATIVE_STACKS)
+        self.assertIn("java", NATIVE_STACKS)
 
     def test_dns_providers(self):
         self.assertIn("cloudflare", DNS_PROVIDERS)
