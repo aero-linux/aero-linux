@@ -11,8 +11,8 @@ from gi.repository import Gtk, Gdk
 
 class AeroWelcomeApp(Gtk.Window):
     def __init__(self):
-        super().__init__(title="Aero Linux Control Center")
-        self.set_default_size(840, 560)
+        super().__init__(title="Aero Linux Control Center & App Store")
+        self.set_default_size(880, 620)
         self.set_position(Gtk.WindowPosition.CENTER)
 
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
@@ -79,7 +79,39 @@ class AeroWelcomeApp(Gtk.Window):
 
         stack.add_titled(page_quick, "quick", "Quick Setup")
 
-        # 2. AI & Local Models
+        # 2. 1-Click App Store Page
+        page_store = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        page_store.set_margin_top(15)
+
+        lbl_store = Gtk.Label()
+        lbl_store.set_markup("<b>📦 1-Click Developer Software Center</b>")
+        page_store.pack_start(lbl_store, False, False, 0)
+
+        store_grid = Gtk.Grid()
+        store_grid.set_column_spacing(12)
+        store_grid.set_row_spacing(10)
+        store_grid.set_column_homogeneous(True)
+
+        apps = [
+            ("💻 Visual Studio Code", "aero store install vscode", 0, 0),
+            ("🦁 Brave Browser", "aero store install brave", 1, 0),
+            ("🐳 Docker & Compose", "aero store install docker", 0, 1),
+            ("📡 Postman API Client", "aero store install postman", 1, 1),
+            ("🐘 DBeaver Database GUI", "aero store install dbeaver", 0, 2),
+            ("📓 Obsidian Second Brain", "aero store install obsidian", 1, 2),
+            ("⚡ Neovim Modern Editor", "aero store install neovim", 0, 3),
+            ("💬 Discord for Devs", "aero store install discord", 1, 3),
+        ]
+
+        for label_text, cmd_text, col, row in apps:
+            btn = Gtk.Button(label=label_text)
+            btn.connect("clicked", lambda b, c=cmd_text: self.run_cmd(f"alacritty -e {c}"))
+            store_grid.attach(btn, col, row, 1, 1)
+
+        page_store.pack_start(store_grid, True, True, 0)
+        stack.add_titled(page_store, "store", "App Center")
+
+        # 3. AI & Local Models
         page_ai = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page_ai.set_margin_top(15)
 
@@ -99,9 +131,13 @@ class AeroWelcomeApp(Gtk.Window):
         btn_deepseek.connect("clicked", lambda b: self.run_cmd("alacritty -e aero ai pull deepseek-r1:8b"))
         page_ai.pack_start(btn_deepseek, False, False, 0)
 
+        btn_live = Gtk.Button(label="🌐 Launch Real-Time Live Telemetry Web Dashboard")
+        btn_live.connect("clicked", lambda b: self.run_cmd("aero live --port 8080 & xdg-open http://localhost:8080"))
+        page_ai.pack_start(btn_live, False, False, 0)
+
         stack.add_titled(page_ai, "ai", "AI & Compute")
 
-        # 3. Developer Toolchains & Databases
+        # 4. Developer Toolchains & Databases
         page_dev = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page_dev.set_margin_top(15)
 
@@ -123,7 +159,7 @@ class AeroWelcomeApp(Gtk.Window):
 
         stack.add_titled(page_dev, "dev", "Dev & Databases")
 
-        # 4. Themes & Aesthetics
+        # 5. Themes & Aesthetics
         page_themes = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page_themes.set_margin_top(15)
 
@@ -143,7 +179,33 @@ class AeroWelcomeApp(Gtk.Window):
         btn_nord.connect("clicked", lambda b: self.run_cmd("aero theme set nord"))
         page_themes.pack_start(btn_nord, False, False, 0)
 
+        btn_auto_theme = Gtk.Button(label="🕒 Auto-Sync Theme with Sun Cycle & Battery")
+        btn_auto_theme.connect("clicked", lambda b: self.run_cmd("aero theme auto"))
+        page_themes.pack_start(btn_auto_theme, False, False, 0)
+
         stack.add_titled(page_themes, "themes", "Themes")
+
+        # 6. Maintenance & Backup
+        page_maint = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_maint.set_margin_top(15)
+
+        lbl_maint = Gtk.Label()
+        lbl_maint.set_markup("<b>💾 System Maintenance & Dotfiles Backup</b>")
+        page_maint.pack_start(lbl_maint, False, False, 0)
+
+        btn_clean = Gtk.Button(label="🧹 Deep De-Bloat & Developer Cache Cleaner")
+        btn_clean.connect("clicked", lambda b: self.run_cmd("alacritty -e aero clean"))
+        page_maint.pack_start(btn_clean, False, False, 0)
+
+        btn_backup = Gtk.Button(label="📦 Export Dotfiles & Developer Configs Bundle")
+        btn_backup.connect("clicked", lambda b: self.run_cmd("alacritty -e aero dotfiles export"))
+        page_maint.pack_start(btn_backup, False, False, 0)
+
+        btn_health = Gtk.Button(label="🏥 Run Hardware S.M.A.R.T. & NVMe Health Audit")
+        btn_health.connect("clicked", lambda b: self.run_cmd("alacritty -e aero health"))
+        page_maint.pack_start(btn_health, False, False, 0)
+
+        stack.add_titled(page_maint, "maint", "Backup & Health")
 
         # Switcher
         switcher = Gtk.StackSwitcher()

@@ -35,6 +35,10 @@ from aero.health_checker import get_nvme_health, get_cpu_thermal_throttle_health
 from aero.mock_server import MOCK_SCHEMAS
 from aero.firewall import get_firewall_status
 from aero.prompt_gen import render_prompt, get_git_branch_fast
+from aero.app_store import APP_CATALOG
+from aero.theme_scheduler import auto_apply_dynamic_theme
+from aero.flasher import list_usb_drives
+from aero.dotfiles_mgr import export_dotfiles, import_dotfiles
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -242,6 +246,29 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIn("aero", p_bash)
         p_fish = render_prompt("fish")
         self.assertIn("aero", p_fish)
+
+    def test_app_catalog(self):
+        self.assertIn("vscode", APP_CATALOG)
+        self.assertIn("docker", APP_CATALOG)
+        self.assertIn("brave", APP_CATALOG)
+
+    def test_theme_scheduler(self):
+        theme = auto_apply_dynamic_theme()
+        self.assertIn(theme, ["nord", "cyber-cyan", "gruvbox", "tokyo-night"])
+
+    def test_usb_drives_listing(self):
+        drives = list_usb_drives()
+        self.assertIsInstance(drives, list)
+
+    def test_dotfiles_export_import(self):
+        tar = export_dotfiles("/tmp/aero_test_dotfiles")
+        self.assertTrue(os.path.exists(tar))
+        res = import_dotfiles(tar)
+        self.assertTrue(res)
+        if os.path.exists(tar):
+            os.remove(tar)
+        if os.path.exists("/tmp/aero_test_dotfiles"):
+            os.rmdir("/tmp/aero_test_dotfiles")
 
 
 if __name__ == "__main__":

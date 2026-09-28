@@ -12,7 +12,7 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-38%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-42%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
@@ -104,11 +104,14 @@ aero agent -s "kill port 8080"  # Generate exact shell commands
 aero gpu setup                  # Auto-configure CUDA / ROCm GPU drivers
 
 # 🛠️ Developer Sandboxes & Local Databases
+aero store [list|install <app>] # 1-Click App Center (VS Code, Brave, Docker, Postman)
 aero dev run [node|python|rust|go|c]  # Isolated containerized workspaces
 aero db start [postgres|redis|mysql|mongo|clickhouse]  # 1-command local DBs
 aero mock serve --port 4000     # Instant local mock REST API & JSON server
 aero cert generate [domain]     # 1-command trusted local SSL/TLS generator
 aero clean [--dry-run]          # Deep system cache de-bloater (npm/pip/apt/docker)
+aero dotfiles [export|import]   # Backup & sync developer shell & desktop configs
+aero flash [drives|write]       # Safe USB live ISO media flasher
 aero trace ping github.com      # Socket connect, TLS handshake & DNS tracer
 aero health                     # Hardware S.M.A.R.T. NVMe & CPU throttle audit
 aero firewall status            # Developer UFW firewall & port manager
@@ -128,6 +131,7 @@ aero layout [windows|tiling]    # 1-click layout switcher
 aero kernel [audit|profile]     # Low-latency vs throughput kernel scheduler
 aero wallpaper [set|generate]   # Procedural vector cyber wallpapers
 aero git [status|clean|graph|churn] # ASCII branch graph & code churn analyzer
+aero theme auto                 # Auto-sync theme with day/night solar cycle & battery
 aero theme set [cyber-cyan|tokyo-night|nord|gruvbox] # Desktop palette switcher
 aero font install jetbrains-mono # 1-click Nerd Font installation
 aero net bbr                    # Enable Google BBR TCP congestion control

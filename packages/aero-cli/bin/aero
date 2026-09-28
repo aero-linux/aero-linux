@@ -66,6 +66,10 @@ from aero.health_checker import audit_hardware_health
 from aero.mock_server import run_mock_server
 from aero.firewall import show_firewall_status, allow_port, block_all_inbound
 from aero.prompt_gen import render_prompt
+from aero.app_store import list_apps, install_app
+from aero.theme_scheduler import auto_apply_dynamic_theme
+from aero.flasher import list_usb_drives, flash_iso
+from aero.dotfiles_mgr import export_dotfiles, import_dotfiles
 
 
 def print_banner():
@@ -240,6 +244,7 @@ def main():
     theme_parser = subparsers.add_parser("theme", help="Desktop aesthetic and palette switcher")
     theme_sub = theme_parser.add_subparsers(dest="theme_action", help="Theme actions")
     theme_sub.add_parser("list", help="List available desktop themes")
+    theme_sub.add_parser("auto", help="Auto-sync theme with day/night solar cycle & battery status")
     theme_set = theme_sub.add_parser("set", help="Apply a desktop theme")
     theme_set.add_argument("name", choices=list(THEMES.keys()), help="Theme name (cyber-cyan, tokyo-night, nord, gruvbox)")
 
@@ -438,6 +443,30 @@ def main():
     # Fast Shell Prompt Generator
     prompt_parser = subparsers.add_parser("prompt", help="Render ultra-fast git-aware terminal prompt string")
     prompt_parser.add_argument("shell", nargs="?", default="bash", choices=["bash", "zsh", "fish"], help="Target shell")
+
+    # Developer Software Store (1-Click App Center)
+    store_parser = subparsers.add_parser("store", help="1-Click developer app store (VS Code, Brave, Docker, Postman)")
+    store_sub = store_parser.add_subparsers(dest="store_action", help="Store actions")
+    s_list = store_sub.add_parser("list", help="List available developer software")
+    s_list.add_argument("--category", "-c", default="", help="Filter by category")
+    s_inst = store_sub.add_parser("install", help="Install software by ID")
+    s_inst.add_argument("app", help="Application ID (e.g. vscode, brave, docker, obsidian)")
+
+    # Live USB ISO Flasher
+    flash_parser = subparsers.add_parser("flash", help="Safe USB ISO flasher tool")
+    flash_sub = flash_parser.add_subparsers(dest="flash_action", help="Flash actions")
+    flash_sub.add_parser("drives", help="List connected removable USB flash drives")
+    f_write = flash_sub.add_parser("write", help="Write ISO file to USB drive")
+    f_write.add_argument("iso", help="Path to ISO image")
+    f_write.add_argument("drive", help="Target drive device path (e.g. /dev/sdb)")
+
+    # Developer Dotfiles & Configs Backup
+    dot_parser = subparsers.add_parser("dotfiles", help="Backup and restore developer shell & desktop configs")
+    dot_sub = dot_parser.add_subparsers(dest="dot_action", help="Dotfiles actions")
+    d_exp = dot_sub.add_parser("export", help="Export dotfiles to a tarball archive")
+    d_exp.add_argument("--out", default=".", help="Output directory")
+    d_imp = dot_sub.add_parser("import", help="Restore dotfiles from tarball archive")
+    d_imp.add_argument("archive", help="Path to tarball archive")
 
     args = parser.parse_args()
 
@@ -650,6 +679,8 @@ def main():
     elif args.command == "theme":
         if args.theme_action == "set":
             set_theme(args.name)
+        elif args.theme_action == "auto":
+            auto_apply_dynamic_theme()
         else:
             list_themes()
 
@@ -800,6 +831,30 @@ def main():
     elif args.command == "prompt":
         p_str = render_prompt(args.shell)
         print(p_str, end="")
+
+    elif args.command == "store":
+        if args.store_action == "install":
+            install_app(args.app)
+        else:
+            list_apps(args.category)
+
+    elif args.command == "flash":
+        if args.flash_action == "write":
+            flash_iso(args.iso, args.drive)
+        else:
+            drives = list_usb_drives()
+            print("\n💾 Connected Removable Flash Drives:")
+            for d in drives:
+                print(f" • {d['device']}: {d['model']} ({d['size_gb']} GB)")
+            if not drives:
+                print(" • No removable USB drives detected.")
+            print("")
+
+    elif args.command == "dotfiles":
+        if args.dot_action == "import":
+            import_dotfiles(args.archive)
+        else:
+            export_dotfiles(args.out)
 
 
 if __name__ == "__main__":
