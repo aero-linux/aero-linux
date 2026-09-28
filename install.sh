@@ -221,6 +221,14 @@ exec python3 "${AERO_HOME}/bin/aero-repair-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-repair-gui"
 
+# Create global executable wrapper for aero-notes-gui
+cat << 'EOF' > "${BIN_DIR}/aero-notes"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-notes-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-notes"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -449,6 +457,17 @@ Icon=system-software-update
 Terminal=false
 Type=Application
 Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-notes.desktop"
+[Desktop Entry]
+Name=Aero Scratchpad Notes
+Comment=Aero Linux Developer Floating Markdown Scratchpad
+Exec=${BIN_DIR}/aero-notes
+Icon=accessories-text-editor
+Terminal=false
+Type=Application
+Categories=Utility;TextEditor;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

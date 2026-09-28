@@ -596,6 +596,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(rep_path))
         self.assertTrue(os.access(rep_path, os.X_OK))
 
+    def test_notes_gui_script(self):
+        notes_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-notes-gui"
+        self.assertTrue(os.path.exists(notes_path))
+        self.assertTrue(os.access(notes_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
