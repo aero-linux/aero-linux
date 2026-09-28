@@ -74,6 +74,10 @@ from aero.tunnel import start_tunnel
 from aero.turbo_build import mount_turbo_ramdisk, unmount_turbo_ramdisk, get_active_turbo_mounts
 from aero.db_ui import launch_db_ui
 from aero.snippets import list_snippets, search_snippets
+from aero.log_streamer import audit_system_errors
+from aero.regex_tool import test_regex
+from aero.diff_tool import show_file_diff
+from aero.qr_tool import render_qr_terminal, generate_wifi_qr
 
 
 def print_banner():
@@ -497,6 +501,26 @@ def main():
     s_find = snip_sub.add_parser("search", help="Search one-liners by keyword")
     s_find.add_argument("query", help="Search keyword (e.g. docker, git, ffmpeg)")
 
+    # Regular Expression Debugger
+    regex_parser = subparsers.add_parser("regex", help="Test and debug regular expressions in terminal")
+    regex_parser.add_argument("pattern", help=r"Regex pattern (e.g. '(?P<ip>\d+\.\d+\.\d+\.\d+)')")
+    regex_parser.add_argument("text", help="Target text to match against")
+
+    # Code & File Diff Inspector
+    diff_parser = subparsers.add_parser("diff", help="Colorized side-by-side terminal file diff inspector")
+    diff_parser.add_argument("file_a", help="Original file path")
+    diff_parser.add_argument("file_b", help="Modified file path")
+
+    # Terminal QR Code Generator
+    qr_parser = subparsers.add_parser("qr", help="Generate UTF-8 QR codes for URLs, text, and Wi-Fi")
+    qr_sub = qr_parser.add_subparsers(dest="qr_action", help="QR actions")
+    qr_text = qr_sub.add_parser("encode", help="Encode text or URL into terminal QR code")
+    qr_text.add_argument("payload", help="URL or text string to encode")
+    qr_wifi = qr_sub.add_parser("wifi", help="Generate Wi-Fi instant connection QR code")
+    qr_wifi.add_argument("ssid", help="Wi-Fi Network Name (SSID)")
+    qr_wifi.add_argument("password", help="Wi-Fi Password")
+    qr_wifi.add_argument("--auth", default="WPA", help="Authentication type (default: WPA)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -909,6 +933,18 @@ def main():
             search_snippets(args.query)
         else:
             list_snippets(args.category)
+
+    elif args.command == "regex":
+        test_regex(args.pattern, args.text)
+
+    elif args.command == "diff":
+        show_file_diff(args.file_a, args.file_b)
+
+    elif args.command == "qr":
+        if args.qr_action == "wifi":
+            generate_wifi_qr(args.ssid, args.password, args.auth)
+        else:
+            render_qr_terminal(args.payload)
 
 
 if __name__ == "__main__":

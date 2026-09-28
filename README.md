@@ -12,7 +12,7 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-44%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-47%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
@@ -110,6 +110,9 @@ aero db start [postgres|redis|mysql|mongo|clickhouse]  # 1-command local DBs
 aero db ui [postgres|redis|sqlite] # Browser-based database management studio
 aero tunnel <port>              # Instant public HTTPS tunnel (Cloudflare / SSH)
 aero turbo [mount|status]       # 10GB/s tmpfs RAM-disk compilation accelerator
+aero regex <pattern> <text>     # Terminal regex debugger and capture group parser
+aero diff <file1> <file2>       # Colorized terminal side-by-side diff inspector
+aero qr [encode|wifi]           # Instant terminal QR codes for mobile sync & Wi-Fi
 aero snippet [list|search <q>]  # Developer one-liner cheatsheet & vault
 aero mock serve --port 4000     # Instant local mock REST API & JSON server
 aero cert generate [domain]     # 1-command trusted local SSL/TLS generator

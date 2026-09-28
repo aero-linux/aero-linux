@@ -41,6 +41,9 @@ from aero.flasher import list_usb_drives
 from aero.dotfiles_mgr import export_dotfiles, import_dotfiles
 from aero.turbo_build import get_active_turbo_mounts
 from aero.snippets import DEFAULT_SNIPPETS
+from aero.log_streamer import get_oom_events
+from aero.regex_tool import test_regex
+from aero.diff_tool import show_file_diff
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -280,6 +283,30 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIn("docker-prune", DEFAULT_SNIPPETS)
         self.assertIn("git-undo-commit", DEFAULT_SNIPPETS)
         self.assertIn("port-find", DEFAULT_SNIPPETS)
+
+    def test_oom_events_check(self):
+        ooms = get_oom_events()
+        self.assertIsInstance(ooms, list)
+
+    def test_regex_tool(self):
+        res = test_regex(r"(?P<word>\w+)", "hello world")
+        self.assertTrue(res["valid"])
+        self.assertEqual(len(res["matches"]), 2)
+
+    def test_diff_tool(self):
+        # Create 2 temp files
+        with open("/tmp/aero_diff_a.txt", "w") as f:
+            f.write("Line 1\nLine 2\n")
+        with open("/tmp/aero_diff_b.txt", "w") as f:
+            f.write("Line 1\nLine 2 modified\nLine 3\n")
+        
+        diff = show_file_diff("/tmp/aero_diff_a.txt", "/tmp/aero_diff_b.txt")
+        self.assertFalse(diff["identical"])
+        self.assertTrue(diff["additions"] > 0)
+
+        # Cleanup
+        os.remove("/tmp/aero_diff_a.txt")
+        os.remove("/tmp/aero_diff_b.txt")
 
 
 if __name__ == "__main__":
