@@ -157,6 +157,22 @@ exec python3 "${AERO_HOME}/bin/aero-connect-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-connect-gui"
 
+# Create global executable wrapper for aero-power-gui
+cat << 'EOF' > "${BIN_DIR}/aero-power-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-power-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-power-gui"
+
+# Create global executable wrapper for aero-nightlight-gui
+cat << 'EOF' > "${BIN_DIR}/aero-nightlight-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-nightlight-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-nightlight-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -297,6 +313,28 @@ Icon=phone
 Terminal=false
 Type=Application
 Categories=Network;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-power.desktop"
+[Desktop Entry]
+Name=Aero Battery & Thermals
+Comment=Aero Linux Battery Care, Fan Curves & Power Profiles
+Exec=${BIN_DIR}/aero-power-gui
+Icon=battery
+Terminal=false
+Type=Application
+Categories=System;Settings;HardwareSettings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-nightlight.desktop"
+[Desktop Entry]
+Name=Aero Night Light
+Comment=Aero Linux Blue Light & Color Temperature Studio
+Exec=${BIN_DIR}/aero-nightlight-gui
+Icon=display
+Terminal=false
+Type=Application
+Categories=System;Settings;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

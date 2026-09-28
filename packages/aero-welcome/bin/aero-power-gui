@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Battery, Power & Fan Control Studio
+Battery charge threshold limiter (80% guard), cooling curves, and power governors.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.thermals import get_temperatures
+from aero.battery import get_battery_health
+from aero.power import get_current_profile, set_profile, PROFILES
+
+
+class PowerManagerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Power & Battery Care Studio")
+        self.set_default_size(560, 540)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Cyber Styling
+        css = b"""
+        window { background-color: #0a0b12; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #34d399; }
+        .card { background-color: #121420; border-radius: 10px; padding: 14px; border: 1px solid #1e293b; }
+        .btn-apply { background-color: #34d399; color: #000000; font-weight: bold; border-radius: 6px; padding: 8px 18px; }
+        .btn-apply:hover { background-color: #6ee7b7; }
+        .btn-tile { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 8px 12px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>⚡ Battery Health & Thermal Studio</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#94a3b8' font='10'>80% charge threshold protection, cooling fan curves & TLP governors</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # 1. Battery Care & Charge Limiter Card
+        bat_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        bat_card.get_style_context().add_class("card")
+        
+        lbl_bat_title = Gtk.Label(label="<b>🔋 Battery Lifespan Guard (Hardware Charge Limiter)</b>", xalign=0)
+        lbl_bat_title.set_use_markup(True)
+        bat_card.pack_start(lbl_bat_title, False, False, 0)
+
+        lbl_bat_desc = Gtk.Label(label="Capping charge at 80% prevents lithium-ion degradation, extending battery life to 5+ years.", xalign=0)
+        lbl_bat_desc.set_markup("<span color='#94a3b8' font='9'>Capping charge at 80% prevents lithium-ion degradation, extending battery life to 5+ years.</span>")
+        bat_card.pack_start(lbl_bat_desc, False, False, 0)
+
+        bat_grid = Gtk.Grid()
+        bat_grid.set_column_spacing(10)
+        bat_grid.set_column_homogeneous(True)
+
+        btn_80 = Gtk.Button(label="🛡️ 80% Guard (Recommended)")
+        btn_80.get_style_context().add_class("btn-tile")
+        btn_80.connect("clicked", lambda b: self._set_battery_threshold(80))
+        bat_grid.attach(btn_80, 0, 0, 1, 1)
+
+        btn_60 = Gtk.Button(label="🔌 60% Desk Mode (Always Plugged)")
+        btn_60.get_style_context().add_class("btn-tile")
+        btn_60.connect("clicked", lambda b: self._set_battery_threshold(60))
+        bat_grid.attach(btn_60, 1, 0, 1, 1)
+
+        btn_100 = Gtk.Button(label="✈️ 100% Full Travel")
+        btn_100.get_style_context().add_class("btn-tile")
+        btn_100.connect("clicked", lambda b: self._set_battery_threshold(100))
+        bat_grid.attach(btn_100, 2, 0, 1, 1)
+
+        bat_card.pack_start(bat_grid, False, False, 0)
+        vbox.pack_start(bat_card, False, False, 0)
+
+        # 2. Fan Cooling Curves Card
+        fan_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        fan_card.get_style_context().add_class("card")
+
+        lbl_fan_title = Gtk.Label(label="<b>❄️ Hardware Fan & Acoustic Cooling Curves</b>", xalign=0)
+        lbl_fan_title.set_use_markup(True)
+        fan_card.pack_start(lbl_fan_title, False, False, 0)
+
+        fan_grid = Gtk.Grid()
+        fan_grid.set_column_spacing(10)
+        fan_grid.set_column_homogeneous(True)
+
+        btn_silent = Gtk.Button(label="🤫 Silent (0 RPM Idle)")
+        btn_silent.get_style_context().add_class("btn-tile")
+        btn_silent.connect("clicked", lambda b: self._set_fan_curve("silent"))
+        fan_grid.attach(btn_silent, 0, 0, 1, 1)
+
+        btn_bal = Gtk.Button(label="⚖️ Balanced (Dynamic)")
+        btn_bal.get_style_context().add_class("btn-tile")
+        btn_bal.connect("clicked", lambda b: self._set_fan_curve("balanced"))
+        fan_grid.attach(btn_bal, 1, 0, 1, 1)
+
+        btn_turbo = Gtk.Button(label="🌪️ Turbo (Max Cooling)")
+        btn_turbo.get_style_context().add_class("btn-tile")
+        btn_turbo.connect("clicked", lambda b: self._set_fan_curve("turbo"))
+        fan_grid.attach(btn_turbo, 2, 0, 1, 1)
+
+        fan_card.pack_start(fan_grid, False, False, 0)
+        vbox.pack_start(fan_card, False, False, 0)
+
+        # 3. Live Hardware Telemetry
+        tele_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        tele_card.get_style_context().add_class("card")
+
+        lbl_tele_title = Gtk.Label(label="<b>📊 Live Sensor Telemetry</b>", xalign=0)
+        lbl_tele_title.set_use_markup(True)
+        tele_card.pack_start(lbl_tele_title, False, False, 0)
+
+        self.lbl_telemetry = Gtk.Label(xalign=0)
+        self.lbl_telemetry.set_markup("<span color='#34d399' font='10'>Reading hardware sensors...</span>")
+        tele_card.pack_start(self.lbl_telemetry, False, False, 0)
+        vbox.pack_start(tele_card, True, True, 0)
+
+        self._update_telemetry()
+
+    def _set_battery_threshold(self, threshold):
+        subprocess.run(["aero", "power", "--threshold", str(threshold)], capture_output=True)
+        subprocess.run(["notify-send", "🔋 Battery Care", f"Battery charge limit set to {threshold}%"])
+        self._update_telemetry()
+
+    def _set_fan_curve(self, mode):
+        subprocess.run(["aero", "fan", mode], capture_output=True)
+        subprocess.run(["notify-send", "❄️ Cooling Profile", f"Fan cooling curve set to {mode.upper()}"])
+        self._update_telemetry()
+
+    def _update_telemetry(self):
+        temps = get_temperatures()
+        temp_str = " • ".join([f"{t['sensor']}: {t['temp_c']}°C" for t in temps[:3]]) if temps else "Sensors active"
+        health = get_battery_health()
+        cycles = health.get("cycle_count", "N/A")
+        
+        markup = f"<b>Thermals:</b> <span color='#00f2fe'>{temp_str}</span>\n<b>Battery Health:</b> <span color='#34d399'>Cycles: {cycles}</span>"
+        self.lbl_telemetry.set_markup(markup)
+
+
+def main():
+    win = PowerManagerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

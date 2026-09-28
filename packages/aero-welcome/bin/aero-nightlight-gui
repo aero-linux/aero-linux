@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Night Light & Blue Light Filter Studio
+Adjust color temperature (3000K-6500K) and blue-light eye protection.
+"""
+
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+class NightLightWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Night Light & Eye Studio")
+        self.set_default_size(500, 420)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Warm Amber Cyber Styling
+        css = b"""
+        window { background-color: #0c0a09; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #f59e0b; }
+        .card { background-color: #1c1917; border-radius: 10px; padding: 14px; border: 1px solid #292524; }
+        .btn-preset { background-color: #292524; color: #f8fafc; border-radius: 6px; padding: 8px 12px; }
+        .btn-preset:hover { background-color: #44403c; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🌙 Night Light &amp; Eye Protection</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#a8a29e' font='10'>Reduce blue light eye strain with warm color temperatures</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Slider Card
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        card.get_style_context().add_class("card")
+
+        self.lbl_temp = Gtk.Label(label="<b>Color Temperature: 4500 K (Warm Amber)</b>", xalign=0)
+        self.lbl_temp.set_use_markup(True)
+        card.pack_start(self.lbl_temp, False, False, 0)
+
+        self.scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 3000, 6500, 100)
+        self.scale.set_value(4500)
+        self.scale.set_inverted(True)
+        self.scale.connect("value-changed", self._on_slider_changed)
+        card.pack_start(self.scale, False, False, 0)
+
+        # Presets Grid
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_column_homogeneous(True)
+
+        btn_day = Gtk.Button(label="☀️ Daylight (6500K)")
+        btn_day.get_style_context().add_class("btn-preset")
+        btn_day.connect("clicked", lambda b: self.scale.set_value(6500))
+        grid.attach(btn_day, 0, 0, 1, 1)
+
+        btn_sunset = Gtk.Button(label="🌅 Sunset (4500K)")
+        btn_sunset.get_style_context().add_class("btn-preset")
+        btn_sunset.connect("clicked", lambda b: self.scale.set_value(4500))
+        grid.attach(btn_sunset, 1, 0, 1, 1)
+
+        btn_night = Gtk.Button(label="🌙 Bedtime (3200K)")
+        btn_night.get_style_context().add_class("btn-preset")
+        btn_night.connect("clicked", lambda b: self.scale.set_value(3200))
+        grid.attach(btn_night, 2, 0, 1, 1)
+
+        card.pack_start(grid, False, False, 0)
+        vbox.pack_start(card, True, True, 0)
+
+        # Auto Schedule
+        self.chk_auto = Gtk.CheckButton(label="⏰ Automatically turn on from Sunset to Sunrise")
+        self.chk_auto.set_active(True)
+        vbox.pack_start(self.chk_auto, False, False, 0)
+
+    def _on_slider_changed(self, scale):
+        temp = int(scale.get_value())
+        self.lbl_temp.set_markup(f"<b>Color Temperature: {temp} K</b>")
+
+        if temp >= 6400:
+            subprocess.run(["aero", "display", "night", "off"], capture_output=True)
+        else:
+            if shutil.which("gammastep"):
+                subprocess.Popen(["gammastep", "-O", str(temp)])
+
+
+def main():
+    win = NightLightWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

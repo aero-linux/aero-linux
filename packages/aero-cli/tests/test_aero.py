@@ -539,6 +539,14 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(cn_path))
         self.assertTrue(os.access(cn_path, os.X_OK))
 
+    def test_power_and_nightlight_gui_scripts(self):
+        pwr_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-power-gui"
+        nl_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-nightlight-gui"
+        self.assertTrue(os.path.exists(pwr_path))
+        self.assertTrue(os.access(pwr_path, os.X_OK))
+        self.assertTrue(os.path.exists(nl_path))
+        self.assertTrue(os.access(nl_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
