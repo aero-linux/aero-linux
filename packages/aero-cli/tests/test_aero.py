@@ -695,6 +695,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(fw_path))
         self.assertTrue(os.access(fw_path, os.X_OK))
 
+    def test_ssh_gui_script(self):
+        ssh_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-ssh-gui"
+        self.assertTrue(os.path.exists(ssh_path))
+        self.assertTrue(os.access(ssh_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

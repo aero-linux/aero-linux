@@ -333,6 +333,14 @@ exec python3 "${AERO_HOME}/bin/aero-firewall-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-firewall-gui"
 
+# Create global executable wrapper for aero-ssh-gui
+cat << 'EOF' > "${BIN_DIR}/aero-ssh-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-ssh-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-ssh-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -715,6 +723,17 @@ Icon=security-high
 Terminal=false
 Type=Application
 Categories=System;Security;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-ssh.desktop"
+[Desktop Entry]
+Name=Aero SSH & Remote Servers
+Comment=Aero Linux SSH Keys Generator & Server Bookmarks
+Exec=${BIN_DIR}/aero-ssh-gui
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Network;Development;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

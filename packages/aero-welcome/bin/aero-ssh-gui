@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical SSH Key & Remote Server Manager Studio
+Generate Ed25519 SSH keys, manage ~/.ssh/config host bookmarks, and 1-click terminal connect.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+SSH_DIR = os.path.expanduser("~/.ssh")
+SSH_CONFIG_PATH = os.path.join(SSH_DIR, "config")
+
+
+def get_ssh_keys():
+    os.makedirs(SSH_DIR, exist_ok=True)
+    keys = []
+    if os.path.exists(SSH_DIR):
+        for f in os.listdir(SSH_DIR):
+            if f.endswith(".pub"):
+                pub_path = os.path.join(SSH_DIR, f)
+                try:
+                    with open(pub_path, "r", encoding="utf-8") as file:
+                        content = file.read().strip()
+                    keys.append({
+                        "name": f,
+                        "path": pub_path,
+                        "type": content.split()[0] if content else "ssh-key",
+                        "content": content
+                    })
+                except Exception:
+                    pass
+    return keys
+
+
+def parse_ssh_config():
+    hosts = []
+    if os.path.exists(SSH_CONFIG_PATH):
+        try:
+            with open(SSH_CONFIG_PATH, "r", encoding="utf-8") as f:
+                current_host = None
+                for line in f:
+                    line_clean = line.strip()
+                    if line_clean.startswith("Host ") and not line_clean.startswith("Host *"):
+                        if current_host:
+                            hosts.append(current_host)
+                        host_alias = line_clean.split(None, 1)[1]
+                        current_host = {"alias": host_alias, "hostname": "", "user": "", "port": "22"}
+                    elif current_host and line_clean:
+                        parts = line_clean.split(None, 1)
+                        if len(parts) == 2:
+                            k, v = parts[0].lower(), parts[1]
+                            if k == "hostname":
+                                current_host["hostname"] = v
+                            elif k == "user":
+                                current_host["user"] = v
+                            elif k == "port":
+                                current_host["port"] = v
+                if current_host:
+                    hosts.append(current_host)
+        except Exception:
+            pass
+    return hosts
+
+
+class SSHManagerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero SSH Key & Remote Server Studio")
+        self.set_default_size(680, 540)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #38bdf8; }
+        .card { background-color: #111827; border-radius: 10px; padding: 12px 16px; border: 1px solid #1f2937; }
+        .btn-action { background-color: #0284c7; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        .btn-action:hover { background-color: #0ea5e9; }
+        .btn-secondary { background-color: #1e293b; color: #38bdf8; font-weight: bold; border-radius: 6px; padding: 6px 12px; font-size: 11px; }
+        .btn-connect { background-color: #10b981; color: #000000; font-weight: bold; border-radius: 6px; padding: 4px 12px; font-size: 11px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔑 Aero SSH Keys &amp; Servers Studio</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Ed25519 keypair generator, ~/.ssh/config bookmarks &amp; 1-click connect</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_gen = Gtk.Button(label="🔑 New Ed25519 Key")
+        btn_gen.get_style_context().add_class("btn-secondary")
+        btn_gen.connect("clicked", self._on_generate_key)
+        header_box.pack_start(btn_gen, False, False, 0)
+
+        btn_add_host = Gtk.Button(label="➕ Add Server")
+        btn_add_host.get_style_context().add_class("btn-action")
+        btn_add_host.connect("clicked", self._on_add_server)
+        header_box.pack_start(btn_add_host, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Keys Overview Card
+        self.keys_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.keys_box.get_style_context().add_class("card")
+        vbox.pack_start(self.keys_box, False, False, 0)
+
+        # Saved Servers List
+        lbl_srv = Gtk.Label(label="<b>Saved Remote Servers (~/.ssh/config)</b>", xalign=0)
+        lbl_srv.set_use_markup(True)
+        vbox.pack_start(lbl_srv, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled.add(self.list_box)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_all()
+
+    def _populate_all(self):
+        # 1. Populate Keys
+        for child in self.keys_box.get_children():
+            self.keys_box.remove(child)
+
+        keys = get_ssh_keys()
+        if not keys:
+            lbl_nk = Gtk.Label(label="No public SSH keys found in ~/.ssh/", xalign=0)
+            lbl_nk.set_markup("<span color='#94a3b8'>No SSH keys found. Click <b>🔑 New Ed25519 Key</b> to generate one.</span>")
+            self.keys_box.pack_start(lbl_nk, True, True, 0)
+        else:
+            for k in keys:
+                btn_k = Gtk.Button(label=f"📋 Copy {k['name']}")
+                btn_k.get_style_context().add_class("btn-secondary")
+                btn_k.connect("clicked", lambda b, c=k['content'], n=k['name']: self._copy_key(c, n))
+                self.keys_box.pack_start(btn_k, False, False, 0)
+
+        self.keys_box.show_all()
+
+        # 2. Populate Servers
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        hosts = parse_ssh_config()
+        if not hosts:
+            lbl_empty = Gtk.Label(label="No servers configured in ~/.ssh/config.", xalign=0.5)
+            lbl_empty.set_markup("<span color='#94a3b8'>No saved remote servers. Click <b>➕ Add Server</b> to bookmark one.</span>")
+            self.list_box.pack_start(lbl_empty, True, True, 30)
+        else:
+            for h in hosts:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                row.get_style_context().add_class("card")
+
+                info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_n = Gtk.Label(xalign=0)
+                lbl_n.set_markup(f"🖥️ <b>{h['alias']}</b> <span color='#38bdf8'>({h['user'] or 'root'}@{h['hostname'] or h['alias']}:{h['port']})</span>")
+                lbl_c = Gtk.Label(xalign=0)
+                lbl_c.set_markup(f"<span color='#9ca3af' font='9'>Command: <code>ssh {h['alias']}</code></span>")
+                info.pack_start(lbl_n, False, False, 0)
+                info.pack_start(lbl_c, False, False, 0)
+                row.pack_start(info, True, True, 0)
+
+                btn_conn = Gtk.Button(label="⚡ Connect")
+                btn_conn.get_style_context().add_class("btn-connect")
+                btn_conn.connect("clicked", lambda b, a=h['alias']: self._connect_ssh(a))
+                row.pack_start(btn_conn, False, False, 0)
+
+                self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Loaded {len(keys)} key(s) and {len(hosts)} server bookmark(s)</span>")
+
+    def _copy_key(self, content, name):
+        clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        clip.set_text(content, -1)
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Copied {name} public key to clipboard!</span>")
+        subprocess.run(["notify-send", "🔑 SSH Key Copied", f"Public key {name} copied to clipboard."])
+
+    def _connect_ssh(self, alias):
+        subprocess.Popen(f"alacritty -e ssh {alias}", shell=True)
+
+    def _on_generate_key(self, button):
+        dialog = Gtk.Dialog(title="Generate Ed25519 SSH Key", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        dialog.set_default_size(360, 160)
+        dialog.set_border_width(12)
+
+        content = dialog.get_content_area()
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        lbl_c = Gtk.Label(label="Key Comment / Email:", xalign=0)
+        entry_email = Gtk.Entry()
+        entry_email.set_placeholder_text("ronitgupta138@gmail.com")
+
+        lbl_f = Gtk.Label(label="Filename:", xalign=0)
+        entry_file = Gtk.Entry()
+        entry_file.set_text("id_ed25519")
+
+        grid.attach(lbl_c, 0, 0, 1, 1)
+        grid.attach(entry_email, 1, 0, 1, 1)
+        grid.attach(lbl_f, 0, 1, 1, 1)
+        grid.attach(entry_file, 1, 1, 1, 1)
+
+        content.add(grid)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            comment = entry_email.get_text().strip() or "aero-user"
+            filename = entry_file.get_text().strip() or "id_ed25519"
+            key_path = os.path.join(SSH_DIR, filename)
+
+            cmd = ["ssh-keygen", "-t", "ed25519", "-C", comment, "-f", key_path, "-N", ""]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode == 0:
+                self._populate_all()
+                subprocess.run(["notify-send", "🔑 SSH Key Generated", f"Generated {filename} successfully."])
+        dialog.destroy()
+
+    def _on_add_server(self, button):
+        dialog = Gtk.Dialog(title="Add Remote Server Bookmark", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_ADD, Gtk.ResponseType.OK)
+        dialog.set_default_size(380, 220)
+        dialog.set_border_width(12)
+
+        content = dialog.get_content_area()
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        lbl_a = Gtk.Label(label="Host Alias:", xalign=0)
+        entry_alias = Gtk.Entry()
+        entry_alias.set_placeholder_text("e.g. prod-vps, aws-ec2, pi")
+
+        lbl_h = Gtk.Label(label="Host IP/Domain:", xalign=0)
+        entry_host = Gtk.Entry()
+        entry_host.set_placeholder_text("e.g. 192.168.1.100 or myserver.com")
+
+        lbl_u = Gtk.Label(label="User:", xalign=0)
+        entry_user = Gtk.Entry()
+        entry_user.set_text("root")
+
+        lbl_p = Gtk.Label(label="Port:", xalign=0)
+        entry_port = Gtk.Entry()
+        entry_port.set_text("22")
+
+        grid.attach(lbl_a, 0, 0, 1, 1)
+        grid.attach(entry_alias, 1, 0, 1, 1)
+        grid.attach(lbl_h, 0, 1, 1, 1)
+        grid.attach(entry_host, 1, 1, 1, 1)
+        grid.attach(lbl_u, 0, 2, 1, 1)
+        grid.attach(entry_user, 1, 2, 1, 1)
+        grid.attach(lbl_p, 0, 3, 1, 1)
+        grid.attach(entry_port, 1, 3, 1, 1)
+
+        content.add(grid)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            alias = entry_alias.get_text().strip()
+            hostname = entry_host.get_text().strip()
+            user = entry_user.get_text().strip() or "root"
+            port = entry_port.get_text().strip() or "22"
+
+            if alias and hostname:
+                block = f"\nHost {alias}\n    HostName {hostname}\n    User {user}\n    Port {port}\n"
+                with open(SSH_CONFIG_PATH, "a", encoding="utf-8") as f:
+                    f.write(block)
+                self._populate_all()
+                subprocess.run(["notify-send", "🖥️ Server Added", f"Saved {alias} ({hostname}) to ~/.ssh/config."])
+        dialog.destroy()
+
+
+def main():
+    win = SSHManagerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
