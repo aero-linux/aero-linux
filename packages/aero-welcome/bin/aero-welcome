@@ -61,6 +61,33 @@ class AeroWelcomeApp(Gtk.Window):
         sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
         page_quick.pack_start(sep, False, False, 5)
 
+        # Quick Hardware & Connectivity Toggles
+        quick_grid = Gtk.Grid()
+        quick_grid.set_column_spacing(10)
+        quick_grid.set_row_spacing(8)
+        quick_grid.set_column_homogeneous(True)
+
+        btn_wifi = Gtk.Button(label="📶 Wi-Fi Settings")
+        btn_wifi.connect("clicked", lambda b: self.run_cmd("nm-connection-editor || alacritty -e nmtui"))
+        quick_grid.attach(btn_wifi, 0, 0, 1, 1)
+
+        btn_bt = Gtk.Button(label="🎧 Bluetooth Devices")
+        btn_bt.connect("clicked", lambda b: self.run_cmd("blueman-manager || alacritty -e bluetoothctl"))
+        quick_grid.attach(btn_bt, 1, 0, 1, 1)
+
+        btn_vol = Gtk.Button(label="🔊 Audio & Volume Mixer")
+        btn_vol.connect("clicked", lambda b: self.run_cmd("pavucontrol"))
+        quick_grid.attach(btn_vol, 0, 1, 1, 1)
+
+        btn_fm = Gtk.Button(label="📁 Files & Drives (Nemo)")
+        btn_fm.connect("clicked", lambda b: self.run_cmd("nemo ~"))
+        quick_grid.attach(btn_fm, 1, 1, 1, 1)
+
+        page_quick.pack_start(quick_grid, False, False, 0)
+
+        sep2 = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        page_quick.pack_start(sep2, False, False, 5)
+
         btn_zram = Gtk.Button(label="🧠 Compact zRAM Memory & Drop Caches")
         btn_zram.connect("clicked", lambda b: self.run_cmd("aero memory --optimize"))
         page_quick.pack_start(btn_zram, False, False, 0)
