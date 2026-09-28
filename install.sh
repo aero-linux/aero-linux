@@ -197,6 +197,22 @@ exec python3 "${AERO_HOME}/bin/aero-vault-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-vault-gui"
 
+# Create global executable wrapper for aero-about-gui
+cat << 'EOF' > "${BIN_DIR}/aero-about"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-about-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-about"
+
+# Create global executable wrapper for aero-screenshot-gui
+cat << 'EOF' > "${BIN_DIR}/aero-screenshot"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-screenshot-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-screenshot"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -392,6 +408,28 @@ Icon=dialog-password
 Terminal=false
 Type=Application
 Categories=Development;Security;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-about.desktop"
+[Desktop Entry]
+Name=About Aero Linux
+Comment=Aero Linux System Information & Hardware Specifications
+Exec=${BIN_DIR}/aero-about
+Icon=help-about
+Terminal=false
+Type=Application
+Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-screenshot.desktop"
+[Desktop Entry]
+Name=Aero Screenshot Tool
+Comment=Aero Linux Snip & Screen Capture Tool
+Exec=${BIN_DIR}/aero-screenshot
+Icon=applets-screenshooter
+Terminal=false
+Type=Application
+Categories=Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

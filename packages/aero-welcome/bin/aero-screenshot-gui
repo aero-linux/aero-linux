@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Screenshot & Snip Tool
+Visual screen capture utility (Region Snip, Active Window, Full Screen) with auto-clipboard copy.
+"""
+
+import os
+import shutil
+import subprocess
+import time
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+class ScreenshotWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Screenshot & Snip Tool")
+        self.set_default_size(480, 360)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #38bdf8; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-snip { background-color: #38bdf8; color: #000000; font-weight: bold; border-radius: 8px; padding: 10px 16px; font-size: 14px; }
+        .btn-snip:hover { background-color: #7dd3fc; }
+        .btn-mode { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 8px 12px; font-weight: bold; }
+        .btn-mode:hover { background-color: #334155; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📸 Aero Screenshot &amp; Snip Tool</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#94a3b8' font='10'>Region selection, window capture, and instant clipboard copy</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Main Snip Button
+        btn_snip = Gtk.Button(label="✂️ Snip Rectangular Area (Win + Shift + S)")
+        btn_snip.get_style_context().add_class("btn-snip")
+        btn_snip.connect("clicked", lambda b: self._capture("region"))
+        vbox.pack_start(btn_snip, False, False, 0)
+
+        # Capture Modes Card
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        card.get_style_context().add_class("card")
+        lbl_m = Gtk.Label(label="<b>🖥️ Other Capture Modes</b>", xalign=0)
+        lbl_m.set_use_markup(True)
+        card.pack_start(lbl_m, False, False, 0)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_column_homogeneous(True)
+
+        btn_win = Gtk.Button(label="🪟 Active Window")
+        btn_win.get_style_context().add_class("btn-mode")
+        btn_win.connect("clicked", lambda b: self._capture("window"))
+        grid.attach(btn_win, 0, 0, 1, 1)
+
+        btn_full = Gtk.Button(label="🖥️ Full Screen")
+        btn_full.get_style_context().add_class("btn-mode")
+        btn_full.connect("clicked", lambda b: self._capture("full"))
+        grid.attach(btn_full, 1, 0, 1, 1)
+
+        card.pack_start(grid, False, False, 0)
+        vbox.pack_start(card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready to capture", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Saved screenshots automatically copy to clipboard</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _capture(self, mode):
+        self.hide()
+        time.sleep(0.2)
+        
+        save_dir = os.path.expanduser("~/Pictures/Screenshots")
+        os.makedirs(save_dir, exist_ok=True)
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        out_path = os.path.join(save_dir, f"Screenshot_{timestamp}.png")
+
+        if mode == "region":
+            if shutil.which("slurp") and shutil.which("grim"):
+                subprocess.run(f"grim -g \"$(slurp)\" '{out_path}'", shell=True)
+            else:
+                subprocess.run(["gnome-screenshot", "-a", "-f", out_path])
+        elif mode == "window":
+            if shutil.which("grim"):
+                subprocess.run(f"grim '{out_path}'", shell=True)
+            else:
+                subprocess.run(["gnome-screenshot", "-w", "-f", out_path])
+        else:
+            if shutil.which("grim"):
+                subprocess.run(f"grim '{out_path}'", shell=True)
+            else:
+                subprocess.run(["gnome-screenshot", "-f", out_path])
+
+        if os.path.exists(out_path):
+            if shutil.which("wl-copy"):
+                subprocess.run(f"wl-copy < '{out_path}'", shell=True)
+            subprocess.run(["notify-send", "📸 Screenshot Captured", f"Saved to {os.path.basename(out_path)} & copied to clipboard"])
+
+        self.show()
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Captured {os.path.basename(out_path)}</span>")
+
+
+def main():
+    win = ScreenshotWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

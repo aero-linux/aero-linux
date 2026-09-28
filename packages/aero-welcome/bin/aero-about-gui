@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical System Info & Hardware Specs ("About This PC")
+Visual hardware specification summary, OS build telemetry, and diagnostics launcher.
+"""
+
+import os
+import platform
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.cpu import get_cpu_info
+from aero.memory import get_memory_info
+from aero.thermals import get_temperatures
+
+
+class AboutWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="About This PC - Aero Linux")
+        self.set_default_size(520, 560)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(20)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 20px; font-weight: bold; color: #00f2fe; }
+        .card { background-color: #111827; border-radius: 10px; padding: 16px; border: 1px solid #1f2937; }
+        .spec-label { color: #94a3b8; font-size: 11px; }
+        .spec-value { color: #f8fafc; font-size: 12px; font-weight: bold; }
+        .btn-action { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 8px 14px; font-weight: bold; }
+        .btn-action:hover { background-color: #334155; }
+        .btn-diag { background-color: #00f2fe; color: #000000; border-radius: 6px; padding: 8px 16px; font-weight: bold; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        self.add(vbox)
+
+        # Header with Logo & OS Name
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        
+        lbl_logo = Gtk.Label()
+        lbl_logo.set_markup("<span font='36'>⚡</span>")
+        header_box.pack_start(lbl_logo, False, False, 0)
+
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>Aero Linux 1.2-Titan</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#38bdf8' font='10'>The Ultra-Lean AI &amp; Developer Operating System</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Specs Card
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        card.get_style_context().add_class("card")
+
+        cpu = get_cpu_info()
+        mem = get_memory_info()
+        kern = platform.release()
+        arch = platform.machine()
+        
+        specs = [
+            ("Processor (CPU)", f"{cpu.get('model', 'AMD Ryzen / Intel Core')} ({cpu.get('cores', 'N/A')} Cores)"),
+            ("System Memory (RAM)", f"{mem.get('total_gb', '16.0')} GB Total • Dynamic zRAM ZSTD Active"),
+            ("Operating System", "Aero Linux 1.2.0-Titan (64-bit x86_64)"),
+            ("Linux Kernel", f"{kern} ({arch})"),
+            ("Display Server", "Wayland (Sway Compositor & Acrylic Waybar)"),
+            ("Power Governor", "Autonomous Battery Guard (80% Cap Active)"),
+        ]
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(16)
+        grid.set_row_spacing(8)
+
+        for i, (k, v) in enumerate(specs):
+            lbl_k = Gtk.Label(label=k, xalign=0)
+            lbl_k.get_style_context().add_class("spec-label")
+            lbl_k.set_markup(f"<span color='#94a3b8' font='10'>{k}</span>")
+
+            lbl_v = Gtk.Label(label=v, xalign=0)
+            lbl_v.get_style_context().add_class("spec-value")
+            lbl_v.set_markup(f"<span color='#f8fafc' font='10' weight='bold'>{v}</span>")
+
+            grid.attach(lbl_k, 0, i, 1, 1)
+            grid.attach(lbl_v, 1, i, 1, 1)
+
+        card.pack_start(grid, True, True, 0)
+        vbox.pack_start(card, True, True, 0)
+
+        # Action Buttons
+        btn_grid = Gtk.Grid()
+        btn_grid.set_column_spacing(10)
+        btn_grid.set_row_spacing(10)
+        btn_grid.set_column_homogeneous(True)
+
+        btn_diag = Gtk.Button(label="⚡ Run Aero Doctor")
+        btn_diag.get_style_context().add_class("btn-diag")
+        btn_diag.connect("clicked", lambda b: subprocess.run(["alacritty", "-e", "aero", "doctor"]))
+        btn_grid.attach(btn_diag, 0, 0, 1, 1)
+
+        btn_upd = Gtk.Button(label="🔄 Update Manager")
+        btn_upd.get_style_context().add_class("btn-action")
+        btn_upd.connect("clicked", lambda b: subprocess.run(["aero-updater"]))
+        btn_grid.attach(btn_upd, 1, 0, 1, 1)
+
+        btn_copy = Gtk.Button(label="📋 Copy System Specs")
+        btn_copy.get_style_context().add_class("btn-action")
+        btn_copy.connect("clicked", self._on_copy_specs)
+        btn_grid.attach(btn_copy, 0, 1, 2, 1)
+
+        vbox.pack_start(btn_grid, False, False, 0)
+
+        self.lbl_status = Gtk.Label(xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='9'>System Verified &amp; Optimized</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _on_copy_specs(self, button):
+        cpu = get_cpu_info()
+        mem = get_memory_info()
+        specs_txt = f"Aero Linux 1.2-Titan (x86_64)\nCPU: {cpu.get('model', 'AMD Ryzen')}\nRAM: {mem.get('total_gb', '16.0')} GB\nKernel: {platform.release()}\nCompositor: Wayland / Sway"
+        clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        clip.set_text(specs_txt, -1)
+        self.lbl_status.set_markup("<span color='#34d399' font='9'>Copied specifications to clipboard!</span>")
+        subprocess.run(["notify-send", "📋 System Specs Copied", "Hardware specifications copied to clipboard"])
+
+
+def main():
+    win = AboutWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

@@ -565,6 +565,14 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(welcome_path))
         self.assertTrue(os.access(welcome_path, os.X_OK))
 
+    def test_about_and_screenshot_gui_scripts(self):
+        abt_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-about-gui"
+        scr_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-screenshot-gui"
+        self.assertTrue(os.path.exists(abt_path))
+        self.assertTrue(os.access(abt_path, os.X_OK))
+        self.assertTrue(os.path.exists(scr_path))
+        self.assertTrue(os.access(scr_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

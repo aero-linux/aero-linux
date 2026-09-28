@@ -80,8 +80,9 @@ bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Aero Sway?' -B 'Shutdown' 
 bindsym $mod+l exec $lock
 
 # Screenshots & Screen Recording
-bindsym Print exec mkdir -p ~/Pictures/Screenshots && grim ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Screenshot Captured' 'Saved to ~/Pictures/Screenshots'
+bindsym Print exec aero-screenshot-gui || (mkdir -p ~/Pictures/Screenshots && grim ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Screenshot Captured' 'Saved to ~/Pictures/Screenshots')
 bindsym Shift+Print exec mkdir -p ~/Pictures/Screenshots && grim -g "$(slurp)" ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Region Captured' 'Saved to ~/Pictures/Screenshots'
+bindsym $mod+Shift+s exec aero-screenshot-gui
 bindsym Control+Shift+r exec aero rec toggle
 
 # Windows-Friendly Familiar Shortcuts
