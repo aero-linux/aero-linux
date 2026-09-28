@@ -12,7 +12,8 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-56%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-80%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![Release](https://img.shields.io/badge/Release-v1.2.0--Titan-00f2fe.svg)](https://github.com/ronitgupta138/aero-linux/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
@@ -158,6 +159,31 @@ aero snapshot create            # Zero-latency system restore point
 aero share .                    # Instant local network HTTP file sharing server
 aero ssh [status|gen|copy|test] # Ed25519 SSH key management
 ```
+
+---
+
+## 🎛️ Complete Zero-Terminal Graphical Application Suite
+
+Aero Linux includes **15 dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
+
+| Application | Command / Shortcut | Description |
+| :--- | :--- | :--- |
+| **Aero Spotlight** | `Alt + Space` / `aero-spotlight` | Floating Raycast-style command palette, inline math evaluator & app launcher |
+| **Aero Control Center** | `aero-welcome` | 7-tab central hardware, power, theme, and store management hub |
+| **Aero Task Manager** | `Ctrl + Shift + Esc` / `aero-monitor` | Live Cairo vector CPU waveform graph & memory gauges |
+| **Aero Update Manager** | `aero-updater` | Asynchronous system & security patch installer |
+| **Aero Wi-Fi Center** | `aero-wifi` | Spectrum scanner, signal strength monitor & 1-click connect |
+| **Aero Bluetooth Center**| `aero-bluetooth` | Audio device & peripheral pairing and battery indicator |
+| **Aero Audio Center** | `aero-audio` | 1-Click PipeWire audio sink switcher (Speakers, Headphones, BT, HDMI) |
+| **Aero Displays** | `aero-displays` | Screen resolution, 240Hz refresh rate & HiDPI fractional scaling |
+| **Aero Game Hub** | `aero-gamehub` | 1-Click GameMode, MangoHud FPS overlay & FSR upscaling launcher |
+| **Aero Phone Link** | `aero-connect-gui` | Wireless phone link & drag-and-drop file drop target |
+| **Aero Battery Studio**| `aero-power-gui` | 80% battery protection cap & acoustic cooling fan curves |
+| **Aero Night Light** | `aero-nightlight-gui` | 3000K-6500K color temperature & eye-strain scheduler |
+| **Aero Theme Studio** | `aero-theme-gui` | Accent glow color palette studio & procedural wallpaper generator |
+| **Aero System Cleaner** | `aero-cleaner-gui` | 1-Click package cache, pip, npm & journal log de-bloater |
+| **Aero TimeMachine** | `aero-snapshot-gui` | System restore points & 1-click rollback |
+| **Aero Vault** | `aero-vault-gui` | Local encrypted developer secrets, API tokens & `.env` exporter |
 
 ---
 
