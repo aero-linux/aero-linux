@@ -189,6 +189,14 @@ exec python3 "${AERO_HOME}/bin/aero-cleaner-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-cleaner-gui"
 
+# Create global executable wrapper for aero-vault-gui
+cat << 'EOF' > "${BIN_DIR}/aero-vault-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-vault-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-vault-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -373,6 +381,17 @@ Icon=user-trash
 Terminal=false
 Type=Application
 Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-vault.desktop"
+[Desktop Entry]
+Name=Aero Developer Vault
+Comment=Aero Linux Encrypted Secrets & API Key Vault
+Exec=${BIN_DIR}/aero-vault-gui
+Icon=dialog-password
+Terminal=false
+Type=Application
+Categories=Development;Security;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

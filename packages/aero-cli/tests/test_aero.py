@@ -555,6 +555,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(cl_path))
         self.assertTrue(os.access(cl_path, os.X_OK))
 
+    def test_vault_gui_script(self):
+        vault_gui_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-vault-gui"
+        self.assertTrue(os.path.exists(vault_gui_path))
+        self.assertTrue(os.access(vault_gui_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

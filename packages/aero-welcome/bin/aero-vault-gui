@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Developer Vault & Secret Manager
+Secure local encrypted secrets manager for API keys, tokens, and database connection strings.
+"""
+
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.vault import list_vault_keys, get_vault_secret, set_vault_secret, delete_vault_secret
+
+
+class VaultWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Developer Vault & Secrets")
+        self.set_default_size(580, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #38bdf8; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-action { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 6px 12px; font-weight: bold; }
+        .btn-action:hover { background-color: #334155; }
+        .btn-add { background-color: #38bdf8; color: #000000; font-weight: bold; border-radius: 6px; padding: 8px 16px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔒 Aero Developer Vault &amp; Secrets</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Local encrypted secrets storage for API tokens, database URIs &amp; credentials</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Controls Card
+        ctrl_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        ctrl_card.get_style_context().add_class("card")
+
+        btn_add = Gtk.Button(label="➕ Add New Secret")
+        btn_add.get_style_context().add_class("btn-add")
+        btn_add.connect("clicked", self._on_add_secret)
+        ctrl_card.pack_start(btn_add, False, False, 0)
+
+        btn_export = Gtk.Button(label="📁 Export to .env")
+        btn_export.get_style_context().add_class("btn-action")
+        btn_export.connect("clicked", self._on_export_env)
+        ctrl_card.pack_start(btn_export, False, False, 0)
+
+        vbox.pack_start(ctrl_card, False, False, 0)
+
+        # Secrets List Card
+        list_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        list_card.get_style_context().add_class("card")
+
+        lbl_sec = Gtk.Label(label="<b>🔑 Stored Secrets &amp; Keys</b>", xalign=0)
+        lbl_sec.set_use_markup(True)
+        list_card.pack_start(lbl_sec, False, False, 0)
+
+        # Scrolled Window with TreeView
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_min_content_height(240)
+        self.store = Gtk.ListStore(str, str)  # Key, Masked Value
+        self.tree = Gtk.TreeView(model=self.store)
+
+        col_key = Gtk.TreeViewColumn("Key Name", Gtk.CellRendererText(), text=0)
+        col_val = Gtk.TreeViewColumn("Masked Secret", Gtk.CellRendererText(), text=1)
+        self.tree.append_column(col_key)
+        self.tree.append_column(col_val)
+
+        scrolled.add(self.tree)
+        list_card.pack_start(scrolled, True, True, 0)
+
+        # Actions under list
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_copy = Gtk.Button(label="📋 Copy Value")
+        btn_copy.get_style_context().add_class("btn-action")
+        btn_copy.connect("clicked", self._on_copy_secret)
+        btn_box.pack_start(btn_copy, False, False, 0)
+
+        btn_del = Gtk.Button(label="🗑️ Delete Key")
+        btn_del.get_style_context().add_class("btn-action")
+        btn_del.connect("clicked", self._on_delete_secret)
+        btn_box.pack_start(btn_del, False, False, 0)
+
+        list_card.pack_start(btn_box, False, False, 0)
+        vbox.pack_start(list_card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Vault locked with local encryption", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Vault Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._refresh_keys()
+
+    def _refresh_keys(self):
+        self.store.clear()
+        keys = list_vault_keys()
+        for k in sorted(keys):
+            self.store.append([k, "••••••••••••••••"])
+
+    def _on_add_secret(self, button):
+        dialog = Gtk.Dialog(title="Add Secret to Vault", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_spacing(10)
+        box.set_border_width(12)
+
+        lbl_k = Gtk.Label(label="Secret Key Name (e.g. OPENAI_API_KEY):", xalign=0)
+        entry_k = Gtk.Entry()
+        lbl_v = Gtk.Label(label="Secret Value:", xalign=0)
+        entry_v = Gtk.Entry()
+        entry_v.set_visibility(False)
+
+        box.add(lbl_k)
+        box.add(entry_k)
+        box.add(lbl_v)
+        box.add(entry_v)
+        dialog.show_all()
+
+        resp = dialog.run()
+        key_name = entry_k.get_text().strip()
+        val = entry_v.get_text().strip()
+        dialog.destroy()
+
+        if resp == Gtk.ResponseType.OK and key_name and val:
+            set_vault_secret(key_name, val)
+            self._refresh_keys()
+            self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Stored secret '{key_name}'</span>")
+
+    def _on_copy_secret(self, button):
+        model, treeiter = self.tree.get_selection().get_selected()
+        if treeiter:
+            key_name = model[treeiter][0]
+            val = get_vault_secret(key_name)
+            if val:
+                clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+                clip.set_text(val, -1)
+                self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Copied value for '{key_name}' to clipboard</span>")
+                subprocess.run(["notify-send", "🔒 Aero Vault", f"Copied '{key_name}' value to clipboard"])
+
+    def _on_delete_secret(self, button):
+        model, treeiter = self.tree.get_selection().get_selected()
+        if treeiter:
+            key_name = model[treeiter][0]
+            delete_vault_secret(key_name)
+            self._refresh_keys()
+            self.lbl_status.set_markup(f"<span color='#f43f5e' font='10'>Deleted key '{key_name}'</span>")
+
+    def _on_export_env(self, button):
+        subprocess.run(["aero", "vault", "export", ".env"], capture_output=True)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Exported all secrets to .env</span>")
+        subprocess.run(["notify-send", "📁 Aero Vault", "Exported secrets to .env"])
+
+
+def main():
+    win = VaultWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
