@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Aero Linux Welcome & Control Center GUI (GTK3)
+Central unified graphical management suite for Aero Linux.
 """
 import subprocess
 import gi
@@ -11,8 +12,8 @@ from gi.repository import Gtk, Gdk
 
 class AeroWelcomeApp(Gtk.Window):
     def __init__(self):
-        super().__init__(title="Aero Linux Control Center & App Store")
-        self.set_default_size(880, 620)
+        super().__init__(title="Aero Linux Control Center & Hub")
+        self.set_default_size(920, 660)
         self.set_position(Gtk.WindowPosition.CENTER)
 
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
@@ -41,7 +42,7 @@ class AeroWelcomeApp(Gtk.Window):
         page_quick.set_margin_top(15)
 
         lbl_quick = Gtk.Label()
-        lbl_quick.set_markup("<b>🚀 Desktop Mode & Essential Optimizations</b>")
+        lbl_quick.set_markup("<b>🚀 Desktop Mode & Essential Hardware Centers</b>")
         page_quick.pack_start(lbl_quick, False, False, 0)
 
         # Layout Switcher Buttons
@@ -52,7 +53,7 @@ class AeroWelcomeApp(Gtk.Window):
         btn_win_mode.connect("clicked", lambda b: self.run_cmd("aero layout windows"))
         layout_box.pack_start(btn_win_mode, True, True, 0)
 
-        btn_tile_mode = Gtk.Button(label="⚡ Hacker Tiling Mode\n(Top Bar + Auto-Tiling)")
+        btn_tile_mode = Gtk.Button(label="⚡ Hacker Tiling Mode\n(Top Bar + Dynamic BSP Auto-Tiling)")
         btn_tile_mode.connect("clicked", lambda b: self.run_cmd("aero layout tiling"))
         layout_box.pack_start(btn_tile_mode, True, True, 0)
 
@@ -67,27 +68,27 @@ class AeroWelcomeApp(Gtk.Window):
         quick_grid.set_row_spacing(8)
         quick_grid.set_column_homogeneous(True)
 
-        btn_wifi = Gtk.Button(label="📶 Wi-Fi Settings")
-        btn_wifi.connect("clicked", lambda b: self.run_cmd("nm-connection-editor || alacritty -e nmtui"))
+        btn_wifi = Gtk.Button(label="📶 Wi-Fi & Network Center")
+        btn_wifi.connect("clicked", lambda b: self.run_cmd("aero-wifi || nm-connection-editor"))
         quick_grid.attach(btn_wifi, 0, 0, 1, 1)
 
-        btn_bt = Gtk.Button(label="🎧 Bluetooth Devices")
-        btn_bt.connect("clicked", lambda b: self.run_cmd("blueman-manager || alacritty -e bluetoothctl"))
+        btn_bt = Gtk.Button(label="🎧 Bluetooth & Peripherals")
+        btn_bt.connect("clicked", lambda b: self.run_cmd("aero-bluetooth || blueman-manager"))
         quick_grid.attach(btn_bt, 1, 0, 1, 1)
 
-        btn_vol = Gtk.Button(label="🔊 Audio & Volume Mixer")
-        btn_vol.connect("clicked", lambda b: self.run_cmd("pavucontrol"))
+        btn_vol = Gtk.Button(label="🔊 Audio & Output Switcher")
+        btn_vol.connect("clicked", lambda b: self.run_cmd("aero-audio || pavucontrol"))
         quick_grid.attach(btn_vol, 0, 1, 1, 1)
 
-        btn_fm = Gtk.Button(label="📁 Files & Drives (Nemo)")
-        btn_fm.connect("clicked", lambda b: self.run_cmd("nemo ~"))
-        quick_grid.attach(btn_fm, 1, 1, 1, 1)
+        btn_disp = Gtk.Button(label="🖥️ Displays & HiDPI Scaling")
+        btn_disp.connect("clicked", lambda b: self.run_cmd("aero-displays || wdisplays"))
+        quick_grid.attach(btn_disp, 1, 1, 1, 1)
 
-        btn_mon_gui = Gtk.Button(label="📊 System Monitor (Task Manager)")
+        btn_mon_gui = Gtk.Button(label="📊 Task Manager (CPU Waveform)")
         btn_mon_gui.connect("clicked", lambda b: self.run_cmd("aero-monitor"))
         quick_grid.attach(btn_mon_gui, 0, 2, 1, 1)
 
-        btn_upd_gui = Gtk.Button(label="🔄 Update Manager (System Patches)")
+        btn_upd_gui = Gtk.Button(label="🔄 Update Manager (Patches)")
         btn_upd_gui.connect("clicked", lambda b: self.run_cmd("aero-updater"))
         quick_grid.attach(btn_upd_gui, 1, 2, 1, 1)
 
@@ -99,14 +100,6 @@ class AeroWelcomeApp(Gtk.Window):
         btn_zram = Gtk.Button(label="🧠 Compact zRAM Memory & Drop Caches")
         btn_zram.connect("clicked", lambda b: self.run_cmd("aero memory --optimize"))
         page_quick.pack_start(btn_zram, False, False, 0)
-
-        btn_battery = Gtk.Button(label="🔋 Enable 80% Battery Health Protection Threshold")
-        btn_battery.connect("clicked", lambda b: self.run_cmd("aero power --threshold 80"))
-        page_quick.pack_start(btn_battery, False, False, 0)
-
-        btn_bbr = Gtk.Button(label="⚡ Enable Google BBR Low-Latency TCP Congestion Control")
-        btn_bbr.connect("clicked", lambda b: self.run_cmd("aero net bbr"))
-        page_quick.pack_start(btn_bbr, False, False, 0)
 
         btn_sec = Gtk.Button(label="🛡️ Apply UFW Firewall & Kernel Security Hardening")
         btn_sec.connect("clicked", lambda b: self.run_cmd("aero security harden"))
@@ -146,39 +139,49 @@ class AeroWelcomeApp(Gtk.Window):
         page_store.pack_start(store_grid, True, True, 0)
         stack.add_titled(page_store, "store", "App Center")
 
-        # 3. AI & Local Models
-        page_ai = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        page_ai.set_margin_top(15)
+        # 3. Hardware & Power Studio
+        page_hw = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_hw.set_margin_top(15)
 
-        lbl_ai = Gtk.Label()
-        lbl_ai.set_markup("<b>🤖 1-Click Local AI & Deep Learning Stack</b>")
-        page_ai.pack_start(lbl_ai, False, False, 0)
+        lbl_hw = Gtk.Label()
+        lbl_hw.set_markup("<b>⚡ Battery Care, Gaming & Mobile Sync</b>")
+        page_hw.pack_start(lbl_hw, False, False, 0)
 
-        btn_ollama = Gtk.Button(label="⚡ Initialize Ollama Runtime (Local LLM Serving)")
-        btn_ollama.connect("clicked", lambda b: self.run_cmd("aero ai init"))
-        page_ai.pack_start(btn_ollama, False, False, 0)
+        hw_grid = Gtk.Grid()
+        hw_grid.set_column_spacing(10)
+        hw_grid.set_row_spacing(10)
+        hw_grid.set_column_homogeneous(True)
 
-        btn_gpu = Gtk.Button(label="🎮 Auto-Configure NVIDIA CUDA / AMD ROCm GPU Acceleration")
-        btn_gpu.connect("clicked", lambda b: self.run_cmd("aero gpu setup"))
-        page_ai.pack_start(btn_gpu, False, False, 0)
+        btn_pwr_gui = Gtk.Button(label="🔋 Battery Care & Fan Curves Studio")
+        btn_pwr_gui.connect("clicked", lambda b: self.run_cmd("aero-power-gui"))
+        hw_grid.attach(btn_pwr_gui, 0, 0, 1, 1)
 
-        btn_deepseek = Gtk.Button(label="📦 Download DeepSeek-R1 (8B Reasoning Model)")
-        btn_deepseek.connect("clicked", lambda b: self.run_cmd("alacritty -e aero ai pull deepseek-r1:8b"))
-        page_ai.pack_start(btn_deepseek, False, False, 0)
+        btn_game_gui = Gtk.Button(label="🎮 Aero Game Hub & Proton Optimizer")
+        btn_game_gui.connect("clicked", lambda b: self.run_cmd("aero-gamehub"))
+        hw_grid.attach(btn_game_gui, 1, 0, 1, 1)
 
-        btn_live = Gtk.Button(label="🌐 Launch Real-Time Live Telemetry Web Dashboard")
-        btn_live.connect("clicked", lambda b: self.run_cmd("aero live --port 8080 & xdg-open http://localhost:8080"))
-        page_ai.pack_start(btn_live, False, False, 0)
+        btn_phone_gui = Gtk.Button(label="📱 Phone Link & Wireless Drop Target")
+        btn_phone_gui.connect("clicked", lambda b: self.run_cmd("aero-connect-gui"))
+        hw_grid.attach(btn_phone_gui, 0, 1, 1, 1)
 
-        stack.add_titled(page_ai, "ai", "AI & Compute")
+        btn_night_gui = Gtk.Button(label="🌙 Night Light & Blue Light Studio")
+        btn_night_gui.connect("clicked", lambda b: self.run_cmd("aero-nightlight-gui"))
+        hw_grid.attach(btn_night_gui, 1, 1, 1, 1)
 
-        # 4. Developer Toolchains & Databases
+        page_hw.pack_start(hw_grid, False, False, 0)
+        stack.add_titled(page_hw, "hardware", "Hardware & Power")
+
+        # 4. Developer Vault & Sandboxes
         page_dev = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page_dev.set_margin_top(15)
 
         lbl_dev = Gtk.Label()
-        lbl_dev.set_markup("<b>🛠️ Sandboxes & Local Databases</b>")
+        lbl_dev.set_markup("<b>🔒 Developer Vault & Local Databases</b>")
         page_dev.pack_start(lbl_dev, False, False, 0)
+
+        btn_vault = Gtk.Button(label="🔒 Aero Developer Vault (Encrypted API Secrets)")
+        btn_vault.connect("clicked", lambda b: self.run_cmd("aero-vault-gui"))
+        page_dev.pack_start(btn_vault, False, False, 0)
 
         btn_pg = Gtk.Button(label="🐘 Launch Local PostgreSQL 16 (Port 5432)")
         btn_pg.connect("clicked", lambda b: self.run_cmd("aero db start postgres"))
@@ -192,27 +195,19 @@ class AeroWelcomeApp(Gtk.Window):
         btn_bench.connect("clicked", lambda b: self.run_cmd("alacritty -e aero benchmark"))
         page_dev.pack_start(btn_bench, False, False, 0)
 
-        stack.add_titled(page_dev, "dev", "Dev & Databases")
+        stack.add_titled(page_dev, "dev", "Dev & Vault")
 
         # 5. Themes & Aesthetics
         page_themes = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page_themes.set_margin_top(15)
 
         lbl_themes = Gtk.Label()
-        lbl_themes.set_markup("<b>🎨 Desktop Aesthetics & Color Themes</b>")
+        lbl_themes.set_markup("<b>🎨 Desktop Aesthetics & Accent Studio</b>")
         page_themes.pack_start(lbl_themes, False, False, 0)
 
-        btn_cyan = Gtk.Button(label="⚡ Cyber Cyan (Default Dark Neon)")
-        btn_cyan.connect("clicked", lambda b: self.run_cmd("aero theme set cyber-cyan"))
-        page_themes.pack_start(btn_cyan, False, False, 0)
-
-        btn_tokyo = Gtk.Button(label="🌙 Tokyo Night (Indigo & Purple)")
-        btn_tokyo.connect("clicked", lambda b: self.run_cmd("aero theme set tokyo-night"))
-        page_themes.pack_start(btn_tokyo, False, False, 0)
-
-        btn_nord = Gtk.Button(label="❄️ Nord Arctic (Muted Frost)")
-        btn_nord.connect("clicked", lambda b: self.run_cmd("aero theme set nord"))
-        page_themes.pack_start(btn_nord, False, False, 0)
+        btn_theme_studio = Gtk.Button(label="🎨 Open Full Aero Theme & Accent Studio")
+        btn_theme_studio.connect("clicked", lambda b: self.run_cmd("aero-theme-gui"))
+        page_themes.pack_start(btn_theme_studio, False, False, 0)
 
         btn_auto_theme = Gtk.Button(label="🕒 Auto-Sync Theme with Sun Cycle & Battery")
         btn_auto_theme.connect("clicked", lambda b: self.run_cmd("aero theme auto"))
@@ -225,62 +220,22 @@ class AeroWelcomeApp(Gtk.Window):
         page_maint.set_margin_top(15)
 
         lbl_maint = Gtk.Label()
-        lbl_maint.set_markup("<b>💾 System Maintenance & Dotfiles Backup</b>")
+        lbl_maint.set_markup("<b>💾 System Maintenance & TimeMachine Snapshots</b>")
         page_maint.pack_start(lbl_maint, False, False, 0)
 
-        btn_clean = Gtk.Button(label="🧹 Deep De-Bloat & Developer Cache Cleaner")
-        btn_clean.connect("clicked", lambda b: self.run_cmd("alacritty -e aero clean"))
-        page_maint.pack_start(btn_clean, False, False, 0)
+        btn_clean_gui = Gtk.Button(label="🧹 Aero Disk Cleaner & Cache De-bloater")
+        btn_clean_gui.connect("clicked", lambda b: self.run_cmd("aero-cleaner-gui"))
+        page_maint.pack_start(btn_clean_gui, False, False, 0)
 
-        btn_backup = Gtk.Button(label="📦 Export Dotfiles & Developer Configs Bundle")
-        btn_backup.connect("clicked", lambda b: self.run_cmd("alacritty -e aero dotfiles export"))
-        page_maint.pack_start(btn_backup, False, False, 0)
+        btn_snap_gui = Gtk.Button(label="🛡️ Aero TimeMachine (System Restore Points & Rollback)")
+        btn_snap_gui.connect("clicked", lambda b: self.run_cmd("aero-snapshot-gui"))
+        page_maint.pack_start(btn_snap_gui, False, False, 0)
 
         btn_health = Gtk.Button(label="🏥 Run Hardware S.M.A.R.T. & NVMe Health Audit")
         btn_health.connect("clicked", lambda b: self.run_cmd("alacritty -e aero health"))
         page_maint.pack_start(btn_health, False, False, 0)
 
-        stack.add_titled(page_maint, "maint", "Backup & Health")
-
-        # 7. System Settings & Hardware Preferences Page
-        page_settings = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        page_settings.set_margin_top(15)
-
-        lbl_settings = Gtk.Label()
-        lbl_settings.set_markup("<b>⚙️ System Settings & Hardware Preferences</b>")
-        page_settings.pack_start(lbl_settings, False, False, 0)
-
-        settings_grid = Gtk.Grid()
-        settings_grid.set_column_spacing(12)
-        settings_grid.set_row_spacing(10)
-        settings_grid.set_column_homogeneous(True)
-
-        btn_scale_100 = Gtk.Button(label="🖥️ Display: 100% Native (Standard)")
-        btn_scale_100.connect("clicked", lambda b: self.run_cmd("swaymsg output '*' scale 1.0"))
-        settings_grid.attach(btn_scale_100, 0, 0, 1, 1)
-
-        btn_scale_125 = Gtk.Button(label="🖥️ Display: 125% HiDPI Fractional")
-        btn_scale_125.connect("clicked", lambda b: self.run_cmd("swaymsg output '*' scale 1.25"))
-        settings_grid.attach(btn_scale_125, 1, 0, 1, 1)
-
-        btn_touchpad = Gtk.Button(label="🖱️ Touchpad: Tap-to-Click & Natural Scroll")
-        btn_touchpad.connect("clicked", lambda b: self.run_cmd("swaymsg input 'type:touchpad' tap enabled && swaymsg input 'type:touchpad' natural_scroll enabled"))
-        settings_grid.attach(btn_touchpad, 0, 1, 1, 1)
-
-        btn_display_gui = Gtk.Button(label="📺 Graphical Display Configurator (wdisplays)")
-        btn_display_gui.connect("clicked", lambda b: self.run_cmd("wdisplays || arandr || aero display"))
-        settings_grid.attach(btn_display_gui, 1, 1, 1, 1)
-
-        btn_time_sync = Gtk.Button(label="🕒 Auto-Sync Network Time & Date (NTP)")
-        btn_time_sync.connect("clicked", lambda b: self.run_cmd("sudo timedatectl set-ntp true"))
-        settings_grid.attach(btn_time_sync, 0, 2, 1, 1)
-
-        btn_audio_gui = Gtk.Button(label="🔊 Sound & Volume Hardware Config")
-        btn_audio_gui.connect("clicked", lambda b: self.run_cmd("pavucontrol"))
-        settings_grid.attach(btn_audio_gui, 1, 2, 1, 1)
-
-        page_settings.pack_start(settings_grid, True, True, 0)
-        stack.add_titled(page_settings, "settings", "Settings")
+        stack.add_titled(page_maint, "maint", "Backup & Snapshots")
 
         # Switcher
         switcher = Gtk.StackSwitcher()

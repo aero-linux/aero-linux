@@ -560,6 +560,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(vault_gui_path))
         self.assertTrue(os.access(vault_gui_path, os.X_OK))
 
+    def test_welcome_control_center_completeness(self):
+        welcome_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-welcome"
+        self.assertTrue(os.path.exists(welcome_path))
+        self.assertTrue(os.access(welcome_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
