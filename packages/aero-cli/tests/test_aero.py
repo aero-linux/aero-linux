@@ -626,6 +626,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(flash_path))
         self.assertTrue(os.access(flash_path, os.X_OK))
 
+    def test_logs_gui_script(self):
+        logs_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-logs-gui"
+        self.assertTrue(os.path.exists(logs_path))
+        self.assertTrue(os.access(logs_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

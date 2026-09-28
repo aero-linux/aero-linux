@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical System Logs & Kernel Diagnostic Viewer
+Live journald viewer, kernel dmesg inspector, error filtering, and 1-click diagnostic report exporter.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+class LogsViewerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero System Logs & Diagnostic Viewer")
+        self.set_default_size(780, 560)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #f43f5e; }
+        .card { background-color: #111827; border-radius: 8px; border: 1px solid #1f2937; }
+        textview text { background-color: #0d1117; color: #f0f6fc; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+        .btn-filter { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: bold; }
+        .btn-filter:hover { background-color: #334155; }
+        .btn-error { background-color: #881337; color: #fda4af; border: 1px solid #e11d48; }
+        .btn-export { background-color: #0284c7; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📜 Aero System &amp; Kernel Logs</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Live systemd journal, dmesg hardware warnings &amp; service crash inspector</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_export = Gtk.Button(label="💾 Export Log")
+        btn_export.get_style_context().add_class("btn-export")
+        btn_export.connect("clicked", self._on_export)
+        header_box.pack_start(btn_export, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Filter Buttons Toolbar
+        bar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        
+        btn_err = Gtk.Button(label="🔴 Errors Only")
+        btn_err.get_style_context().add_class("btn-filter")
+        btn_err.get_style_context().add_class("btn-error")
+        btn_err.connect("clicked", lambda b: self._load_logs(["journalctl", "-p", "3", "-xb", "-n", "200", "--no-pager"]))
+        bar_box.pack_start(btn_err, False, False, 0)
+
+        btn_warn = Gtk.Button(label="🟡 Warnings")
+        btn_warn.get_style_context().add_class("btn-filter")
+        btn_warn.connect("clicked", lambda b: self._load_logs(["journalctl", "-p", "4", "-xb", "-n", "200", "--no-pager"]))
+        bar_box.pack_start(btn_warn, False, False, 0)
+
+        btn_k = Gtk.Button(label="🐧 Kernel dmesg")
+        btn_k.get_style_context().add_class("btn-filter")
+        btn_k.connect("clicked", lambda b: self._load_logs(["dmesg", "-T"]))
+        bar_box.pack_start(btn_k, False, False, 0)
+
+        btn_boot = Gtk.Button(label="🚀 Current Boot")
+        btn_boot.get_style_context().add_class("btn-filter")
+        btn_boot.connect("clicked", lambda b: self._load_logs(["journalctl", "-b", "-n", "300", "--no-pager"]))
+        bar_box.pack_start(btn_boot, False, False, 0)
+
+        vbox.pack_start(bar_box, False, False, 0)
+
+        # Scrolled Text View
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.get_style_context().add_class("card")
+        
+        self.text_view = Gtk.TextView()
+        self.text_view.set_editable(False)
+        self.text_view.set_cursor_visible(False)
+        self.text_view.set_left_margin(10)
+        self.text_view.set_right_margin(10)
+        self.buffer = self.text_view.get_buffer()
+
+        scrolled.add(self.text_view)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        # Initial load (Errors only)
+        self._load_logs(["journalctl", "-p", "3", "-xb", "-n", "100", "--no-pager"])
+
+    def _load_logs(self, cmd):
+        self.lbl_status.set_markup("<span color='#38bdf8' font='10'>Loading logs...</span>")
+        
+        def fetch():
+            try:
+                res = subprocess.run(cmd, capture_output=True, text=True)
+                out = res.stdout.strip() or res.stderr.strip() or "No relevant log messages found."
+            except Exception as e:
+                out = f"Error querying logs: {e}"
+            GLib.idle_add(self._update_text, out, len(out.splitlines()))
+
+        threading.Thread(target=fetch, daemon=True).start()
+
+    def _update_text(self, text, line_count):
+        self.buffer.set_text(text)
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Loaded {line_count} log line(s)</span>")
+
+    def _on_export(self, button):
+        start, end = self.buffer.get_bounds()
+        text = self.buffer.get_text(start, end, True)
+        out_path = os.path.expanduser("~/aero_system_logs.log")
+        try:
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(text)
+            self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Saved to {out_path}</span>")
+            subprocess.run(["notify-send", "📜 Logs Exported", f"Log report exported to {out_path}"])
+        except Exception as e:
+            self.lbl_status.set_markup(f"<span color='#f43f5e' font='10'>Export error: {e}</span>")
+
+
+def main():
+    win = LogsViewerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

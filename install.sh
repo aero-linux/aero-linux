@@ -269,6 +269,14 @@ exec python3 "${AERO_HOME}/bin/aero-flasher-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-flasher-gui"
 
+# Create global executable wrapper for aero-logs-gui
+cat << 'EOF' > "${BIN_DIR}/aero-logs-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-logs-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-logs-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -563,6 +571,17 @@ Icon=drive-removable-media
 Terminal=false
 Type=Application
 Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-logs.desktop"
+[Desktop Entry]
+Name=Aero System Logs
+Comment=Aero Linux Live Journald & Kernel Diagnostic Viewer
+Exec=${BIN_DIR}/aero-logs-gui
+Icon=utilities-system-monitor
+Terminal=false
+Type=Application
+Categories=System;Monitor;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
