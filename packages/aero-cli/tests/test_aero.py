@@ -31,6 +31,10 @@ from aero.tracer import DNS_SERVERS
 from aero.cleaner import get_disk_free_mb
 from aero.cert_mgr import generate_dev_certificate
 from aero.notifier import send_notification
+from aero.health_checker import get_nvme_health, get_cpu_thermal_throttle_health
+from aero.mock_server import MOCK_SCHEMAS
+from aero.firewall import get_firewall_status
+from aero.prompt_gen import render_prompt, get_git_branch_fast
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -216,6 +220,28 @@ class TestAeroCLI(unittest.TestCase):
     def test_notifier(self):
         res = send_notification("Test Title", "Test Message", "low", False)
         self.assertTrue(res)
+
+    def test_health_checker(self):
+        nvme = get_nvme_health()
+        self.assertIn("nvme_devices", nvme)
+        cpu = get_cpu_thermal_throttle_health()
+        self.assertIn("throttle_events", cpu)
+
+    def test_mock_schemas(self):
+        self.assertIn("users", MOCK_SCHEMAS)
+        self.assertIn("products", MOCK_SCHEMAS)
+        self.assertIn("metrics", MOCK_SCHEMAS)
+
+    def test_firewall_status(self):
+        fw = get_firewall_status()
+        self.assertIn("active", fw)
+        self.assertIn("rules", fw)
+
+    def test_prompt_renderer(self):
+        p_bash = render_prompt("bash")
+        self.assertIn("aero", p_bash)
+        p_fish = render_prompt("fish")
+        self.assertIn("aero", p_fish)
 
 
 if __name__ == "__main__":

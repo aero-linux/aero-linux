@@ -62,6 +62,10 @@ from aero.tracer import trace_tcp_tls_latency, trace_dns_benchmark
 from aero.cleaner import deep_system_clean
 from aero.cert_mgr import generate_dev_certificate
 from aero.notifier import send_notification
+from aero.health_checker import audit_hardware_health
+from aero.mock_server import run_mock_server
+from aero.firewall import show_firewall_status, allow_port, block_all_inbound
+from aero.prompt_gen import render_prompt
 
 
 def print_banner():
@@ -412,6 +416,29 @@ def main():
     notif_parser.add_argument("--urgency", "-u", default="normal", choices=["low", "normal", "critical"], help="Notification urgency")
     notif_parser.add_argument("--sound", "-s", action="store_true", help="Play terminal bell alert")
 
+    # Hardware & NVMe S.M.A.R.T. Health Diagnostics
+    subparsers.add_parser("health", help="Inspect NVMe SSD wear, firmware, and CPU throttle events")
+
+    # Local Mock REST API Server
+    mock_parser = subparsers.add_parser("mock", help="Start instant local mock REST API & JSON server")
+    mock_sub = mock_parser.add_subparsers(dest="mock_action", help="Mock actions")
+    m_serve = mock_sub.add_parser("serve", help="Start mock API server")
+    m_serve.add_argument("--port", "-p", type=int, default=4000, help="Port to listen on (default: 4000)")
+    m_serve.add_argument("--delay", "-d", type=int, default=0, help="Simulated latency in ms (default: 0)")
+
+    # Developer Firewall Manager
+    fw_parser = subparsers.add_parser("firewall", help="UFW developer port whitelister and firewall manager")
+    fw_sub = fw_parser.add_subparsers(dest="fw_action", help="Firewall actions")
+    fw_sub.add_parser("status", help="Show active firewall rules and open ports")
+    fw_allow = fw_sub.add_parser("allow", help="Whitelist a port")
+    fw_allow.add_argument("port", type=int, help="Port number (e.g. 3000, 5432, 8080)")
+    fw_allow.add_argument("--proto", default="tcp", choices=["tcp", "udp"], help="Protocol (default: tcp)")
+    fw_sub.add_parser("block-all", help="Enable strict inbound firewall blocking")
+
+    # Fast Shell Prompt Generator
+    prompt_parser = subparsers.add_parser("prompt", help="Render ultra-fast git-aware terminal prompt string")
+    prompt_parser.add_argument("shell", nargs="?", default="bash", choices=["bash", "zsh", "fish"], help="Target shell")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -755,6 +782,24 @@ def main():
 
     elif args.command == "notify":
         send_notification(args.title, args.message, args.urgency, args.sound)
+
+    elif args.command == "health":
+        audit_hardware_health()
+
+    elif args.command == "mock":
+        run_mock_server(args.port, args.delay)
+
+    elif args.command == "firewall":
+        if args.fw_action == "allow":
+            allow_port(args.port, args.proto)
+        elif args.fw_action == "block-all":
+            block_all_inbound()
+        else:
+            show_firewall_status()
+
+    elif args.command == "prompt":
+        p_str = render_prompt(args.shell)
+        print(p_str, end="")
 
 
 if __name__ == "__main__":
