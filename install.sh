@@ -261,6 +261,14 @@ exec python3 "${AERO_HOME}/bin/aero-shortcuts-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-shortcuts-gui"
 
+# Create global executable wrapper for aero-flasher-gui
+cat << 'EOF' > "${BIN_DIR}/aero-flasher-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-flasher-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-flasher-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -544,6 +552,17 @@ Icon=input-keyboard
 Terminal=false
 Type=Application
 Categories=Utility;Help;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-flasher.desktop"
+[Desktop Entry]
+Name=Aero USB Flasher
+Comment=Aero Linux Safe ISO & Live USB Creator
+Exec=${BIN_DIR}/aero-flasher-gui
+Icon=drive-removable-media
+Terminal=false
+Type=Application
+Categories=System;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

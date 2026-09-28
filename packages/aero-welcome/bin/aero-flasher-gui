@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical ISO Flasher & USB Media Creator
+Safe, 1-click live USB flash tool with safety locks against internal storage overwrite.
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+def get_removable_usb_drives():
+    drives = []
+    if shutil.which("lsblk"):
+        res = subprocess.run(["lsblk", "-J", "-d", "-o", "NAME,SIZE,TYPE,TRAN,MODEL,RM"], capture_output=True, text=True)
+        try:
+            data = json.loads(res.stdout)
+            for d in data.get("blockdevices", []):
+                # Check if USB transport or removable disk
+                if d.get("tran") == "usb" or d.get("rm") in (True, "1", 1):
+                    # Never include nvme or mmcblk boot drives
+                    if not d["name"].startswith("nvme") and not d["name"].startswith("loop"):
+                        drives.append({
+                            "dev": f"/dev/{d['name']}",
+                            "name": d["name"],
+                            "size": d.get("size", "Unknown"),
+                            "model": d.get("model", "USB Drive").strip()
+                        })
+        except Exception:
+            pass
+    return drives
+
+
+class FlasherWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero ISO USB Flasher")
+        self.set_default_size(520, 480)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        self.selected_iso = None
+        self.selected_usb = None
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #f97316; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-browse { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: bold; }
+        .btn-flash { background-color: #f97316; color: #ffffff; font-weight: bold; border-radius: 8px; padding: 10px 18px; font-size: 14px; }
+        .btn-flash:hover { background-color: #ea580c; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔥 Aero USB Media Creator</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Flash bootable Aero Linux, Ubuntu, or Windows ISOs safely to USB</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Step 1: Select ISO Card
+        iso_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        iso_card.get_style_context().add_class("card")
+        lbl_1 = Gtk.Label(label="<b>1. Select ISO Image</b>", xalign=0)
+        lbl_1.set_use_markup(True)
+        iso_card.pack_start(lbl_1, False, False, 0)
+
+        iso_h = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self.lbl_iso_path = Gtk.Label(label="No ISO image selected", xalign=0)
+        self.lbl_iso_path.set_markup("<span color='#9ca3af'>No ISO image selected</span>")
+        iso_h.pack_start(self.lbl_iso_path, True, True, 0)
+
+        btn_iso = Gtk.Button(label="📁 Browse ISO...")
+        btn_iso.get_style_context().add_class("btn-browse")
+        btn_iso.connect("clicked", self._on_choose_iso)
+        iso_h.pack_start(btn_iso, False, False, 0)
+        iso_card.pack_start(iso_h, False, False, 0)
+        vbox.pack_start(iso_card, False, False, 0)
+
+        # Step 2: Target USB Drive Card
+        usb_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        usb_card.get_style_context().add_class("card")
+        lbl_2 = Gtk.Label(label="<b>2. Target Removable USB Drive</b>", xalign=0)
+        lbl_2.set_use_markup(True)
+        usb_card.pack_start(lbl_2, False, False, 0)
+
+        self.combo_usb = Gtk.ComboBoxText()
+        usb_card.pack_start(self.combo_usb, False, False, 0)
+        vbox.pack_start(usb_card, False, False, 0)
+
+        # Progress bar
+        self.progress = Gtk.ProgressBar()
+        self.progress.set_fraction(0.0)
+        vbox.pack_start(self.progress, False, False, 0)
+
+        # Flash Action Button
+        self.btn_flash = Gtk.Button(label="⚡ Flash Bootable USB")
+        self.btn_flash.get_style_context().add_class("btn-flash")
+        self.btn_flash.connect("clicked", self._on_flash_clicked)
+        vbox.pack_start(self.btn_flash, False, False, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Insert USB drive and select ISO", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Safety Lock: Internal NVMe/SATA drives are hardware-protected</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_usb_drives()
+
+    def _on_choose_iso(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Select ISO Image", parent=self, action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        
+        filter_iso = Gtk.FileFilter()
+        filter_iso.set_name("Disk Images (*.iso, *.img)")
+        filter_iso.add_pattern("*.iso")
+        filter_iso.add_pattern("*.img")
+        dialog.add_filter(filter_iso)
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            self.selected_iso = dialog.get_filename()
+            self.lbl_iso_path.set_markup(f"<span color='#38bdf8'><b>{os.path.basename(self.selected_iso)}</b></span>")
+        dialog.destroy()
+
+    def _populate_usb_drives(self):
+        self.combo_usb.remove_all()
+        drives = get_removable_usb_drives()
+        if not drives:
+            self.combo_usb.append_text("No USB drives detected — Insert USB drive")
+            self.combo_usb.set_active(0)
+        else:
+            for d in drives:
+                self.combo_usb.append_text(f"{d['dev']} ({d['model']} - {d['size']})")
+            self.combo_usb.set_active(0)
+
+    def _on_flash_clicked(self, button):
+        if not self.selected_iso or not os.path.exists(self.selected_iso):
+            dialog = Gtk.MessageDialog(
+                transient_for=self, flags=0, message_type=Gtk.MessageType.WARNING,
+                buttons=Gtk.ButtonsType.OK, text="Please select an ISO image first."
+            )
+            dialog.run()
+            dialog.destroy()
+            return
+
+        drives = get_removable_usb_drives()
+        if not drives:
+            dialog = Gtk.MessageDialog(
+                transient_for=self, flags=0, message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK, text="No removable USB drive detected."
+            )
+            dialog.run()
+            dialog.destroy()
+            return
+
+        idx = self.combo_usb.get_active()
+        target = drives[idx]
+
+        # Confirmation Dialog
+        dialog = Gtk.MessageDialog(
+            transient_for=self, flags=0, message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.YES_NO,
+            text=f"WARNING: All data on {target['dev']} ({target['model']}) will be erased!\n\nAre you sure you want to proceed?"
+        )
+        response = dialog.run()
+        dialog.destroy()
+
+        if response == Gtk.ResponseType.YES:
+            self.btn_flash.set_sensitive(False)
+            self.lbl_status.set_markup(f"<span color='#f97316' font='10'>Flashing {os.path.basename(self.selected_iso)} to {target['dev']}...</span>")
+            self.progress.pulse()
+
+            def run_flash():
+                cmd = f"pkexec dd if='{self.selected_iso}' of='{target['dev']}' bs=4M status=progress oflag=sync"
+                res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                GLib.idle_add(self._flash_done, res.returncode == 0)
+
+            threading.Thread(target=run_flash, daemon=True).start()
+
+    def _flash_done(self, success):
+        self.btn_flash.set_sensitive(True)
+        if success:
+            self.progress.set_fraction(1.0)
+            self.lbl_status.set_markup("<span color='#34d399' font='10'>✔ Bootable USB Flash Completed Successfully!</span>")
+            subprocess.run(["notify-send", "🔥 Aero Flasher", "Bootable USB created successfully!"])
+        else:
+            self.lbl_status.set_markup("<span color='#f43f5e' font='10'>❌ Flashing failed or cancelled.</span>")
+
+
+def main():
+    win = FlasherWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

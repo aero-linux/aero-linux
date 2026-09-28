@@ -621,6 +621,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(s_path))
         self.assertTrue(os.access(s_path, os.X_OK))
 
+    def test_flasher_gui_script(self):
+        flash_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-flasher-gui"
+        self.assertTrue(os.path.exists(flash_path))
+        self.assertTrue(os.access(flash_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
