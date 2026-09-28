@@ -77,6 +77,22 @@ exec python3 "${AERO_HOME}/bin/aero-quick-settings" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-quick-settings"
 
+# Create global executable wrapper for aero-monitor GUI
+cat << 'EOF' > "${BIN_DIR}/aero-monitor"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-monitor" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-monitor"
+
+# Create global executable wrapper for aero-updater GUI
+cat << 'EOF' > "${BIN_DIR}/aero-updater"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-updater" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-updater"
+
 # Install Desktop Icon & Man Pages
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -94,6 +110,28 @@ Icon=aero
 Terminal=false
 Type=Application
 Categories=System;Settings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-monitor.desktop"
+[Desktop Entry]
+Name=Aero System Monitor
+Comment=Aero Linux Graphical CPU Waveform & Task Manager
+Exec=${BIN_DIR}/aero-monitor
+Icon=utilities-system-monitor
+Terminal=false
+Type=Application
+Categories=System;Monitor;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-updater.desktop"
+[Desktop Entry]
+Name=Aero Update Manager
+Comment=Aero Linux System & Package Updater GUI
+Exec=${BIN_DIR}/aero-updater
+Icon=system-software-update
+Terminal=false
+Type=Application
+Categories=System;PackageManager;GTK;
 EOF
 
 cat << EOF > "${HOME}/.local/share/applications/aero-terminal.desktop"

@@ -453,6 +453,15 @@ class TestAeroCLI(unittest.TestCase):
         devs = get_phone_devices()
         self.assertIsInstance(devs, list)
 
+    def test_monitor_and_updater_gui_helpers(self):
+        # Verify monitor and updater scripts exist and are executable
+        mon_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-monitor"
+        upd_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-updater"
+        self.assertTrue(os.path.exists(mon_path))
+        self.assertTrue(os.access(mon_path, os.X_OK))
+        self.assertTrue(os.path.exists(upd_path))
+        self.assertTrue(os.access(upd_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

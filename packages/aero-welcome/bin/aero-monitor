@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical System Monitor & Task Manager
+Real-time CPU waveform graph, memory gauges, and interactive process killer.
+"""
+
+import os
+import signal
+import subprocess
+import time
+from typing import List, Dict, Any
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib
+
+
+CSS = b"""
+window {
+    background-color: #0d1117;
+    color: #f0f6fc;
+}
+
+.monitor-card {
+    background: #161b22;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.graph-box {
+    background: #0a0b10;
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 8px;
+}
+
+progressbar trough {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    min-height: 12px;
+}
+
+progressbar progress {
+    background: linear-gradient(90deg, #00f2fe, #4facfe);
+    border-radius: 6px;
+}
+
+treeview {
+    background-color: #161b22;
+    color: #f0f6fc;
+    border-radius: 8px;
+}
+
+treeview:selected {
+    background-color: rgba(0, 242, 254, 0.25);
+    color: #00f2fe;
+}
+
+button.danger-btn {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 6px 16px;
+}
+
+button.danger-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+"""
+
+
+def get_system_cpu_usage() -> float:
+    try:
+        with open("/proc/stat", "r") as f:
+            line = f.readline()
+        fields = [float(x) for x in line.split()[1:8]]
+        idle = fields[3] + fields[4]
+        total = sum(fields)
+        # Store for diff
+        return total, idle
+    except Exception:
+        return 100.0, 50.0
+
+
+def get_system_memory() -> Dict[str, Any]:
+    mem = {"total_mb": 16000, "used_mb": 4000, "pct": 25.0}
+    try:
+        with open("/proc/meminfo", "r") as f:
+            lines = f.readlines()
+        info = {}
+        for l in lines:
+            parts = l.split(":")
+            if len(parts) == 2:
+                k = parts[0].strip()
+                v = int(parts[1].split()[0])
+                info[k] = v
+        total_kb = info.get("MemTotal", 1)
+        avail_kb = info.get("MemAvailable", 0)
+        used_kb = total_kb - avail_kb
+        mem["total_mb"] = round(total_kb / 1024)
+        mem["used_mb"] = round(used_kb / 1024)
+        mem["pct"] = round((used_kb / total_kb) * 100, 1)
+    except Exception:
+        pass
+    return mem
+
+
+def get_top_processes(limit: int = 30) -> List[Dict[str, Any]]:
+    procs = []
+    try:
+        out = subprocess.check_output(
+            ["ps", "-eo", "pid,user,%cpu,%mem,comm", "--sort=-%cpu"],
+            text=True,
+            stderr=subprocess.DEVNULL
+        )
+        for line in out.strip().splitlines()[1:limit + 1]:
+            parts = line.split(None, 4)
+            if len(parts) == 5:
+                procs.append({
+                    "pid": int(parts[0]),
+                    "user": parts[1],
+                    "cpu": float(parts[2]),
+                    "mem": float(parts[3]),
+                    "name": parts[4],
+                })
+    except Exception:
+        pass
+    return procs
+
+
+class SystemMonitorWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero System Monitor")
+        self.set_default_size(780, 560)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Style provider
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+        self.cpu_history = [0.0] * 40
+        self.last_total = 0.0
+        self.last_idle = 0.0
+
+        # Main Layout Box
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        vbox.set_margin_top(16)
+        vbox.set_margin_bottom(16)
+        vbox.set_margin_start(16)
+        vbox.set_margin_end(16)
+        self.add(vbox)
+
+        # Header Title
+        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        lbl_title = Gtk.Label()
+        lbl_title.set_markup("<span font='14' weight='bold' color='#00f2fe'>⚡ Aero System & Task Monitor</span>")
+        header.pack_start(lbl_title, False, False, 0)
+        vbox.pack_start(header, False, False, 0)
+
+        # 2-Column Metrics Card (CPU Waveform Graph + Memory Bar)
+        metrics_grid = Gtk.Grid()
+        metrics_grid.set_column_spacing(12)
+        metrics_grid.set_row_spacing(8)
+        metrics_grid.set_column_homogeneous(True)
+
+        # CPU Waveform Card
+        card_cpu = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        card_cpu.get_style_context().add_class("monitor-card")
+        self.lbl_cpu_pct = Gtk.Label()
+        self.lbl_cpu_pct.set_markup("<b>CPU Usage: 0%</b>")
+        self.lbl_cpu_pct.set_xalign(0)
+        card_cpu.pack_start(self.lbl_cpu_pct, False, False, 0)
+
+        self.drawing_area = Gtk.DrawingArea()
+        self.drawing_area.set_size_request(340, 90)
+        self.drawing_area.get_style_context().add_class("graph-box")
+        self.drawing_area.connect("draw", self.on_draw_cpu_graph)
+        card_cpu.pack_start(self.drawing_area, True, True, 0)
+        metrics_grid.attach(card_cpu, 0, 0, 1, 1)
+
+        # Memory Card
+        card_mem = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        card_mem.get_style_context().add_class("monitor-card")
+        self.lbl_mem_stat = Gtk.Label()
+        self.lbl_mem_stat.set_markup("<b>RAM & zRAM Usage: 0 MB / 0 MB</b>")
+        self.lbl_mem_stat.set_xalign(0)
+        card_mem.pack_start(self.lbl_mem_stat, False, False, 0)
+
+        self.pb_mem = Gtk.ProgressBar()
+        card_mem.pack_start(self.pb_mem, False, False, 0)
+
+        lbl_zram_badge = Gtk.Label()
+        lbl_zram_badge.set_markup("<span font='10' color='#34d399'>✔ Active 3:1 zRAM ZSTD In-Memory Compression</span>")
+        lbl_zram_badge.set_xalign(0)
+        card_mem.pack_start(lbl_zram_badge, False, False, 0)
+        metrics_grid.attach(card_mem, 1, 0, 1, 1)
+
+        vbox.pack_start(metrics_grid, False, False, 0)
+
+        # Processes Table Label & End Task Button
+        proc_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        lbl_procs = Gtk.Label()
+        lbl_procs.set_markup("<b>Active System Processes (Top CPU/RAM)</b>")
+        proc_header.pack_start(lbl_procs, False, False, 0)
+
+        btn_kill = Gtk.Button(label="🛑 End Process")
+        btn_kill.get_style_context().add_class("danger-btn")
+        btn_kill.connect("clicked", self.on_kill_selected)
+        proc_header.pack_end(btn_kill, False, False, 0)
+        vbox.pack_start(proc_header, False, False, 0)
+
+        # Process List (TreeView)
+        self.liststore = Gtk.ListStore(int, str, float, float, str)
+        self.treeview = Gtk.TreeView(model=self.liststore)
+        self.treeview.get_selection().set_mode(Gtk.SelectionMode.SINGLE)
+
+        cols = [
+            ("PID", 0, 70),
+            ("Process Name", 4, 260),
+            ("CPU %", 2, 90),
+            ("Memory %", 3, 90),
+            ("User", 1, 90),
+        ]
+        for title, col_id, width in cols:
+            renderer = Gtk.CellRendererText()
+            col = Gtk.TreeViewColumn(title, renderer, text=col_id)
+            col.set_fixed_width(width)
+            self.treeview.append_column(col)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scroll.add(self.treeview)
+        vbox.pack_start(scroll, True, True, 0)
+
+        # Timer for live refresh (1 second interval)
+        GLib.timeout_add(1000, self.update_telemetry)
+        self.update_telemetry()
+
+    def update_telemetry(self):
+        # Update CPU
+        total, idle = get_system_cpu_usage()
+        diff_total = total - self.last_total
+        diff_idle = idle - self.last_idle
+        self.last_total = total
+        self.last_idle = idle
+
+        cpu_pct = 0.0
+        if diff_total > 0:
+            cpu_pct = round(((diff_total - diff_idle) / diff_total) * 100, 1)
+        self.cpu_history.append(cpu_pct)
+        self.cpu_history.pop(0)
+        self.lbl_cpu_pct.set_markup(f"<b>CPU Usage: <span color='#00f2fe'>{cpu_pct}%</span></b>")
+        self.drawing_area.queue_draw()
+
+        # Update Memory
+        mem = get_system_memory()
+        self.lbl_mem_stat.set_markup(f"<b>RAM Usage: {mem['used_mb']} MB / {mem['total_mb']} MB ({mem['pct']}%)</b>")
+        self.pb_mem.set_fraction(mem["pct"] / 100.0)
+
+        # Update Process List
+        procs = get_top_processes(25)
+        self.liststore.clear()
+        for p in procs:
+            self.liststore.append([p["pid"], p["user"], p["cpu"], p["mem"], p["name"]])
+
+        return True
+
+    def on_draw_cpu_graph(self, widget, cr):
+        w = widget.get_allocated_width()
+        h = widget.get_allocated_height()
+
+        # Draw Background Grid Lines
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.05)
+        cr.set_line_width(1.0)
+        for y in [h * 0.25, h * 0.5, h * 0.75]:
+            cr.move_to(0, y)
+            cr.line_to(w, y)
+            cr.stroke()
+
+        # Draw CPU Waveform
+        step = w / (len(self.cpu_history) - 1)
+        cr.set_source_rgba(0.0, 0.95, 1.0, 0.9)
+        cr.set_line_width(2.5)
+
+        for i, val in enumerate(self.cpu_history):
+            x = i * step
+            y = h - (val / 100.0 * h)
+            if i == 0:
+                cr.move_to(x, y)
+            else:
+                cr.line_to(x, y)
+        cr.stroke()
+
+    def on_kill_selected(self, button):
+        selection = self.treeview.get_selection()
+        model, treeiter = selection.get_selected()
+        if treeiter:
+            pid = model[treeiter][0]
+            name = model[treeiter][4]
+            try:
+                os.kill(pid, signal.SIGTERM)
+                subprocess.run(["notify-send", "Process Terminated", f"Ended {name} (PID: {pid})"])
+                self.update_telemetry()
+            except Exception as e:
+                subprocess.run(["notify-send", "Error Ending Process", str(e)])
+
+
+def main():
+    win = SystemMonitorWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

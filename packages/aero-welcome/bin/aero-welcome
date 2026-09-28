@@ -83,6 +83,14 @@ class AeroWelcomeApp(Gtk.Window):
         btn_fm.connect("clicked", lambda b: self.run_cmd("nemo ~"))
         quick_grid.attach(btn_fm, 1, 1, 1, 1)
 
+        btn_mon_gui = Gtk.Button(label="📊 System Monitor (Task Manager)")
+        btn_mon_gui.connect("clicked", lambda b: self.run_cmd("aero-monitor"))
+        quick_grid.attach(btn_mon_gui, 0, 2, 1, 1)
+
+        btn_upd_gui = Gtk.Button(label="🔄 Update Manager (System Patches)")
+        btn_upd_gui.connect("clicked", lambda b: self.run_cmd("aero-updater"))
+        quick_grid.attach(btn_upd_gui, 1, 2, 1, 1)
+
         page_quick.pack_start(quick_grid, False, False, 0)
 
         sep2 = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
