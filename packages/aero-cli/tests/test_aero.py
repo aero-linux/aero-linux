@@ -54,6 +54,8 @@ from aero.dev_utils import convert_color, time_execution
 from aero.osd import handle_osd_action
 from aero.trash import get_trash_items, empty_trash_bin
 from aero.display import set_night_light
+from aero.calc import calculate_expression
+from aero.battery_daemon import check_battery_alerts
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -389,6 +391,14 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(empty_trash_bin())
         res_nl = set_night_light(False)
         self.assertFalse(res_nl)
+
+    def test_calc_and_battery_daemon(self):
+        c1 = calculate_expression("1024 * 16")
+        self.assertEqual(c1["result"], 16384)
+        c2 = calculate_expression("sqrt(256) + 4")
+        self.assertEqual(c2["result"], 20.0)
+        bat = check_battery_alerts()
+        self.assertIn("capacity", bat)
 
 
 if __name__ == "__main__":

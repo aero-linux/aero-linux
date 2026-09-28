@@ -88,6 +88,8 @@ from aero.ai_tools import audit_ai_memory_footprint, show_prompt_template
 from aero.hardware_tuning import get_hardware_fan_status, set_fan_profile
 from aero.dev_utils import convert_color, time_execution
 from aero.osd import handle_osd_action
+from aero.calc import calculate_expression
+from aero.recorder import start_recording, stop_recording, is_recording_active
 
 
 def print_banner():
@@ -610,6 +612,19 @@ def main():
     osd_parser = subparsers.add_parser("osd", help="Trigger hardware On-Screen Display (OSD) volume and brightness overlays")
     osd_parser.add_argument("action", choices=["volume-up", "volume-down", "mute", "mic-mute", "brightness-up", "brightness-down", "play-pause", "next", "prev"], help="OSD action to trigger")
 
+    # Fast Calculator & Unit Converter
+    calc_parser = subparsers.add_parser("calc", help="Fast arithmetic, memory unit converter, and math evaluator")
+    calc_parser.add_argument("expression", nargs="?", default="2 + 2", help="Math expression (e.g. '1024 * 16' or 'sqrt(256)')")
+
+    # Screen & GIF Recorder
+    rec_parser = subparsers.add_parser("rec", help="Wayland desktop screen and GIF recorder")
+    rec_sub = rec_parser.add_subparsers(dest="rec_action", help="Recorder actions")
+    rec_start = rec_sub.add_parser("start", help="Start full screen or region recording")
+    rec_start.add_argument("--region", "-r", action="store_true", help="Select area to record")
+    rec_start.add_argument("--gif", "-g", action="store_true", help="Save as animated GIF")
+    rec_sub.add_parser("stop", help="Stop active screen recording")
+    rec_sub.add_parser("toggle", help="Toggle recording start/stop")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1097,6 +1112,20 @@ def main():
 
     elif args.command == "osd":
         handle_osd_action(args.action)
+
+    elif args.command == "calc":
+        calculate_expression(args.expression)
+
+    elif args.command == "rec":
+        if args.rec_action == "stop":
+            stop_recording()
+        elif args.rec_action == "toggle":
+            if is_recording_active():
+                stop_recording()
+            else:
+                start_recording()
+        else:
+            start_recording(is_gif=getattr(args, "gif", False), region=getattr(args, "region", False))
 
 
 if __name__ == "__main__":

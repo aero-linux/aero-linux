@@ -42,6 +42,12 @@ exec blueman-applet
 exec /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1
 exec /usr/local/bin/aero-welcome
 
+# Input Configuration & Keyboard Layout Switching (Win+Space)
+input "type:keyboard" {
+    xkb_layout "us,in"
+    xkb_options "grp:win_space_toggle"
+}
+
 # Keybindings: System & Launchers
 bindsym $mod+Return exec $term
 bindsym $mod+d exec $menu
@@ -49,13 +55,15 @@ bindsym $mod+Shift+q kill
 bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Aero Sway?' -B 'Shutdown' 'systemctl poweroff' -B 'Reboot' 'systemctl reboot' -B 'Logout' 'swaymsg exit'
 bindsym $mod+l exec $lock
 
-# Screenshots (PrintScreen & Shift+PrintScreen)
+# Screenshots & Screen Recording
 bindsym Print exec mkdir -p ~/Pictures/Screenshots && grim ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Screenshot Captured' 'Saved to ~/Pictures/Screenshots'
 bindsym Shift+Print exec mkdir -p ~/Pictures/Screenshots && grim -g "$(slurp)" ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Region Captured' 'Saved to ~/Pictures/Screenshots'
+bindsym Control+Shift+r exec aero rec toggle
 
 # Windows-Friendly Familiar Shortcuts
 bindsym $mod+a exec aero-quick-settings
 bindsym $mod+v exec aero clip menu
+bindsym $mod+c exec galculator || gnome-calculator || $term -e aero calc
 bindsym $mod+e exec nemo ~ || thunar ~ || pcmanfm ~
 bindsym Control+Shift+Escape exec xfce4-taskmanager || gnome-system-monitor || lxtask || $term -e aero monitor
 bindsym Mod1+Tab focus next
