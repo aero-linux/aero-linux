@@ -73,3 +73,19 @@ def zoom_out() -> Dict[str, Any]:
 
 def zoom_reset() -> Dict[str, Any]:
     return set_zoom(1.0)
+
+
+def zoom_peek(scale: float = 1.35, duration: float = 1.8) -> Dict[str, Any]:
+    """Momentary peek zoom: magnifies display and auto-resets when gesture ends / timeout."""
+    import threading
+    import time
+
+    set_zoom(scale)
+
+    def _auto_reset():
+        time.sleep(duration)
+        zoom_reset()
+
+    thread = threading.Thread(target=_auto_reset, daemon=True)
+    thread.start()
+    return {"status": "peeking", "scale": scale, "duration": duration}

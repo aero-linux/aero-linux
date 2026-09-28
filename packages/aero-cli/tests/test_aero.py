@@ -66,7 +66,7 @@ from aero.gpu_switcher import get_current_gpu_mode, GPU_MODES
 from aero.phone_connect import show_phone_status, get_phone_devices
 from aero.accent_manager import apply_accent_color, ACCENT_PRESETS
 from aero.appimage_mgr import integrate_appimage
-from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom
+from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -482,6 +482,8 @@ class TestAeroCLI(unittest.TestCase):
         self.assertEqual(res["percent"], 125)
         res_rst = zoom_reset()
         self.assertEqual(res_rst["percent"], 100)
+        peek_res = zoom_peek(scale=1.30, duration=0.1)
+        self.assertEqual(peek_res["status"], "peeking")
 
 
 if __name__ == "__main__":

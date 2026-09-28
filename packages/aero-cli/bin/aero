@@ -99,7 +99,7 @@ from aero.gpu_switcher import get_current_gpu_mode, set_gpu_mode
 from aero.phone_connect import show_phone_status, send_file_to_phone
 from aero.accent_manager import apply_accent_color, list_accents
 from aero.appimage_mgr import integrate_appimage
-from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom
+from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
 
 
 def print_banner():
@@ -689,6 +689,9 @@ def main():
     zoom_sub.add_parser("in", help="Zoom in (magnify display)")
     zoom_sub.add_parser("out", help="Zoom out")
     zoom_sub.add_parser("reset", help="Reset zoom to 100% (1.0x)")
+    zoom_peek_p = zoom_sub.add_parser("peek", help="Momentary zoom with automatic touch-release reset")
+    zoom_peek_p.add_argument("--scale", type=float, default=1.35, help="Peek zoom scale factor")
+    zoom_peek_p.add_argument("--duration", type=float, default=1.8, help="Peek duration in seconds before reset")
     zoom_set = zoom_sub.add_parser("set", help="Set specific zoom scale factor")
     zoom_set.add_argument("scale", type=float, help="Scale factor (e.g. 1.25, 1.5, 2.0)")
 
@@ -1237,6 +1240,8 @@ def main():
             zoom_in()
         elif args.zoom_action == "out":
             zoom_out()
+        elif args.zoom_action == "peek":
+            zoom_peek(args.scale, args.duration)
         elif args.zoom_action == "set":
             set_zoom(args.scale)
         else:
