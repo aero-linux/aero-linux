@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Startup Applications & Autostart Manager
+Manage apps that launch automatically on login, add custom commands, and optimize boot speed.
+"""
+
+import configparser
+import glob
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+AUTOSTART_DIR = os.path.expanduser("~/.config/autostart")
+
+
+def load_autostart_entries():
+    os.makedirs(AUTOSTART_DIR, exist_ok=True)
+    entries = []
+    
+    # User autostart
+    for file_path in glob.glob(os.path.join(AUTOSTART_DIR, "*.desktop")):
+        try:
+            parser = configparser.ConfigParser(interpolation=None)
+            parser.read(file_path, encoding="utf-8")
+            if "Desktop Entry" in parser:
+                sec = parser["Desktop Entry"]
+                name = sec.get("Name", os.path.basename(file_path))
+                cmd = sec.get("Exec", "")
+                comment = sec.get("Comment", "User startup application")
+                hidden = sec.get("Hidden", "false").lower() == "true"
+                nodisplay = sec.get("X-GNOME-Autostart-enabled", "true").lower() == "false"
+                enabled = not (hidden or nodisplay)
+                
+                entries.append({
+                    "path": file_path,
+                    "filename": os.path.basename(file_path),
+                    "name": name,
+                    "exec": cmd,
+                    "comment": comment,
+                    "enabled": enabled
+                })
+        except Exception:
+            pass
+    return entries
+
+
+class StartupManagerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Startup Applications Manager")
+        self.set_default_size(640, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #3b82f6; }
+        .card { background-color: #111827; border-radius: 8px; padding: 10px 14px; border: 1px solid #1f2937; }
+        .btn-add { background-color: #3b82f6; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        .btn-add:hover { background-color: #2563eb; }
+        .btn-del { background-color: #7f1d1d; color: #fca5a5; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        .btn-del:hover { background-color: #991b1b; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🚀 Aero Startup Applications</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Control background programs that automatically start on desktop login</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_add = Gtk.Button(label="➕ Add Program")
+        btn_add.get_style_context().add_class("btn-add")
+        btn_add.connect("clicked", self._on_add_program_dialog)
+        header_box.pack_start(btn_add, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Scrolled List
+        scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled.add(self.list_box)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_list()
+
+    def _populate_list(self):
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        entries = load_autostart_entries()
+        if not entries:
+            lbl_empty = Gtk.Label(label="No custom startup applications configured.", xalign=0.5)
+            lbl_empty.set_markup("<span color='#94a3b8'>No custom startup applications configured. Click <b>➕ Add Program</b> to create one.</span>")
+            self.list_box.pack_start(lbl_empty, True, True, 30)
+        else:
+            for item in entries:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                row.get_style_context().add_class("card")
+
+                # Switch
+                switch = Gtk.Switch()
+                switch.set_active(item["enabled"])
+                switch.connect("state-set", lambda s, state, path=item["path"]: self._on_toggle_state(path, state))
+                row.pack_start(switch, False, False, 0)
+
+                # Info
+                info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_name = Gtk.Label(xalign=0)
+                lbl_name.set_markup(f"<b>{item['name']}</b>")
+                lbl_cmd = Gtk.Label(xalign=0)
+                lbl_cmd.set_markup(f"<span color='#94a3b8' font='9'>Command: <code>{item['exec']}</code></span>")
+                info.pack_start(lbl_name, False, False, 0)
+                info.pack_start(lbl_cmd, False, False, 0)
+                row.pack_start(info, True, True, 0)
+
+                # Delete Button
+                btn_del = Gtk.Button(label="🗑️ Remove")
+                btn_del.get_style_context().add_class("btn-del")
+                btn_del.connect("clicked", lambda b, path=item["path"]: self._on_delete(path))
+                row.pack_start(btn_del, False, False, 0)
+
+                self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+        self.lbl_status.set_markup(f"<span color='#3b82f6' font='10'>Startup Items: {len(entries)} configured</span>")
+
+    def _on_toggle_state(self, path, state):
+        try:
+            parser = configparser.ConfigParser(interpolation=None)
+            parser.read(path, encoding="utf-8")
+            if "Desktop Entry" in parser:
+                parser["Desktop Entry"]["X-GNOME-Autostart-enabled"] = "true" if state else "false"
+                with open(path, "w", encoding="utf-8") as f:
+                    parser.write(f)
+        except Exception as e:
+            self.lbl_status.set_markup(f"<span color='#f43f5e' font='10'>Error: {e}</span>")
+        return False
+
+    def _on_delete(self, path):
+        if os.path.exists(path):
+            os.remove(path)
+            self._populate_list()
+            subprocess.run(["notify-send", "🚀 Startup Manager", "Startup application removed."])
+
+    def _on_add_program_dialog(self, button):
+        dialog = Gtk.Dialog(title="Add Startup Application", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_ADD, Gtk.ResponseType.OK)
+        dialog.set_default_size(380, 220)
+        dialog.set_border_width(12)
+
+        content = dialog.get_content_area()
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        lbl_n = Gtk.Label(label="App Name:", xalign=0)
+        entry_name = Gtk.Entry()
+        entry_name.set_placeholder_text("e.g. Discord, Telegram, Docker")
+
+        lbl_c = Gtk.Label(label="Command / Exec:", xalign=0)
+        entry_cmd = Gtk.Entry()
+        entry_cmd.set_placeholder_text("e.g. /usr/bin/discord --start-minimized")
+
+        lbl_d = Gtk.Label(label="Comment:", xalign=0)
+        entry_desc = Gtk.Entry()
+        entry_desc.set_placeholder_text("e.g. Voice and chat app")
+
+        grid.attach(lbl_n, 0, 0, 1, 1)
+        grid.attach(entry_name, 1, 0, 1, 1)
+        grid.attach(lbl_c, 0, 1, 1, 1)
+        grid.attach(entry_cmd, 1, 1, 1, 1)
+        grid.attach(lbl_d, 0, 2, 1, 1)
+        grid.attach(entry_desc, 1, 2, 1, 1)
+
+        content.add(grid)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            name = entry_name.get_text().strip()
+            cmd = entry_cmd.get_text().strip()
+            desc = entry_desc.get_text().strip() or name
+
+            if name and cmd:
+                slug = "".join(c if c.isalnum() else "_" for c in name.lower())
+                file_path = os.path.join(AUTOSTART_DIR, f"{slug}.desktop")
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(f"[Desktop Entry]\nType=Application\nName={name}\nExec={cmd}\nComment={desc}\nHidden=false\nNoDisplay=false\nX-GNOME-Autostart-enabled=true\n")
+                self._populate_list()
+                subprocess.run(["notify-send", "🚀 Startup Manager", f"Added {name} to startup applications."])
+        dialog.destroy()
+
+
+def main():
+    win = StartupManagerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

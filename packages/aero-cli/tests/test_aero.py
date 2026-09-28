@@ -636,6 +636,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(srv_path))
         self.assertTrue(os.access(srv_path, os.X_OK))
 
+    def test_startup_gui_script(self):
+        st_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-startup-gui"
+        self.assertTrue(os.path.exists(st_path))
+        self.assertTrue(os.access(st_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
