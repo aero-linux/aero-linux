@@ -293,6 +293,14 @@ exec python3 "${AERO_HOME}/bin/aero-startup-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-startup-gui"
 
+# Create global executable wrapper for aero-sync-gui
+cat << 'EOF' > "${BIN_DIR}/aero-sync-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-sync-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-sync-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -620,6 +628,17 @@ Icon=system-run
 Terminal=false
 Type=Application
 Categories=Settings;DesktopSettings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-sync.desktop"
+[Desktop Entry]
+Name=Aero Dotfiles Sync
+Comment=Aero Linux Configs & Settings Cloud Sync
+Exec=${BIN_DIR}/aero-sync-gui
+Icon=folder-cloud
+Terminal=false
+Type=Application
+Categories=Utility;Settings;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

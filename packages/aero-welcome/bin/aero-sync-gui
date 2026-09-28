@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Developer Dotfiles & Cloud Config Sync Studio
+1-click backup, export, restore, and cloud synchronization for desktop settings and dotfiles.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.dotfiles_mgr import export_dotfiles, import_dotfiles
+
+
+class SyncStudioWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Dotfiles & Config Sync Studio")
+        self.set_default_size(580, 500)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #6366f1; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-action { background-color: #6366f1; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 8px 16px; font-size: 12px; }
+        .btn-action:hover { background-color: #4f46e5; }
+        .btn-restore { background-color: #0d9488; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 8px 16px; font-size: 12px; }
+        .btn-restore:hover { background-color: #0f766e; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>☁️ Aero Config &amp; Dotfiles Sync</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Backup, export, and restore developer configs, themes &amp; dotfiles</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Export Card
+        exp_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        exp_card.get_style_context().add_class("card")
+        lbl_e_title = Gtk.Label(label="<b>📦 1-Click Export &amp; Backup</b>", xalign=0)
+        lbl_e_title.set_use_markup(True)
+        lbl_e_desc = Gtk.Label(label="Bundles ~/.config/aero, ~/.bashrc, ~/.gitconfig, and desktop themes into a compressed tarball.", xalign=0)
+        lbl_e_desc.set_markup("<span color='#9ca3af' font='9'>Bundles ~/.config/aero, ~/.bashrc, ~/.gitconfig, and desktop themes into a compressed tarball.</span>")
+        exp_card.pack_start(lbl_e_title, False, False, 0)
+        exp_card.pack_start(lbl_e_desc, False, False, 0)
+
+        btn_export = Gtk.Button(label="⚡ Create Dotfiles Bundle")
+        btn_export.get_style_context().add_class("btn-action")
+        btn_export.connect("clicked", self._on_export)
+        exp_card.pack_start(btn_export, False, False, 0)
+        vbox.pack_start(exp_card, False, False, 0)
+
+        # Restore Card
+        res_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        res_card.get_style_context().add_class("card")
+        lbl_r_title = Gtk.Label(label="<b>📥 1-Click Restore Configs</b>", xalign=0)
+        lbl_r_title.set_use_markup(True)
+        lbl_r_desc = Gtk.Label(label="Restore desktop configurations, themes, and shell settings from an existing backup bundle.", xalign=0)
+        lbl_r_desc.set_markup("<span color='#9ca3af' font='9'>Restore desktop configurations, themes, and shell settings from an existing backup bundle.</span>")
+        res_card.pack_start(lbl_r_title, False, False, 0)
+        res_card.pack_start(lbl_r_desc, False, False, 0)
+
+        btn_restore = Gtk.Button(label="📁 Select Backup Bundle &amp; Restore")
+        btn_restore.get_style_context().add_class("btn-restore")
+        btn_restore.connect("clicked", self._on_restore)
+        res_card.pack_start(btn_restore, False, False, 0)
+        vbox.pack_start(res_card, False, False, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Sync Engine Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _on_export(self, button):
+        self.lbl_status.set_markup("<span color='#6366f1' font='10'>Exporting dotfiles...</span>")
+        
+        def run():
+            dest = os.path.expanduser("~/")
+            path = export_dotfiles(dest_dir=dest)
+            GLib.idle_add(self._export_done, path)
+
+        threading.Thread(target=run, daemon=True).start()
+
+    def _export_done(self, path):
+        if path and os.path.exists(path):
+            self.lbl_status.set_markup(f"<span color='#34d399' font='10'>✔ Backup created: <b>{os.path.basename(path)}</b> in ~/</span>")
+            subprocess.run(["notify-send", "☁️ Dotfiles Backup", f"Bundle exported to {path}"])
+        else:
+            self.lbl_status.set_markup("<span color='#f43f5e' font='10'>❌ Failed to export dotfiles.</span>")
+
+    def _on_restore(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Select Dotfiles Backup Bundle", parent=self, action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        
+        filter_tar = Gtk.FileFilter()
+        filter_tar.set_name("Gzip Tarballs (*.tar.gz)")
+        filter_tar.add_pattern("*.tar.gz")
+        dialog.add_filter(filter_tar)
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            bundle_path = dialog.get_filename()
+            dialog.destroy()
+            
+            self.lbl_status.set_markup("<span color='#0d9488' font='10'>Restoring dotfiles...</span>")
+            
+            def run():
+                success = import_dotfiles(bundle_path)
+                GLib.idle_add(self._restore_done, success, bundle_path)
+
+            threading.Thread(target=run, daemon=True).start()
+        else:
+            dialog.destroy()
+
+    def _restore_done(self, success, path):
+        if success:
+            self.lbl_status.set_markup(f"<span color='#34d399' font='10'>✔ Restored configurations from <b>{os.path.basename(path)}</b>!</span>")
+            subprocess.run(["notify-send", "☁️ Configs Restored", "All dotfiles and settings restored successfully."])
+        else:
+            self.lbl_status.set_markup("<span color='#f43f5e' font='10'>❌ Failed to restore configurations.</span>")
+
+
+def main():
+    win = SyncStudioWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

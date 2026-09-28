@@ -641,6 +641,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(st_path))
         self.assertTrue(os.access(st_path, os.X_OK))
 
+    def test_sync_gui_script(self):
+        sync_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-sync-gui"
+        self.assertTrue(os.path.exists(sync_path))
+        self.assertTrue(os.access(sync_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
