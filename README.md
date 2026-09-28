@@ -12,7 +12,7 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-50%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-56%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
@@ -115,6 +115,11 @@ aero uuid / aero token          # Cryptographic UUIDv4 & random token generator
 aero hash [sha256|md5] <target> # Cryptographic file/string hash calculator
 aero base64 [enc|dec] <str>     # Base64 encoder/decoder
 aero jwt <token>                # Local JWT payload & expiration claims inspector
+aero http <url>                 # High-speed HTTP client with latency breakdown
+aero dig <domain> / aero ping <host> # DNS records & TCP latency profiler
+aero color <hex>                # Terminal HEX/RGB color inspector & ANSI swatch
+aero time "<command>"           # High-precision sub-millisecond execution stopwatch
+aero fan [status|set <profile>] # Hardware cooling curve manager (silent/turbo)
 aero regex <pattern> <text>     # Terminal regex debugger and capture group parser
 aero diff <file1> <file2>       # Colorized terminal side-by-side diff inspector
 aero qr [encode|wifi]           # Instant terminal QR codes for mobile sync & Wi-Fi

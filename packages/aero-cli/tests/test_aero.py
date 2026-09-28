@@ -47,6 +47,10 @@ from aero.diff_tool import show_file_diff
 from aero.json_tools import format_json_str, minify_json_str, query_json_path
 from aero.crypto_tools import generate_uuid, generate_token, compute_hash
 from aero.jwt_tools import b64_encode_str, b64_decode_str, decode_jwt_token
+from aero.net_diagnostics import dns_dig, ping_host
+from aero.ai_tools import audit_ai_memory_footprint, PROMPT_TEMPLATES
+from aero.hardware_tuning import get_hardware_fan_status, FAN_PROFILES
+from aero.dev_utils import convert_color, time_execution
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -337,6 +341,36 @@ class TestAeroCLI(unittest.TestCase):
         mock_jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlJvbml0IiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         res = decode_jwt_token(mock_jwt)
         self.assertEqual(res["payload"]["name"], "Ronit")
+
+    def test_dns_dig(self):
+        res = dns_dig("localhost")
+        self.assertIn("A", res)
+
+    def test_ping_host(self):
+        res = ping_host("127.0.0.1", count=1)
+        self.assertIn("latencies", res)
+
+    def test_ai_tools_vram(self):
+        self.assertIn("coding", PROMPT_TEMPLATES)
+        self.assertIn("reasoning", PROMPT_TEMPLATES)
+
+    def test_fan_hardware(self):
+        self.assertIn("silent", FAN_PROFILES)
+        self.assertIn("turbo", FAN_PROFILES)
+        st = get_hardware_fan_status()
+        self.assertIn("fan_mode", st)
+
+    def test_color_converter(self):
+        c = convert_color("#00f2fe")
+        self.assertEqual(c["hex"], "#00F2FE")
+        self.assertEqual(c["r"], 0)
+        self.assertEqual(c["g"], 242)
+        self.assertEqual(c["b"], 254)
+
+    def test_time_execution(self):
+        res = time_execution("echo test")
+        self.assertEqual(res["exit_code"], 0)
+        self.assertTrue(res["elapsed_sec"] >= 0)
 
 
 if __name__ == "__main__":

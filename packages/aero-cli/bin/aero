@@ -81,6 +81,11 @@ from aero.qr_tool import render_qr_terminal, generate_wifi_qr
 from aero.json_tools import format_json_str, minify_json_str, query_json_path
 from aero.crypto_tools import generate_uuid, generate_token, compute_hash
 from aero.jwt_tools import b64_encode_str, b64_decode_str, decode_jwt_token
+from aero.http_client import http_request
+from aero.net_diagnostics import dns_dig, ping_host
+from aero.ai_tools import audit_ai_memory_footprint, show_prompt_template
+from aero.hardware_tuning import get_hardware_fan_status, set_fan_profile
+from aero.dev_utils import convert_color, time_execution
 
 
 def print_banner():
@@ -557,6 +562,35 @@ def main():
     jwt_parser = subparsers.add_parser("jwt", help="Decode and inspect JWT token payload and expiration")
     jwt_parser.add_argument("token", help="JWT token string")
 
+    # Developer HTTP Client
+    http_parser = subparsers.add_parser("http", help="Developer HTTP client and latency inspector")
+    http_parser.add_argument("url", help="Target URL (e.g. api.github.com)")
+    http_parser.add_argument("--method", "-m", default="GET", choices=["GET", "POST", "PUT", "DELETE"], help="HTTP method")
+    http_parser.add_argument("--data", "-d", default="", help="Request payload string")
+
+    # DNS Dig & Ping
+    dig_parser = subparsers.add_parser("dig", help="Query DNS A and AAAA records for a domain")
+    dig_parser.add_argument("domain", help="Target domain (e.g. google.com)")
+
+    ping_parser = subparsers.add_parser("ping", help="High-precision TCP/ICMP ping latency profiler")
+    ping_parser.add_argument("host", help="Target hostname or IP")
+    ping_parser.add_argument("--count", "-c", type=int, default=4, help="Number of packets")
+
+    # Hardware Fan & Cooling
+    fan_parser = subparsers.add_parser("fan", help="Hardware fan curve and cooling mode manager")
+    fan_sub = fan_parser.add_subparsers(dest="fan_action", help="Fan actions")
+    fan_sub.add_parser("status", help="Show fan RPM and cooling mode")
+    fan_set = fan_sub.add_parser("set", help="Apply fan profile")
+    fan_set.add_argument("profile", choices=["silent", "balanced", "turbo"], help="Fan profile")
+
+    # Developer Color Converter
+    color_parser = subparsers.add_parser("color", help="HEX/RGB color inspector and ANSI previewer")
+    color_parser.add_argument("hex", help="HEX color code (e.g. #00f2fe or ff5500)")
+
+    # Execution Stopwatch
+    time_parser = subparsers.add_parser("time", help="High-precision command execution stopwatch")
+    time_parser.add_argument("cmd", help="Command to time")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1007,6 +1041,27 @@ def main():
 
     elif args.command == "jwt":
         decode_jwt_token(args.token)
+
+    elif args.command == "http":
+        http_request(args.url, args.method, args.data)
+
+    elif args.command == "dig":
+        dns_dig(args.domain)
+
+    elif args.command == "ping":
+        ping_host(args.host, args.count)
+
+    elif args.command == "fan":
+        if args.fan_action == "set":
+            set_fan_profile(args.profile)
+        else:
+            get_hardware_fan_status()
+
+    elif args.command == "color":
+        convert_color(args.hex)
+
+    elif args.command == "time":
+        time_execution(args.cmd)
 
 
 if __name__ == "__main__":
