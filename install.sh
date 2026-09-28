@@ -277,6 +277,14 @@ exec python3 "${AERO_HOME}/bin/aero-logs-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-logs-gui"
 
+# Create global executable wrapper for aero-services-gui
+cat << 'EOF' > "${BIN_DIR}/aero-services-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-services-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-services-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -582,6 +590,17 @@ Icon=utilities-system-monitor
 Terminal=false
 Type=Application
 Categories=System;Monitor;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-services.desktop"
+[Desktop Entry]
+Name=Aero Services Manager
+Comment=Aero Linux Systemd Daemons & Background Services Manager
+Exec=${BIN_DIR}/aero-services-gui
+Icon=system-run
+Terminal=false
+Type=Application
+Categories=System;Settings;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

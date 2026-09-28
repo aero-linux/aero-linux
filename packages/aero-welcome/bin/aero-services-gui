@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Systemd Service & Daemon Manager
+Real-time dashboard to monitor, start, stop, restart, and toggle developer & system services.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+CORE_SERVICES = [
+    {"unit": "docker.service", "name": "Docker Container Daemon", "desc": "Container runtime engine"},
+    {"unit": "ssh.service", "name": "OpenSSH Server", "desc": "Secure remote shell daemon"},
+    {"unit": "postgresql.service", "name": "PostgreSQL Database", "desc": "Relational SQL database server"},
+    {"unit": "redis-server.service", "name": "Redis In-Memory Cache", "desc": "Key-value store & pub/sub broker"},
+    {"unit": "NetworkManager.service", "name": "NetworkManager", "desc": "Network connection daemon"},
+    {"unit": "bluetooth.service", "name": "Bluetooth Service", "desc": "Wireless Bluetooth daemon"},
+    {"unit": "cups.service", "name": "CUPS Printing Spooler", "desc": "Print queue and printer service"},
+    {"unit": "systemd-resolved.service", "name": "systemd-resolved", "desc": "DNS name resolution manager"},
+    {"unit": "cron.service", "name": "Cron Task Scheduler", "desc": "Periodic background cron job manager"},
+    {"unit": "ollama.service", "name": "Ollama AI Inference", "desc": "Local LLM server runtime"},
+]
+
+
+def get_service_status(unit_name):
+    res = subprocess.run(["systemctl", "is-active", unit_name], capture_output=True, text=True)
+    is_active = res.stdout.strip() == "active"
+    
+    res_en = subprocess.run(["systemctl", "is-enabled", unit_name], capture_output=True, text=True)
+    is_enabled = res_en.stdout.strip() == "enabled"
+    
+    return is_active, is_enabled
+
+
+class ServicesManagerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Service & Daemon Manager")
+        self.set_default_size(680, 560)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #06b6d4; }
+        .card { background-color: #111827; border-radius: 8px; padding: 10px 14px; border: 1px solid #1f2937; }
+        .btn-toggle-on { background-color: #059669; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        .btn-toggle-off { background-color: #dc2626; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        .btn-restart { background-color: #1e293b; color: #38bdf8; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        .btn-refresh { background-color: #06b6d4; color: #000000; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>⚙️ Aero Service &amp; Daemon Manager</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Manage background systemd daemons (Docker, SSH, Databases, Network)</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_ref = Gtk.Button(label="🔄 Refresh")
+        btn_ref.get_style_context().add_class("btn-refresh")
+        btn_ref.connect("clicked", self._on_refresh)
+        header_box.pack_start(btn_ref, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Search Entry
+        self.entry_search = Gtk.Entry()
+        self.entry_search.set_placeholder_text("🔍 Filter services (e.g. docker, postgres, ssh, network)...")
+        self.entry_search.connect("changed", self._on_search)
+        vbox.pack_start(self.entry_search, False, False, 0)
+
+        # Scrolled List
+        scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled.add(self.list_box)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_services("")
+
+    def _on_search(self, entry):
+        self._populate_services(entry.get_text().strip().lower())
+
+    def _on_refresh(self, button):
+        self._populate_services(self.entry_search.get_text().strip().lower())
+
+    def _populate_services(self, query):
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        for s in CORE_SERVICES:
+            if query and query not in s["name"].lower() and query not in s["unit"].lower() and query not in s["desc"].lower():
+                continue
+
+            active, enabled = get_service_status(s["unit"])
+
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.get_style_context().add_class("card")
+
+            # Status dot
+            dot_color = "#10b981" if active else "#64748b"
+            status_text = "Running" if active else "Stopped"
+            
+            info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            lbl_name = Gtk.Label(xalign=0)
+            lbl_name.set_markup(f"<span color='{dot_color}'>●</span> <b>{s['name']}</b> <span color='#94a3b8' font='10'>({s['unit']})</span>")
+            lbl_desc = Gtk.Label(xalign=0)
+            lbl_desc.set_markup(f"<span color='#9ca3af' font='9'>{s['desc']} — Status: <b color='{dot_color}'>{status_text}</b> (Boot: {'Enabled' if enabled else 'Disabled'})</span>")
+            info.pack_start(lbl_name, False, False, 0)
+            info.pack_start(lbl_desc, False, False, 0)
+            row.pack_start(info, True, True, 0)
+
+            # Actions
+            btn_tog = Gtk.Button(label="Stop" if active else "Start")
+            btn_tog.get_style_context().add_class("btn-toggle-off" if active else "btn-toggle-on")
+            btn_tog.connect("clicked", lambda b, unit=s['unit'], act=active: self._toggle_service(unit, act))
+            row.pack_start(btn_tog, False, False, 0)
+
+            btn_rest = Gtk.Button(label="Restart")
+            btn_rest.get_style_context().add_class("btn-restart")
+            btn_rest.connect("clicked", lambda b, unit=s['unit']: self._restart_service(unit))
+            row.pack_start(btn_rest, False, False, 0)
+
+            self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+        self.lbl_status.set_markup("<span color='#06b6d4' font='10'>Services updated.</span>")
+
+    def _toggle_service(self, unit, is_active):
+        action = "stop" if is_active else "start"
+        subprocess.run(["pkexec", "systemctl", action, unit], capture_output=True)
+        self._populate_services(self.entry_search.get_text().strip().lower())
+        subprocess.run(["notify-send", "⚙️ Service Manager", f"{unit} {action}ed."])
+
+    def _restart_service(self, unit):
+        subprocess.run(["pkexec", "systemctl", "restart", unit], capture_output=True)
+        self._populate_services(self.entry_search.get_text().strip().lower())
+        subprocess.run(["notify-send", "⚙️ Service Manager", f"{unit} restarted."])
+
+
+def main():
+    win = ServicesManagerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
