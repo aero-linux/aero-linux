@@ -1,0 +1,35 @@
+name: 🐛 Bug Report
+description: Report an issue or unexpected behavior in Aero Linux
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Aero Linux! Please fill out the details below.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware & Environment
+      description: CPU, RAM size, GPU (NVIDIA/AMD/Intel), and kernel version (from `aero doctor`).
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Commands executed or steps taken.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Terminal Output / Error Logs
+      description: Paste any error messages from `aero logs` or terminal traceback.
+      render: shell

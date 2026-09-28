@@ -1,0 +1,27 @@
+name: ✨ Feature Request
+description: Suggest a new idea, CLI command, or optimization for Aero Linux
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make Aero Linux faster, leaner, or more developer-friendly?
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a specific workflow problem or limitation?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Feature
+      description: Describe how the new CLI command, GUI feature, or config should work.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Any alternative tools or workarounds you have considered?
