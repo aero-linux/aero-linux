@@ -78,6 +78,9 @@ from aero.log_streamer import audit_system_errors
 from aero.regex_tool import test_regex
 from aero.diff_tool import show_file_diff
 from aero.qr_tool import render_qr_terminal, generate_wifi_qr
+from aero.json_tools import format_json_str, minify_json_str, query_json_path
+from aero.crypto_tools import generate_uuid, generate_token, compute_hash
+from aero.jwt_tools import b64_encode_str, b64_decode_str, decode_jwt_token
 
 
 def print_banner():
@@ -521,6 +524,39 @@ def main():
     qr_wifi.add_argument("password", help="Wi-Fi Password")
     qr_wifi.add_argument("--auth", default="WPA", help="Authentication type (default: WPA)")
 
+    # JSON Formatting & Query Engine
+    json_parser = subparsers.add_parser("json", help="High-speed JSON formatting, minification, and key querying")
+    json_sub = json_parser.add_subparsers(dest="json_action", help="JSON actions")
+    j_fmt = json_sub.add_parser("format", help="Prettify JSON file or string")
+    j_fmt.add_argument("target", help="JSON string or file path")
+    j_min = json_sub.add_parser("minify", help="Minify JSON file or string")
+    j_min.add_argument("target", help="JSON string or file path")
+    j_get = json_sub.add_parser("get", help="Query path in JSON (e.g. users.0.id)")
+    j_get.add_argument("path", help="Key path")
+    j_get.add_argument("target", help="JSON string or file path")
+
+    # Cryptographic IDs & Hashes
+    subparsers.add_parser("uuid", help="Generate UUIDv4 string")
+    
+    tok_parser = subparsers.add_parser("token", help="Generate cryptographically secure random token")
+    tok_parser.add_argument("--len", "-l", type=int, default=32, help="Token length (default: 32)")
+    tok_parser.add_argument("--mode", "-m", choices=["hex", "alphanumeric", "urlsafe"], default="hex", help="Token format")
+
+    hash_parser = subparsers.add_parser("hash", help="Compute file or string cryptographic hash (SHA256/MD5)")
+    hash_parser.add_argument("algo", choices=["sha256", "sha512", "md5", "sha1"], help="Hash algorithm")
+    hash_parser.add_argument("target", help="File path or string")
+
+    # Base64 & JWT Tools
+    b64_parser = subparsers.add_parser("base64", help="Encode/Decode Base64 strings")
+    b64_sub = b64_parser.add_subparsers(dest="b64_action", help="Base64 actions")
+    b64_enc = b64_sub.add_parser("enc", help="Encode string to Base64")
+    b64_enc.add_argument("text", help="String to encode")
+    b64_dec = b64_sub.add_parser("dec", help="Decode Base64 string")
+    b64_dec.add_argument("encoded", help="Base64 string to decode")
+
+    jwt_parser = subparsers.add_parser("jwt", help="Decode and inspect JWT token payload and expiration")
+    jwt_parser.add_argument("token", help="JWT token string")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -945,6 +981,32 @@ def main():
             generate_wifi_qr(args.ssid, args.password, args.auth)
         else:
             render_qr_terminal(args.payload)
+
+    elif args.command == "json":
+        if args.json_action == "minify":
+            minify_json_str(args.target)
+        elif args.json_action == "get":
+            query_json_path(args.target, args.path)
+        else:
+            format_json_str(args.target)
+
+    elif args.command == "uuid":
+        generate_uuid()
+
+    elif args.command == "token":
+        generate_token(args.len, args.mode)
+
+    elif args.command == "hash":
+        compute_hash(args.target, args.algo)
+
+    elif args.command == "base64":
+        if args.b64_action == "dec":
+            b64_decode_str(args.encoded)
+        else:
+            b64_encode_str(args.text)
+
+    elif args.command == "jwt":
+        decode_jwt_token(args.token)
 
 
 if __name__ == "__main__":

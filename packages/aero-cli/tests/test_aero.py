@@ -44,6 +44,9 @@ from aero.snippets import DEFAULT_SNIPPETS
 from aero.log_streamer import get_oom_events
 from aero.regex_tool import test_regex
 from aero.diff_tool import show_file_diff
+from aero.json_tools import format_json_str, minify_json_str, query_json_path
+from aero.crypto_tools import generate_uuid, generate_token, compute_hash
+from aero.jwt_tools import b64_encode_str, b64_decode_str, decode_jwt_token
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -307,6 +310,33 @@ class TestAeroCLI(unittest.TestCase):
         # Cleanup
         os.remove("/tmp/aero_diff_a.txt")
         os.remove("/tmp/aero_diff_b.txt")
+
+    def test_json_tools(self):
+        raw = '{"name": "Aero", "version": 1.0, "tools": ["cli", "gui"]}'
+        fmt = format_json_str(raw)
+        self.assertIn("\n", fmt)
+        mini = minify_json_str(raw)
+        self.assertNotIn("\n", mini)
+        val = query_json_path(raw, "tools.0")
+        self.assertEqual(val, "cli")
+
+    def test_crypto_tools(self):
+        u = generate_uuid()
+        self.assertEqual(len(u), 36)
+        tok = generate_token(16, "hex")
+        self.assertEqual(len(tok), 16)
+        h = compute_hash("hello world", "sha256")
+        self.assertEqual(len(h), 64)
+
+    def test_jwt_base64_tools(self):
+        b64 = b64_encode_str("test_payload")
+        dec = b64_decode_str(b64)
+        self.assertEqual(dec, "test_payload")
+        
+        # Test mock JWT
+        mock_jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlJvbml0IiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        res = decode_jwt_token(mock_jwt)
+        self.assertEqual(res["payload"]["name"], "Ronit")
 
 
 if __name__ == "__main__":
