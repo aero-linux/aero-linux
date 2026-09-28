@@ -69,6 +69,14 @@ exec python3 "${AERO_HOME}/bin/aero-welcome" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-welcome"
 
+# Create global executable wrapper for aero-quick-settings GUI
+cat << 'EOF' > "${BIN_DIR}/aero-quick-settings"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-quick-settings" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-quick-settings"
+
 # Install Desktop Icon & Man Pages
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"

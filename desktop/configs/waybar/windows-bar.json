@@ -58,17 +58,19 @@
   },
   "battery": {
     "format": "🔋 {capacity}%",
-    "format-charging": "⚡ {capacity}%"
+    "format-charging": "⚡ {capacity}%",
+    "on-click": "aero-quick-settings || aero-welcome"
   },
   "network": {
     "format-wifi": "📶 {essid}",
     "format-ethernet": "🌐 Wired",
-    "format-disconnected": "⚠️ Offline"
+    "format-disconnected": "⚠️ Offline",
+    "on-click": "aero-quick-settings"
   },
   "pulseaudio": {
     "format": "🔊 {volume}%",
     "format-muted": "🔇 Muted",
-    "on-click": "pavucontrol",
+    "on-click": "aero-quick-settings",
     "scroll-step": 5
   },
   "custom/shutdown": {

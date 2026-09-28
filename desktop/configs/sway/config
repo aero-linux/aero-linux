@@ -54,6 +54,7 @@ bindsym Print exec mkdir -p ~/Pictures/Screenshots && grim ~/Pictures/Screenshot
 bindsym Shift+Print exec mkdir -p ~/Pictures/Screenshots && grim -g "$(slurp)" ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Region Captured' 'Saved to ~/Pictures/Screenshots'
 
 # Windows-Friendly Familiar Shortcuts
+bindsym $mod+a exec aero-quick-settings
 bindsym $mod+e exec nemo ~ || thunar ~ || pcmanfm ~
 bindsym Control+Shift+Escape exec xfce4-taskmanager || gnome-system-monitor || lxtask || $term -e aero monitor
 bindsym Mod1+Tab focus next
