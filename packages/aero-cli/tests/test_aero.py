@@ -646,6 +646,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(sync_path))
         self.assertTrue(os.access(sync_path, os.X_OK))
 
+    def test_disk_gui_script(self):
+        disk_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-disk-gui"
+        self.assertTrue(os.path.exists(disk_path))
+        self.assertTrue(os.access(disk_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

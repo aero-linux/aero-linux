@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Storage & Developer Disk Visualizer
+Visual partition space analyzer, developer folder scanner (node_modules, .venv, target), and 1-click clean.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+def get_mount_stats():
+    mounts = []
+    targets = [("/", "Root System Partition (NVMe)"), (os.path.expanduser("~"), "User Home Directory")]
+    
+    # Check extra mount points like Area 51 / D: drive
+    area51 = "/media/ronit138/Area 51"
+    if os.path.exists(area51):
+        targets.append((area51, "Secondary NVMe / NTFS Storage (Area 51)"))
+
+    for path, label in targets:
+        try:
+            total, used, free = shutil.disk_usage(path)
+            pct = (used / total) * 100
+            mounts.append({
+                "path": path,
+                "label": label,
+                "total_gb": total / (1024**3),
+                "used_gb": used / (1024**3),
+                "free_gb": free / (1024**3),
+                "pct": pct
+            })
+        except Exception:
+            pass
+    return mounts
+
+
+class DiskVisualizerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Storage & Developer Disk Visualizer")
+        self.set_default_size(640, 540)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #ec4899; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-scan { background-color: #ec4899; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 8px 16px; font-size: 12px; }
+        .btn-scan:hover { background-color: #db2777; }
+        .btn-clean { background-color: #7f1d1d; color: #fca5a5; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>💾 Aero Storage &amp; Disk Visualizer</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Partition analyzer, developer build artifacts cleaner (node_modules, target, .venv)</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Mounts Card
+        self.mounts_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.mounts_box.get_style_context().add_class("card")
+        vbox.pack_start(self.mounts_box, False, False, 0)
+
+        # Developer Artifact Scanner Card
+        scan_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scan_card.get_style_context().add_class("card")
+        
+        scan_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        lbl_s_title = Gtk.Label(label="<b>🔍 Developer Artifact Scanner</b>", xalign=0)
+        lbl_s_title.set_use_markup(True)
+        scan_header.pack_start(lbl_s_title, True, True, 0)
+
+        self.btn_scan = Gtk.Button(label="⚡ Scan Dev Caches")
+        self.btn_scan.get_style_context().add_class("btn-scan")
+        self.btn_scan.connect("clicked", self._on_scan_dev_artifacts)
+        scan_header.pack_start(self.btn_scan, False, False, 0)
+        scan_card.pack_start(scan_header, False, False, 0)
+
+        # Artifacts Scrolled list
+        self.scrolled_art = Gtk.ScrolledWindow()
+        self.scrolled_art.set_min_content_height(140)
+        self.art_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.scrolled_art.add(self.art_box)
+        scan_card.pack_start(self.scrolled_art, True, True, 0)
+
+        vbox.pack_start(scan_card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Storage Analyzer Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_mounts()
+
+    def _populate_mounts(self):
+        for child in self.mounts_box.get_children():
+            self.mounts_box.remove(child)
+
+        mounts = get_mount_stats()
+        for m in mounts:
+            row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            
+            h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            lbl_name = Gtk.Label(xalign=0)
+            lbl_name.set_markup(f"<b>{m['label']}</b> <span color='#9ca3af'>({m['path']})</span>")
+            lbl_stat = Gtk.Label(xalign=1)
+            lbl_stat.set_markup(f"<span color='#38bdf8' font='10'>{m['used_gb']:.1f} GB used / {m['free_gb']:.1f} GB free ({m['pct']:.1f}%)</span>")
+            h_box.pack_start(lbl_name, True, True, 0)
+            h_box.pack_start(lbl_stat, False, False, 0)
+            row.pack_start(h_box, False, False, 0)
+
+            pbar = Gtk.ProgressBar()
+            pbar.set_fraction(m["pct"] / 100.0)
+            row.pack_start(pbar, False, False, 0)
+
+            self.mounts_box.pack_start(row, False, False, 0)
+
+        self.mounts_box.show_all()
+
+    def _on_scan_dev_artifacts(self, button):
+        self.btn_scan.set_sensitive(False)
+        self.lbl_status.set_markup("<span color='#ec4899' font='10'>Scanning ~/ and projects for node_modules, target, .venv...</span>")
+        
+        def run():
+            artifacts = []
+            home = os.path.expanduser("~")
+            
+            # Fast bounded depth search for major dev artifact folders
+            targets = ["node_modules", "target", ".venv", ".next", "dist", ".cache/pip"]
+            for root, dirs, files in os.walk(home):
+                # Skip deep hidden dirs
+                if "/." in root and not root.endswith("/.") and ".config" not in root and ".cache" not in root:
+                    continue
+                if root.count(os.sep) - home.count(os.sep) > 4:
+                    dirs[:] = []
+                    continue
+                for d in list(dirs):
+                    if d in ["node_modules", "target", ".venv", ".next", "dist"]:
+                        full_path = os.path.join(root, d)
+                        try:
+                            # Estimate size in MB
+                            size_mb = sum(os.path.getsize(os.path.join(dirpath, f)) for dirpath, dirnames, filenames in os.walk(full_path) for f in filenames) / (1024**2)
+                            artifacts.append({"path": full_path, "name": d, "size_mb": size_mb})
+                        except Exception:
+                            pass
+                        dirs.remove(d)
+
+            GLib.idle_add(self._display_artifacts, artifacts)
+
+        threading.Thread(target=run, daemon=True).start()
+
+    def _display_artifacts(self, artifacts):
+        self.btn_scan.set_sensitive(True)
+        for child in self.art_box.get_children():
+            self.art_box.remove(child)
+
+        if not artifacts:
+            lbl_empty = Gtk.Label(label="No bulky developer cache directories found. Clean workspace!", xalign=0.5)
+            self.art_box.pack_start(lbl_empty, True, True, 20)
+            self.lbl_status.set_markup("<span color='#34d399' font='10'>Workspace is completely optimized.</span>")
+        else:
+            artifacts.sort(key=lambda x: x["size_mb"], reverse=True)
+            total_mb = sum(a["size_mb"] for a in artifacts)
+            
+            for a in artifacts[:10]:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                row.get_style_context().add_class("card")
+
+                info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_p = Gtk.Label(xalign=0)
+                lbl_p.set_markup(f"<b color='#ec4899'>{a['name']}</b> ➔ <span color='#cbd5e1' font='10'>{a['path']}</span>")
+                lbl_s = Gtk.Label(xalign=0)
+                lbl_s.set_markup(f"<span color='#f59e0b' font='9'>Size: {a['size_mb']:.1f} MB</span>")
+                info.pack_start(lbl_p, False, False, 0)
+                info.pack_start(lbl_s, False, False, 0)
+                row.pack_start(info, True, True, 0)
+
+                btn_del = Gtk.Button(label="🗑️ Clean")
+                btn_del.get_style_context().add_class("btn-clean")
+                btn_del.connect("clicked", lambda b, p=a['path']: self._clean_path(p))
+                row.pack_start(btn_del, False, False, 0)
+
+                self.art_box.pack_start(row, False, False, 0)
+
+            self.lbl_status.set_markup(f"<span color='#ec4899' font='10'>Found {len(artifacts)} dev build folder(s) consuming {total_mb:.1f} MB total.</span>")
+
+        self.art_box.show_all()
+
+    def _clean_path(self, path):
+        if os.path.exists(path):
+            shutil.rmtree(path, ignore_errors=True)
+            self._on_scan_dev_artifacts(None)
+            self._populate_mounts()
+            subprocess.run(["notify-send", "💾 Disk Cleaner", f"Reclaimed space by deleting {os.path.basename(path)}"])
+
+
+def main():
+    win = DiskVisualizerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
