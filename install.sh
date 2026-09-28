@@ -341,6 +341,14 @@ exec python3 "${AERO_HOME}/bin/aero-ssh-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-ssh-gui"
 
+# Create global executable wrapper for aero-ssl-gui
+cat << 'EOF' > "${BIN_DIR}/aero-ssl-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-ssl-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-ssl-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -734,6 +742,17 @@ Icon=utilities-terminal
 Terminal=false
 Type=Application
 Categories=Network;Development;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-ssl.desktop"
+[Desktop Entry]
+Name=Aero SSL & Dev Certs
+Comment=Aero Linux Local HTTPS SSL/TLS Certificates Studio
+Exec=${BIN_DIR}/aero-ssl-gui
+Icon=security-medium
+Terminal=false
+Type=Application
+Categories=Development;Security;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

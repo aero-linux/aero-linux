@@ -1,0 +1,261 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical SSL/TLS & Developer Certificate Studio
+1-click local HTTPS certificates generator, SAN configuration, and server integration snippets.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+CERTS_DIR = os.path.expanduser("~/.config/aero/certs")
+
+
+def get_certificates():
+    os.makedirs(CERTS_DIR, exist_ok=True)
+    certs = []
+    if os.path.exists(CERTS_DIR):
+        for f in sorted(os.listdir(CERTS_DIR)):
+            if f.endswith(".crt"):
+                base = f[:-4]
+                crt_path = os.path.join(CERTS_DIR, f)
+                key_path = os.path.join(CERTS_DIR, f"{base}.key")
+                
+                # Check expiry via openssl
+                expiry = "Valid"
+                res = subprocess.run(["openssl", "x509", "-enddate", "-noout", "-in", crt_path], capture_output=True, text=True)
+                if res.returncode == 0 and "notAfter=" in res.stdout:
+                    expiry = res.stdout.replace("notAfter=", "").strip()
+
+                certs.append({
+                    "domain": base,
+                    "crt_path": crt_path,
+                    "key_path": key_path,
+                    "expiry": expiry
+                })
+    return certs
+
+
+class SSLStudioWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero SSL & Dev Certs Studio")
+        self.set_default_size(680, 540)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #a855f7; }
+        .card { background-color: #111827; border-radius: 10px; padding: 12px 16px; border: 1px solid #1f2937; }
+        .btn-action { background-color: #9333ea; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 6px 14px; font-size: 12px; }
+        .btn-action:hover { background-color: #a855f7; }
+        .btn-secondary { background-color: #1e293b; color: #c084fc; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        .btn-del { background-color: #7f1d1d; color: #fca5a5; font-weight: bold; border-radius: 6px; padding: 4px 10px; font-size: 11px; }
+        .btn-del:hover { background-color: #991b1b; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔒 Aero SSL &amp; Dev Certs Studio</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Local HTTPS SSL/TLS certificate generator for Node.js, FastAPI &amp; Nginx</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_new = Gtk.Button(label="➕ New Certificate")
+        btn_new.get_style_context().add_class("btn-action")
+        btn_new.connect("clicked", self._on_create_cert_dialog)
+        header_box.pack_start(btn_new, False, False, 0)
+
+        vbox.pack_start(header_box, False, False, 0)
+
+        # List
+        lbl_list = Gtk.Label(label="<b>Active Local HTTPS Certificates (~/.config/aero/certs)</b>", xalign=0)
+        lbl_list.set_use_markup(True)
+        vbox.pack_start(lbl_list, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled.add(self.list_box)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready", xalign=0)
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+        self._populate_certs()
+
+    def _populate_certs(self):
+        for child in self.list_box.get_children():
+            self.list_box.remove(child)
+
+        certs = get_certificates()
+        if not certs:
+            lbl_empty = Gtk.Label(label="No local SSL certificates found.", xalign=0.5)
+            lbl_empty.set_markup("<span color='#94a3b8'>No dev certificates generated yet. Click <b>➕ New Certificate</b> to issue one.</span>")
+            self.list_box.pack_start(lbl_empty, True, True, 30)
+        else:
+            for c in certs:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                row.get_style_context().add_class("card")
+
+                info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                lbl_d = Gtk.Label(xalign=0)
+                lbl_d.set_markup(f"🔒 <b>{c['domain']}</b> <span color='#10b981' font='9'>● {c['expiry']}</span>")
+                lbl_p = Gtk.Label(xalign=0)
+                lbl_p.set_markup(f"<span color='#9ca3af' font='9'>Cert: {c['crt_path']}</span>")
+                info.pack_start(lbl_d, False, False, 0)
+                info.pack_start(lbl_p, False, False, 0)
+                row.pack_start(info, True, True, 0)
+
+                btn_code = Gtk.Button(label="📋 Code Snippet")
+                btn_code.get_style_context().add_class("btn-secondary")
+                btn_code.connect("clicked", lambda b, crt=c['crt_path'], k=c['key_path']: self._show_snippet_dialog(crt, k))
+                row.pack_start(btn_code, False, False, 0)
+
+                btn_del = Gtk.Button(label="🗑️")
+                btn_del.get_style_context().add_class("btn-del")
+                btn_del.connect("clicked", lambda b, crt=c['crt_path'], k=c['key_path']: self._delete_cert(crt, k))
+                row.pack_start(btn_del, False, False, 0)
+
+                self.list_box.pack_start(row, False, False, 0)
+
+        self.list_box.show_all()
+        self.lbl_status.set_markup(f"<span color='#c084fc' font='10'>Loaded {len(certs)} development certificate(s)</span>")
+
+    def _show_snippet_dialog(self, crt, key):
+        dialog = Gtk.Dialog(title="HTTPS Integration Snippet", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+        dialog.set_default_size(520, 320)
+        dialog.set_border_width(12)
+
+        content = dialog.get_content_area()
+        notebook = Gtk.Notebook()
+
+        # Node.js
+        node_code = f"""const https = require('https');
+const fs = require('fs');
+
+const options = {{
+  key: fs.readFileSync('{key}'),
+  cert: fs.readFileSync('{crt}')
+}};
+
+https.createServer(options, app).listen(3000, () => {{
+  console.log('Secure server running at https://localhost:3000');
+}});"""
+        txt_node = Gtk.TextView()
+        txt_node.get_buffer().set_text(node_code)
+        txt_node.set_editable(False)
+        notebook.append_page(txt_node, Gtk.Label(label="Node.js / Express"))
+
+        # FastAPI
+        fastapi_code = f"""# Run with Uvicorn:
+uvicorn main:app --ssl-keyfile="{key}" --ssl-certfile="{crt}" --port 8000"""
+        txt_py = Gtk.TextView()
+        txt_py.get_buffer().set_text(fastapi_code)
+        txt_py.set_editable(False)
+        notebook.append_page(txt_py, Gtk.Label(label="FastAPI / Uvicorn"))
+
+        # Nginx
+        nginx_code = f"""server {{
+    listen 443 ssl;
+    server_name localhost;
+
+    ssl_certificate {crt};
+    ssl_certificate_key {key};
+
+    location / {{
+        proxy_pass http://127.0.0.1:3000;
+    }}
+}}"""
+        txt_ngx = Gtk.TextView()
+        txt_ngx.get_buffer().set_text(nginx_code)
+        txt_ngx.set_editable(False)
+        notebook.append_page(txt_ngx, Gtk.Label(label="Nginx Config"))
+
+        content.add(notebook)
+        dialog.show_all()
+        dialog.run()
+        dialog.destroy()
+
+    def _delete_cert(self, crt, key):
+        if os.path.exists(crt):
+            os.remove(crt)
+        if os.path.exists(key):
+            os.remove(key)
+        self._populate_certs()
+        subprocess.run(["notify-send", "🔒 Certificate Deleted", "Development certificate removed."])
+
+    def _on_create_cert_dialog(self, button):
+        dialog = Gtk.Dialog(title="Generate Development SSL Certificate", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        dialog.set_default_size(380, 160)
+        dialog.set_border_width(12)
+
+        content = dialog.get_content_area()
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        lbl_d = Gtk.Label(label="Domain / SAN:", xalign=0)
+        entry_domain = Gtk.Entry()
+        entry_domain.set_text("localhost")
+
+        lbl_days = Gtk.Label(label="Validity (Days):", xalign=0)
+        entry_days = Gtk.Entry()
+        entry_days.set_text("365")
+
+        grid.attach(lbl_d, 0, 0, 1, 1)
+        grid.attach(entry_domain, 1, 0, 1, 1)
+        grid.attach(lbl_days, 0, 1, 1, 1)
+        grid.attach(entry_days, 1, 1, 1, 1)
+
+        content.add(grid)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            domain = entry_domain.get_text().strip() or "localhost"
+            days = entry_days.get_text().strip() or "365"
+            os.makedirs(CERTS_DIR, exist_ok=True)
+            crt_path = os.path.join(CERTS_DIR, f"{domain}.crt")
+            key_path = os.path.join(CERTS_DIR, f"{domain}.key")
+
+            cmd = [
+                "openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+                "-keyout", key_path, "-out", crt_path, "-days", days,
+                "-subj", f"/CN={domain}"
+            ]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode == 0:
+                self._populate_certs()
+                subprocess.run(["notify-send", "🔒 SSL Certificate Generated", f"Generated cert for {domain}."])
+        dialog.destroy()
+
+
+def main():
+    win = SSLStudioWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
