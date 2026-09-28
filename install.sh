@@ -357,6 +357,14 @@ exec python3 "${AERO_HOME}/bin/aero-ai-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-ai-gui"
 
+# Create global executable wrapper for aero-workspaces-gui
+cat << 'EOF' > "${BIN_DIR}/aero-workspaces-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-workspaces-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-workspaces-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -772,6 +780,17 @@ Icon=system-search
 Terminal=false
 Type=Application
 Categories=Development;ArtificialIntelligence;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-workspaces.desktop"
+[Desktop Entry]
+Name=Aero Workspaces & Desktops
+Comment=Aero Linux Virtual Workspaces & Window Organizer
+Exec=${BIN_DIR}/aero-workspaces-gui
+Icon=preferences-desktop-workspaces
+Terminal=false
+Type=Application
+Categories=Settings;DesktopSettings;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

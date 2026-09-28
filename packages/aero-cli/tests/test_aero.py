@@ -710,6 +710,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(ai_path))
         self.assertTrue(os.access(ai_path, os.X_OK))
 
+    def test_workspaces_gui_script(self):
+        ws_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-workspaces-gui"
+        self.assertTrue(os.path.exists(ws_path))
+        self.assertTrue(os.access(ws_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
