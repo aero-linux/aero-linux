@@ -234,6 +234,46 @@ class AeroWelcomeApp(Gtk.Window):
 
         stack.add_titled(page_maint, "maint", "Backup & Health")
 
+        # 7. System Settings & Hardware Preferences Page
+        page_settings = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_settings.set_margin_top(15)
+
+        lbl_settings = Gtk.Label()
+        lbl_settings.set_markup("<b>⚙️ System Settings & Hardware Preferences</b>")
+        page_settings.pack_start(lbl_settings, False, False, 0)
+
+        settings_grid = Gtk.Grid()
+        settings_grid.set_column_spacing(12)
+        settings_grid.set_row_spacing(10)
+        settings_grid.set_column_homogeneous(True)
+
+        btn_scale_100 = Gtk.Button(label="🖥️ Display: 100% Native (Standard)")
+        btn_scale_100.connect("clicked", lambda b: self.run_cmd("swaymsg output '*' scale 1.0"))
+        settings_grid.attach(btn_scale_100, 0, 0, 1, 1)
+
+        btn_scale_125 = Gtk.Button(label="🖥️ Display: 125% HiDPI Fractional")
+        btn_scale_125.connect("clicked", lambda b: self.run_cmd("swaymsg output '*' scale 1.25"))
+        settings_grid.attach(btn_scale_125, 1, 0, 1, 1)
+
+        btn_touchpad = Gtk.Button(label="🖱️ Touchpad: Tap-to-Click & Natural Scroll")
+        btn_touchpad.connect("clicked", lambda b: self.run_cmd("swaymsg input 'type:touchpad' tap enabled && swaymsg input 'type:touchpad' natural_scroll enabled"))
+        settings_grid.attach(btn_touchpad, 0, 1, 1, 1)
+
+        btn_display_gui = Gtk.Button(label="📺 Graphical Display Configurator (wdisplays)")
+        btn_display_gui.connect("clicked", lambda b: self.run_cmd("wdisplays || arandr || aero display"))
+        settings_grid.attach(btn_display_gui, 1, 1, 1, 1)
+
+        btn_time_sync = Gtk.Button(label="🕒 Auto-Sync Network Time & Date (NTP)")
+        btn_time_sync.connect("clicked", lambda b: self.run_cmd("sudo timedatectl set-ntp true"))
+        settings_grid.attach(btn_time_sync, 0, 2, 1, 1)
+
+        btn_audio_gui = Gtk.Button(label="🔊 Sound & Volume Hardware Config")
+        btn_audio_gui.connect("clicked", lambda b: self.run_cmd("pavucontrol"))
+        settings_grid.attach(btn_audio_gui, 1, 2, 1, 1)
+
+        page_settings.pack_start(settings_grid, True, True, 0)
+        stack.add_titled(page_settings, "settings", "Settings")
+
         # Switcher
         switcher = Gtk.StackSwitcher()
         switcher.set_stack(stack)
