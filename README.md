@@ -12,8 +12,8 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-101%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
-[![Release](https://img.shields.io/badge/Release-v1.2.0--Titan-00f2fe.svg)](https://github.com/ronitgupta138/aero-linux/releases)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-107%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![Release](https://img.shields.io/badge/Release-v1.3.0--Nebula-00f2fe.svg)](https://github.com/ronitgupta138/aero-linux/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
@@ -164,13 +164,26 @@ aero ssh [status|gen|copy|test] # Ed25519 SSH key management
 
 ## 🎛️ Complete Zero-Terminal Graphical Application Suite
 
-Aero Linux includes **24+ dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
+Aero Linux includes **30 dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
 
 | Application | Command / Shortcut | Description |
 | :--- | :--- | :--- |
 | **Aero Spotlight** | `Alt + Space` / `aero-spotlight` | Floating Raycast-style command palette, inline math evaluator & app launcher |
 | **Aero Control Center** | `aero-welcome` | 6-tab central hardware, developer suite, maintenance, power, theme, and store hub |
-| **Aero Git Dashboard** | `aero-git-gui` | Multi-repository workspace status monitor, branch tracker & 1-click fetch/pull |
+| **Aero Local AI Studio**| `aero-ai-gui` | Offline Ollama LLM model manager, VRAM estimator & local AI prompt playground |
+| **Aero Snapshots Studio**| `aero-snapshots-gui` | 1-Click TimeMachine system restore points creator & instant config rollback |
+| **Aero Workspaces** | `aero-workspaces-gui` | Multi-monitor virtual workspace switcher, window organizer & tagger |
+| **Aero SSL & Dev Certs**| `aero-ssl-gui` | Local HTTPS SSL/TLS cert generator with Node.js, FastAPI & Nginx snippets |
+| **Aero SSH & Servers** | `aero-ssh-gui` | Ed25519 keypair generator, `~/.ssh/config` bookmarks & 1-click connect |
+| **Aero Firewall Shield**| `aero-firewall-gui` | UFW network firewall controller, 1-click port allow rules & security shield |
+| **Aero Git Repos** | `aero-git-gui` | Multi-repository workspace status monitor, branch tracker & 1-click fetch/pull |
+| **Aero Speed & Latency**| `aero-speed-gui` | High-precision latency profiler, DNS speed benchmark & CDN throughput tester |
+| **Aero Disk Visualizer**| `aero-disk-gui` | Storage analyzer & 1-click `node_modules`, `target`, `.venv` bloat cleaner |
+| **Aero Dotfiles Sync** | `aero-sync-gui` | 1-Click backup, export, and restore for developer dotfiles and configs |
+| **Aero Startup Apps** | `aero-startup-gui` | Manage login autostart programs, add custom commands & optimize boot speeds |
+| **Aero Service Manager**| `aero-services-gui` | Background systemd daemons (Docker, SSH, DBs) controller |
+| **Aero Safe USB Flasher**| `aero-flasher-gui` | Safe live USB creator with automatic internal NVMe write protection |
+| **Aero System Logs** | `aero-logs-gui` | Live systemd journald and dmesg hardware log viewer with 1-click export |
 | **Aero Action Center** | `aero-quick-settings` | Frosted-glass quick tiles, sliders & system toggles |
 | **Aero Task Manager** | `Ctrl + Shift + Esc` / `aero-monitor` | Live Cairo vector CPU waveform graph & memory gauges |
 | **Aero Update Manager** | `aero-updater` | Asynchronous system & security patch installer |
@@ -180,16 +193,14 @@ Aero Linux includes **24+ dedicated native GTK3 graphical management tools**, en
 | **Aero Displays** | `aero-displays` | Screen resolution, 240Hz refresh rate & HiDPI fractional scaling |
 | **Aero Game Hub** | `aero-gamehub` | 1-Click GameMode, MangoHud FPS overlay & FSR upscaling launcher |
 | **Aero Phone Link** | `aero-connect-gui` | Wireless phone link & drag-and-drop file drop target |
-| **Aero Battery Studio**| `aero-power-gui` | 80% battery protection cap & acoustic cooling fan curves |
+| **Aero Battery Studio** | `aero-power-gui` | 80% battery protection cap & acoustic cooling fan curves |
 | **Aero Night Light** | `aero-nightlight-gui` | 3000K-6500K color temperature & eye-strain scheduler |
 | **Aero Theme Studio** | `aero-theme-gui` | Accent glow color palette studio & procedural wallpaper generator |
 | **Aero System Cleaner** | `aero-cleaner-gui` | 1-Click package cache, pip, npm & journal log de-bloater |
-| **Aero TimeMachine** | `aero-snapshot-gui` | System restore points & 1-click rollback |
 | **Aero Vault** | `aero-vault-gui` | Local encrypted developer secrets, API tokens & `.env` exporter |
 | **Aero Snipping Tool** | `Win + Shift + S` / `aero-screenshot-gui` | Screen capture with instant crop and clipboard export |
 | **Aero Font Studio** | `aero-font-gui` | Developer Nerd Font catalog and previewer |
-| **Aero Port Inspector**| `aero-ports-gui` | Active listening dev ports, process viewer and kill tool |
-| **Aero Speedtest** | `aero-speed-gui` | Real-time network throughput and latency profiler |
+| **Aero Port Inspector** | `aero-ports-gui` | Active listening dev ports, process viewer and kill tool |
 | **Aero Self-Repair** | `aero-repair-gui` | 1-Click automated DNS, package, and service repair |
 | **Aero About System** | `aero-about-gui` | Hardware specifications, kernel info, and Aero build badge |
 

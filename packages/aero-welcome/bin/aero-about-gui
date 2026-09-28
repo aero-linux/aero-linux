@@ -53,7 +53,7 @@ class AboutWindow(Gtk.Window):
 
         title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         lbl_title = Gtk.Label(xalign=0)
-        lbl_title.set_markup("<span class='header-title'>Aero Linux 1.2-Titan</span>")
+        lbl_title.set_markup("<span class='header-title'>Aero Linux 1.3-Nebula</span>")
         lbl_sub = Gtk.Label(xalign=0)
         lbl_sub.set_markup("<span color='#38bdf8' font='10'>The Ultra-Lean AI &amp; Developer Operating System</span>")
         title_box.pack_start(lbl_title, False, False, 0)
@@ -73,7 +73,7 @@ class AboutWindow(Gtk.Window):
         specs = [
             ("Processor (CPU)", f"{cpu.get('model', 'AMD Ryzen / Intel Core')} ({cpu.get('cores', 'N/A')} Cores)"),
             ("System Memory (RAM)", f"{mem.get('total_gb', '16.0')} GB Total • Dynamic zRAM ZSTD Active"),
-            ("Operating System", "Aero Linux 1.2.0-Titan (64-bit x86_64)"),
+            ("Operating System", "Aero Linux 1.3.0-Nebula (64-bit x86_64)"),
             ("Linux Kernel", f"{kern} ({arch})"),
             ("Display Server", "Wayland (Sway Compositor & Acrylic Waybar)"),
             ("Power Governor", "Autonomous Battery Guard (80% Cap Active)"),
@@ -128,7 +128,7 @@ class AboutWindow(Gtk.Window):
     def _on_copy_specs(self, button):
         cpu = get_cpu_info()
         mem = get_memory_info()
-        specs_txt = f"Aero Linux 1.2-Titan (x86_64)\nCPU: {cpu.get('model', 'AMD Ryzen')}\nRAM: {mem.get('total_gb', '16.0')} GB\nKernel: {platform.release()}\nCompositor: Wayland / Sway"
+        specs_txt = f"Aero Linux 1.3-Nebula (x86_64)\nCPU: {cpu.get('model', 'AMD Ryzen')}\nRAM: {mem.get('total_gb', '16.0')} GB\nKernel: {platform.release()}\nCompositor: Wayland / Sway"
         clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         clip.set_text(specs_txt, -1)
         self.lbl_status.set_markup("<span color='#34d399' font='9'>Copied specifications to clipboard!</span>")
