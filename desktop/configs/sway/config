@@ -67,9 +67,9 @@ bindgesture swipe:3:up exec wofi --show window
 bindgesture swipe:3:down exec aero-quick-settings
 bindgesture swipe:4:up exec aero-monitor
 bindgesture swipe:4:down exec aero-welcome
-bindgesture pinch:3:outward exec aero zoom in
-bindgesture pinch:3:inward exec aero zoom out
-bindgesture pinch:4:inward exec aero zoom reset
+bindgesture pinch:2:outward exec aero zoom in
+bindgesture pinch:2:inward exec aero zoom out
+bindgesture pinch:3:inward exec aero zoom reset
 
 # Keybindings: System & Launchers
 bindsym $mod+Return exec $term
