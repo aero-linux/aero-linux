@@ -45,15 +45,19 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 * `aero dev list`: List available containerized sandboxes.
 * `aero dev run [node|python|rust|go|c]`: Spin up isolated workspace in current directory.
 * `aero db start [postgres|redis|mysql|mongo|clickhouse]`: 1-command local background database.
+* `aero cert generate [domain]`: 1-command trusted local SSL/TLS certificate generator for HTTPS.
+* `aero clean [--dry-run]`: Deep system de-bloater (prunes npm, pip, apt, docker caches).
+* `aero trace [ping <host>|dns]`: Network socket connect, TLS handshake, and DNS latency tracer.
 * `aero vault [set|get|list|delete|export]`: Local encrypted developer keyring & .env manager.
 * `aero live [--port 8080]`: Real-time developer web telemetry streaming dashboard.
+* `aero notify <title> [msg] [--sound]`: Desktop notification broadcaster and build finished alert.
 * `aero port list`: Show active listening developer ports and bound processes.
 * `aero port kill <port>`: Terminate process listening on a specific port.
 * `aero env check`: Audit installed SDKs (Node, Python, C, Rust, Go, Java, Docker).
 * `aero api bench <url>`: Run concurrent HTTP load tests (req/sec, p95/p99 latency).
 * `aero share [path]`: Zero-config local network HTTP file sharing server.
 * `aero ssh [status|gen|copy|test]`: Ed25519 SSH key management and GitHub auth test.
-* `aero git [status|clean]`: Fast branch tracking and merged branch cleanup.
+* `aero git [status|clean|graph|churn]`: Branch tracking, ASCII commit graph, and code churn analyzer.
 
 ---
 

@@ -58,6 +58,10 @@ from aero.agent import ask_local_agent
 from aero.perf_tools import profile_cpu_load, audit_io_scheduler
 from aero.sandbox import run_in_sandbox
 from aero.git_tools import show_git_graph, show_git_churn
+from aero.tracer import trace_tcp_tls_latency, trace_dns_benchmark
+from aero.cleaner import deep_system_clean
+from aero.cert_mgr import generate_dev_certificate
+from aero.notifier import send_notification
 
 
 def print_banner():
@@ -380,6 +384,33 @@ def main():
     s_run.add_argument("--offline", action="store_true", help="Unshare network stack")
     s_run.add_argument("--rw", action="store_true", help="Allow read-write in current directory")
     s_run.add_argument("--ram", type=int, default=2048, help="Memory limit in MB (default: 2048)")
+
+    # Network Latency & Socket Tracer
+    trace_parser = subparsers.add_parser("trace", help="Network socket, TLS handshake, and DNS latency tracer")
+    trace_sub = trace_parser.add_subparsers(dest="trace_action", help="Trace actions")
+    t_ping = trace_sub.add_parser("ping", help="Measure DNS, TCP SYN-ACK, and TLS handshake latency")
+    t_ping.add_argument("host", nargs="?", default="github.com", help="Target hostname (default: github.com)")
+    t_ping.add_argument("--port", "-p", type=int, default=443, help="Port (default: 443)")
+    t_dns = trace_sub.add_parser("dns", help="Benchmark latency across top public DNS resolvers")
+    t_dns.add_argument("--domain", default="google.com", help="Domain to resolve")
+
+    # Deep System Cache & De-Bloater Cleaner
+    clean_parser = subparsers.add_parser("clean", help="Deep developer cache and system de-bloater cleaner")
+    clean_parser.add_argument("--dry-run", action="store_true", help="Preview storage that would be cleaned")
+
+    # Local SSL Developer Certificate Generator
+    cert_parser = subparsers.add_parser("cert", help="Generate trusted local developer SSL/TLS certificates")
+    cert_sub = cert_parser.add_subparsers(dest="cert_action", help="Cert actions")
+    c_gen = cert_sub.add_parser("generate", help="Generate local SSL certificate & private key")
+    c_gen.add_argument("domain", nargs="?", default="localhost", help="Domain name (default: localhost)")
+    c_gen.add_argument("--out", default=".", help="Output directory (default: current directory)")
+
+    # Desktop Notification Broadcaster
+    notif_parser = subparsers.add_parser("notify", help="Send desktop toast notification & sound alert")
+    notif_parser.add_argument("title", help="Notification title")
+    notif_parser.add_argument("message", nargs="?", default="", help="Notification body message")
+    notif_parser.add_argument("--urgency", "-u", default="normal", choices=["low", "normal", "critical"], help="Notification urgency")
+    notif_parser.add_argument("--sound", "-s", action="store_true", help="Play terminal bell alert")
 
     args = parser.parse_args()
 
@@ -709,6 +740,21 @@ def main():
     elif args.command == "sandbox":
         code = run_in_sandbox(args.cmd, args.offline, not args.rw, args.ram)
         sys.exit(code)
+
+    elif args.command == "trace":
+        if args.trace_action == "dns":
+            trace_dns_benchmark(args.domain)
+        else:
+            trace_tcp_tls_latency(args.host, args.port)
+
+    elif args.command == "clean":
+        deep_system_clean(args.dry_run)
+
+    elif args.command == "cert":
+        generate_dev_certificate(args.domain, args.out)
+
+    elif args.command == "notify":
+        send_notification(args.title, args.message, args.urgency, args.sound)
 
 
 if __name__ == "__main__":

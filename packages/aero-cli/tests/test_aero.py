@@ -27,6 +27,10 @@ from aero.wallpaper import generate_wallpaper_svg, PALETTES
 from aero.memory import get_memory_stats
 from aero.perf_tools import get_cpu_stat_snapshot
 from aero.sandbox import check_namespace_support
+from aero.tracer import DNS_SERVERS
+from aero.cleaner import get_disk_free_mb
+from aero.cert_mgr import generate_dev_certificate
+from aero.notifier import send_notification
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -189,6 +193,29 @@ class TestAeroCLI(unittest.TestCase):
     def test_sandbox_support(self):
         res = check_namespace_support()
         self.assertIsInstance(res, bool)
+
+    def test_trace_dns_servers(self):
+        self.assertIn("Cloudflare (1.1.1.1)", DNS_SERVERS)
+        self.assertIn("Google (8.8.8.8)", DNS_SERVERS)
+
+    def test_cleaner_disk_stats(self):
+        free_mb = get_disk_free_mb()
+        self.assertTrue(free_mb > 0)
+
+    def test_cert_generator(self):
+        res = generate_dev_certificate("test_domain", "/tmp/test_aero_cert")
+        self.assertTrue(res)
+        self.assertTrue(os.path.exists("/tmp/test_aero_cert/test_domain.crt"))
+        self.assertTrue(os.path.exists("/tmp/test_aero_cert/test_domain.key"))
+        # Cleanup
+        if os.path.exists("/tmp/test_aero_cert"):
+            for f in os.listdir("/tmp/test_aero_cert"):
+                os.remove(os.path.join("/tmp/test_aero_cert", f))
+            os.rmdir("/tmp/test_aero_cert")
+
+    def test_notifier(self):
+        res = send_notification("Test Title", "Test Message", "low", False)
+        self.assertTrue(res)
 
 
 if __name__ == "__main__":

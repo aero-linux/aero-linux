@@ -12,7 +12,7 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-30%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-34%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
@@ -106,9 +106,13 @@ aero gpu setup                  # Auto-configure CUDA / ROCm GPU drivers
 # 🛠️ Developer Sandboxes & Local Databases
 aero dev run [node|python|rust|go|c]  # Isolated containerized workspaces
 aero db start [postgres|redis|mysql|mongo|clickhouse]  # 1-command local DBs
+aero cert generate [domain]     # 1-command trusted local SSL/TLS generator
+aero clean [--dry-run]          # Deep system cache de-bloater (npm/pip/apt/docker)
+aero trace ping github.com      # Socket connect, TLS handshake & DNS tracer
 aero sandbox run --offline ./script.sh # Micro-jail Linux namespace sandbox
 aero vault [set|get|list|export] # Encrypted local secret & .env keyring
 aero live --port 8080           # Real-time web telemetry streaming dashboard
+aero notify <title> [msg]       # Desktop toast notification & sound alert
 aero perf [cpu|io]              # Low-level CPU context-switch & NVMe profiler
 aero port list                  # Active listening developer port inspector
 aero port kill 3000             # Terminate process listening on specific port
