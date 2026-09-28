@@ -66,6 +66,7 @@ from aero.gpu_switcher import get_current_gpu_mode, GPU_MODES
 from aero.phone_connect import show_phone_status, get_phone_devices
 from aero.accent_manager import apply_accent_color, ACCENT_PRESETS
 from aero.appimage_mgr import integrate_appimage
+from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -474,6 +475,13 @@ class TestAeroCLI(unittest.TestCase):
         # Non-existent file test
         res = integrate_appimage("/tmp/non_existent_app.AppImage")
         self.assertEqual(res["status"], "error")
+
+    def test_zoom_manager(self):
+        res = set_zoom(1.25)
+        self.assertEqual(res["status"], "ok")
+        self.assertEqual(res["percent"], 125)
+        res_rst = zoom_reset()
+        self.assertEqual(res_rst["percent"], 100)
 
 
 if __name__ == "__main__":

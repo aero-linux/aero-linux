@@ -98,6 +98,13 @@ bindsym $mod+Right focus right
 bindsym $mod+Up fullscreen toggle
 bindsym $mod+Down floating toggle
 
+# Desktop Screen Magnifier (Zoom In / Zoom Out / Reset)
+bindsym $mod+plus exec aero zoom in
+bindsym $mod+equal exec aero zoom in
+bindsym $mod+minus exec aero zoom out
+bindsym $mod+0 exec aero zoom reset
+bindsym $mod+Escape exec aero zoom reset
+
 # Keybindings: Quick Aero Optimizations
 bindsym $mod+Shift+a exec $term -e aero doctor
 bindsym $mod+Shift+m exec $term -e aero memory --optimize
