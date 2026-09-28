@@ -101,6 +101,7 @@ from aero.accent_manager import apply_accent_color, list_accents
 from aero.appimage_mgr import integrate_appimage, list_appimages, remove_appimage
 from aero.store_engine import search_universal_store, print_store_search_results
 from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
+from aero.repair import show_repair_summary, run_system_repair
 
 
 def print_banner():
@@ -706,6 +707,9 @@ def main():
     zoom_set = zoom_sub.add_parser("set", help="Set specific zoom scale factor")
     zoom_set.add_argument("scale", type=float, help="Scale factor (e.g. 1.25, 1.5, 2.0)")
 
+    # System Self-Repair & Integrity Engine
+    subparsers.add_parser("repair", help="System integrity diagnostic and 1-click self-repair engine")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1276,6 +1280,9 @@ def main():
             set_zoom(args.scale)
         else:
             zoom_reset()
+
+    elif args.command == "repair":
+        show_repair_summary()
 
 
 if __name__ == "__main__":

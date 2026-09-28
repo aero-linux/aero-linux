@@ -70,6 +70,7 @@ from aero.appimage_mgr import integrate_appimage, list_appimages, remove_appimag
 from aero.store_engine import search_universal_store
 from aero.zoom_mgr import zoom_in, zoom_out, zoom_reset, set_zoom, zoom_peek
 from aero.power_daemon import get_ac_power_status, apply_power_state
+from aero.repair import run_system_repair
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -580,6 +581,15 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.access(bld_path, os.X_OK))
         res = subprocess.run(["bash", "-n", bld_path], capture_output=True)
         self.assertEqual(res.returncode, 0)
+
+    def test_repair_engine(self):
+        results = run_system_repair()
+        self.assertIsInstance(results, list)
+        self.assertGreaterEqual(len(results), 4)
+        for r in results:
+            self.assertIn("component", r)
+            self.assertIn("status", r)
+            self.assertIn("message", r)
 
 
 if __name__ == "__main__":
