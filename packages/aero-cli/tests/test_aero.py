@@ -61,6 +61,9 @@ from aero.archive_tools import compress_archive, extract_archive
 from aero.file_search import search_files_by_name, search_text_content
 from aero.nvme_wear import get_ssd_wear_stats
 from aero.autotile import is_autotile_running, stop_autotiling
+from aero.wine_runner import run_windows_app
+from aero.gpu_switcher import get_current_gpu_mode, GPU_MODES
+from aero.phone_connect import show_phone_status, get_phone_devices
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -435,6 +438,20 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIsInstance(running, bool)
         stop_res = stop_autotiling()
         self.assertIn("status", stop_res)
+
+    def test_wine_runner(self):
+        res = run_windows_app("/tmp/non_existent_app.exe")
+        self.assertEqual(res["status"], "error")
+
+    def test_gpu_switcher(self):
+        self.assertIn("hybrid", GPU_MODES)
+        self.assertIn("integrated", GPU_MODES)
+        gpu = get_current_gpu_mode()
+        self.assertIn("mode", gpu)
+
+    def test_phone_connect(self):
+        devs = get_phone_devices()
+        self.assertIsInstance(devs, list)
 
 
 if __name__ == "__main__":

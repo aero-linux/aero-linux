@@ -94,6 +94,9 @@ from aero.archive_tools import compress_archive, extract_archive
 from aero.file_search import search_files_by_name, search_text_content
 from aero.nvme_wear import get_ssd_wear_stats
 from aero.autotile import start_autotiling, stop_autotiling, is_autotile_running
+from aero.wine_runner import run_windows_app
+from aero.gpu_switcher import get_current_gpu_mode, set_gpu_mode
+from aero.phone_connect import show_phone_status, send_file_to_phone
 
 
 def print_banner():
@@ -659,6 +662,18 @@ def main():
     tile_sub.add_parser("stop", help="Stop auto-tiling daemon")
     tile_sub.add_parser("status", help="Check if auto-tiling daemon is active")
 
+    # Windows App Compatibility Runner (Proton / Wine)
+    wine_p = subparsers.add_parser("wine", help="Run Windows .exe/.msi applications with GE-Proton / Wine")
+    wine_p.add_argument("executable", help="Path to Windows .exe or .msi file")
+    wine_p.add_argument("--no-gamemode", action="store_true", help="Disable GameMode performance boost")
+
+    # Wireless Phone Sync (Zorin Connect / KDE Connect)
+    phone_p = subparsers.add_parser("connect", help="Wireless phone sync, notifications, and file sharing")
+    phone_sub = phone_p.add_subparsers(dest="connect_action", help="Connect actions")
+    phone_sub.add_parser("status", help="Show paired mobile devices")
+    phone_share = phone_sub.add_parser("share", help="Beam a file wirelessly to phone")
+    phone_share.add_argument("file", help="File to send to phone")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1184,6 +1199,15 @@ def main():
             print(f"Auto-tiling Daemon Active: {'✅ Yes' if running else '❌ No'}")
         else:
             start_autotiling()
+
+    elif args.command == "wine":
+        run_windows_app(args.executable, use_gamemode=not args.no_gamemode)
+
+    elif args.command == "connect":
+        if args.connect_action == "share":
+            send_file_to_phone(args.file)
+        else:
+            show_phone_status()
 
 
 if __name__ == "__main__":

@@ -108,7 +108,7 @@ class QuickSettingsWindow(Gtk.Window):
         header.pack_end(btn_close, False, False, 0)
         vbox.pack_start(header, False, False, 0)
 
-        # 2x3 Quick-Action Tiles Grid
+        # 2x4 Quick-Action Tiles Grid
         grid = Gtk.Grid()
         grid.set_column_spacing(10)
         grid.set_row_spacing(10)
@@ -126,27 +126,41 @@ class QuickSettingsWindow(Gtk.Window):
         self.btn_bt.connect("clicked", lambda b: self.run_cmd("blueman-manager || alacritty -e bluetoothctl"))
         grid.attach(self.btn_bt, 1, 0, 1, 1)
 
-        self.btn_theme = Gtk.Button(label="🌙 Dark OLED\n<span font='9' color='#00f2fe'>Cyber Cyan</span>")
+        self.btn_autotile = Gtk.Button(label="⚡ Auto-Tiling\n<span font='9' color='#00f2fe'>Golden BSP</span>")
+        self.btn_autotile.get_child().set_use_markup(True)
+        self.btn_autotile.get_style_context().add_class("action-tile")
+        self.btn_autotile.connect("clicked", self.toggle_autotiling)
+        grid.attach(self.btn_autotile, 0, 1, 1, 1)
+
+        self.btn_night = Gtk.Button(label="🌙 Night Light\n<span font='9' color='#fbbf24'>4500K Warm</span>")
+        self.btn_night.get_child().set_use_markup(True)
+        self.btn_night.get_style_context().add_class("action-tile")
+        self.btn_night.connect("clicked", lambda b: self.run_cmd("aero display night on && notify-send 'Night Light' '4500K eye protection active'"))
+        grid.attach(self.btn_night, 1, 1, 1, 1)
+
+        self.btn_theme = Gtk.Button(label="🎨 Theme OLED\n<span font='9' color='#00f2fe'>Cyber Cyan</span>")
         self.btn_theme.get_child().set_use_markup(True)
         self.btn_theme.get_style_context().add_class("action-tile")
         self.btn_theme.connect("clicked", self.toggle_theme)
-        grid.attach(self.btn_theme, 0, 1, 1, 1)
+        grid.attach(self.btn_theme, 0, 2, 1, 1)
 
         self.btn_fan = Gtk.Button(label="❄️ Fan Curve\n<span font='9' color='#fbbf24'>Balanced</span>")
         self.btn_fan.get_child().set_use_markup(True)
         self.btn_fan.get_style_context().add_class("action-tile")
         self.btn_fan.connect("clicked", self.toggle_fan)
-        grid.attach(self.btn_fan, 1, 1, 1, 1)
+        grid.attach(self.btn_fan, 1, 2, 1, 1)
 
         self.btn_zram = Gtk.Button(label="🧠 zRAM Purge\n<span font='9' color='#34d399'>Compact</span>")
         self.btn_zram.get_child().set_use_markup(True)
         self.btn_zram.get_style_context().add_class("action-tile")
         self.btn_zram.connect("clicked", lambda b: self.run_cmd("aero memory --optimize && notify-send 'zRAM Compacted' 'Memory purged successfully'"))
-        grid.attach(self.btn_zram, 0, 2, 1, 1)
+        grid.attach(self.btn_zram, 0, 3, 1, 1)
 
         self.btn_power = Gtk.Button(label="🔋 80% Battery\n<span font='9' color='#34d399'>Protected</span>")
         self.btn_power.get_child().set_use_markup(True)
         self.btn_power.get_style_context().add_class("action-tile")
+        self.btn_power.connect("clicked", lambda b: self.run_cmd("aero power --threshold 80 && notify-send 'Battery Guard' '80% threshold applied'"))
+        grid.attach(self.btn_power, 1, 3, 1, 1)
         self.btn_power.connect("clicked", lambda b: self.run_cmd("aero power --threshold 80 && notify-send 'Battery Guard' '80% threshold applied'"))
         grid.attach(self.btn_power, 1, 2, 1, 1)
 
@@ -207,6 +221,10 @@ class QuickSettingsWindow(Gtk.Window):
 
     def run_cmd(self, cmd: str):
         subprocess.Popen(cmd, shell=True)
+
+    def toggle_autotiling(self, button):
+        self.run_cmd("aero autotile start && notify-send 'Auto-Tiling' 'Dynamic Golden-Ratio window tiling active'")
+        button.get_child().set_markup("⚡ Auto-Tiling\n<span font='9' color='#34d399'>Active</span>")
 
     def toggle_theme(self, button):
         self.run_cmd("aero theme set tokyo-night || aero theme set cyber-cyan")
