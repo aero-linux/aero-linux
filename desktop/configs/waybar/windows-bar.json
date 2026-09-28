@@ -24,7 +24,8 @@
     "network",
     "battery",
     "clock",
-    "tray"
+    "tray",
+    "custom/shutdown"
   ],
   "custom/start": {
     "format": "⚡ Start",
@@ -66,6 +67,13 @@
   },
   "pulseaudio": {
     "format": "🔊 {volume}%",
-    "format-muted": "🔇 Muted"
+    "format-muted": "🔇 Muted",
+    "on-click": "pavucontrol",
+    "scroll-step": 5
+  },
+  "custom/shutdown": {
+    "format": "⏻",
+    "tooltip": "Power & Logout Menu",
+    "on-click": "wlogout || swaynag -t warning -m 'Power Menu' -B 'Shutdown' 'systemctl poweroff' -B 'Reboot' 'systemctl reboot' -B 'Lock' 'swaylock -c 0a0b0e' -B 'Logout' 'swaymsg exit'"
   }
 }

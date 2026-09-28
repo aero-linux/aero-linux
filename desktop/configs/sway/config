@@ -34,21 +34,28 @@ client.focused_inactive #1e293b #0a0b0e #94a3b8 #1e293b   #1e293b
 client.unfocused        #0f172a #0a0b0e #64748b #0f172a   #0f172a
 client.urgent           #ff5f56 #0a0b0e #f8fafc #ff5f56   #ff5f56
 
-# Autostart Core Daemons
+# Autostart Core Daemons & Applets
 exec waybar
 exec mako
+exec nm-applet --indicator
+exec blueman-applet
+exec /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1
 exec /usr/local/bin/aero-welcome
 
 # Keybindings: System & Launchers
 bindsym $mod+Return exec $term
 bindsym $mod+d exec $menu
 bindsym $mod+Shift+q kill
-bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Aero Sway?' -B 'Yes, exit' 'swaymsg exit'
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Aero Sway?' -B 'Shutdown' 'systemctl poweroff' -B 'Reboot' 'systemctl reboot' -B 'Logout' 'swaymsg exit'
 bindsym $mod+l exec $lock
+
+# Screenshots (PrintScreen & Shift+PrintScreen)
+bindsym Print exec mkdir -p ~/Pictures/Screenshots && grim ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Screenshot Captured' 'Saved to ~/Pictures/Screenshots'
+bindsym Shift+Print exec mkdir -p ~/Pictures/Screenshots && grim -g "$(slurp)" ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png && notify-send '📸 Region Captured' 'Saved to ~/Pictures/Screenshots'
 
 # Windows-Friendly Familiar Shortcuts
 bindsym $mod+e exec nemo ~ || thunar ~ || pcmanfm ~
-bindsym Control+Shift+Escape exec $term -e aero monitor
+bindsym Control+Shift+Escape exec xfce4-taskmanager || gnome-system-monitor || lxtask || $term -e aero monitor
 bindsym Mod1+Tab focus next
 bindsym $mod+r exec wofi --show run
 
