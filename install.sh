@@ -229,6 +229,14 @@ exec python3 "${AERO_HOME}/bin/aero-notes-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-notes"
 
+# Create global executable wrapper for aero-color-gui
+cat << 'EOF' > "${BIN_DIR}/aero-color"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-color-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-color"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -468,6 +476,17 @@ Icon=accessories-text-editor
 Terminal=false
 Type=Application
 Categories=Utility;TextEditor;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-color.desktop"
+[Desktop Entry]
+Name=Aero Color Picker
+Comment=Aero Linux Pixel Color Dropper & HEX/RGB Studio
+Exec=${BIN_DIR}/aero-color
+Icon=color-picker
+Terminal=false
+Type=Application
+Categories=Graphics;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

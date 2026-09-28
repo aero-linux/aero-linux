@@ -601,6 +601,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(notes_path))
         self.assertTrue(os.access(notes_path, os.X_OK))
 
+    def test_color_gui_script(self):
+        col_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-color-gui"
+        self.assertTrue(os.path.exists(col_path))
+        self.assertTrue(os.access(col_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

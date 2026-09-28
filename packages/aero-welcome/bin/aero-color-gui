@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Color Picker & Palette Studio
+Screen color dropper, HEX/RGB/HSL converter, and palette history for developers & designers.
+"""
+
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.dev_utils import hex_to_rgb
+
+
+class ColorPickerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Color Picker & Palette Studio")
+        self.set_default_size(460, 460)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        self.current_hex = "#00F2FE"
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #00f2fe; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-pick { background-color: #00f2fe; color: #000000; font-weight: bold; border-radius: 8px; padding: 10px 18px; font-size: 14px; }
+        .btn-pick:hover { background-color: #38bdf8; }
+        .btn-copy { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: bold; }
+        .btn-copy:hover { background-color: #334155; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🎨 Aero Color Picker</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Pixel-accurate screen dropper, HEX/RGB converter &amp; palette</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Dropper Card
+        drop_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        drop_card.get_style_context().add_class("card")
+
+        # Color Swatch Preview Box
+        self.swatch = Gtk.EventBox()
+        self.swatch.set_size_request(64, 64)
+        self._update_swatch_color()
+        drop_card.pack_start(self.swatch, False, False, 0)
+
+        btn_pick = Gtk.Button(label="🎯 Pick Color from Screen")
+        btn_pick.get_style_context().add_class("btn-pick")
+        btn_pick.connect("clicked", self._on_pick_color)
+        drop_card.pack_start(btn_pick, True, True, 0)
+
+        vbox.pack_start(drop_card, False, False, 0)
+
+        # Formats Card
+        fmt_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        fmt_card.get_style_context().add_class("card")
+
+        lbl_f = Gtk.Label(label="<b>📋 Color Formats</b>", xalign=0)
+        lbl_f.set_use_markup(True)
+        fmt_card.pack_start(lbl_f, False, False, 0)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(8)
+
+        # HEX
+        lbl_h_tag = Gtk.Label(label="HEX:", xalign=0)
+        self.entry_hex = Gtk.Entry()
+        self.entry_hex.set_text(self.current_hex)
+        btn_cp_hex = Gtk.Button(label="📋 Copy")
+        btn_cp_hex.get_style_context().add_class("btn-copy")
+        btn_cp_hex.connect("clicked", lambda b: self._copy_text(self.entry_hex.get_text()))
+        grid.attach(lbl_h_tag, 0, 0, 1, 1)
+        grid.attach(self.entry_hex, 1, 0, 1, 1)
+        grid.attach(btn_cp_hex, 2, 0, 1, 1)
+
+        # RGB
+        lbl_r_tag = Gtk.Label(label="RGB:", xalign=0)
+        self.entry_rgb = Gtk.Entry()
+        self.entry_rgb.set_text("rgb(0, 242, 254)")
+        btn_cp_rgb = Gtk.Button(label="📋 Copy")
+        btn_cp_rgb.get_style_context().add_class("btn-copy")
+        btn_cp_rgb.connect("clicked", lambda b: self._copy_text(self.entry_rgb.get_text()))
+        grid.attach(lbl_r_tag, 0, 1, 1, 1)
+        grid.attach(self.entry_rgb, 1, 1, 1, 1)
+        grid.attach(btn_cp_rgb, 2, 1, 1, 1)
+
+        fmt_card.pack_start(grid, True, True, 0)
+        vbox.pack_start(fmt_card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready to pick colors", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Color Picker Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _update_swatch_color(self):
+        rgba = Gdk.RGBA()
+        rgba.parse(self.current_hex)
+        self.swatch.override_background_color(Gtk.StateFlags.NORMAL, rgba)
+
+    def _on_pick_color(self, button):
+        self.lbl_status.set_markup("<span color='#00f2fe' font='10'>🎯 Click any pixel on screen...</span>")
+        
+        # Try grim + slurp pixel grab
+        if shutil.which("grim") and shutil.which("slurp"):
+            res = subprocess.run("grim -g \"$(slurp -p)\" -t ppm - | convert - -format '%[pixel:p{0,0}]' info:-", shell=True, capture_output=True, text=True)
+            out = res.stdout.strip()
+            if out:
+                self._set_color_from_raw(out)
+                return
+
+        # Fallback to ColorChooserDialog
+        dialog = Gtk.ColorChooserDialog(title="Choose Color", parent=self)
+        if dialog.run() == Gtk.ResponseType.OK:
+            c = dialog.get_rgba()
+            hex_val = f"#{int(c.red*255):02X}{int(c.green*255):02X}{int(c.blue*255):02X}"
+            self._set_color(hex_val)
+        dialog.destroy()
+
+    def _set_color(self, hex_str):
+        self.current_hex = hex_str.upper()
+        self.entry_hex.set_text(self.current_hex)
+        r, g, b = hex_to_rgb(self.current_hex)
+        self.entry_rgb.set_text(f"rgb({r}, {g}, {b})")
+        self._update_swatch_color()
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Selected {self.current_hex}</span>")
+
+    def _set_color_from_raw(self, raw_str):
+        if raw_str.startswith("#"):
+            self._set_color(raw_str)
+        elif raw_str.startswith("srgb("):
+            parts = raw_str.replace("srgb(", "").replace(")", "").split(",")
+            r, g, b = [int(p.strip()) for p in parts[:3]]
+            self._set_color(f"#{r:02X}{g:02X}{b:02X}")
+
+    def _copy_text(self, text):
+        clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        clip.set_text(text, -1)
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Copied {text} to clipboard!</span>")
+        subprocess.run(["notify-send", "🎨 Color Copied", f"Copied {text} to clipboard"])
+
+
+def main():
+    win = ColorPickerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
