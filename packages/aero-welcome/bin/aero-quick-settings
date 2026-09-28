@@ -123,7 +123,7 @@ class QuickSettingsWindow(Gtk.Window):
         self.btn_bt = Gtk.Button(label="🎧 Bluetooth\n<span font='9' color='#8b949e'>Ready</span>")
         self.btn_bt.get_child().set_use_markup(True)
         self.btn_bt.get_style_context().add_class("action-tile")
-        self.btn_bt.connect("clicked", lambda b: self.run_cmd("blueman-manager || alacritty -e bluetoothctl"))
+        self.btn_bt.connect("clicked", lambda b: self.run_cmd("aero-bluetooth || blueman-manager || alacritty -e bluetoothctl"))
         grid.attach(self.btn_bt, 1, 0, 1, 1)
 
         self.btn_autotile = Gtk.Button(label="⚡ Auto-Tiling\n<span font='9' color='#00f2fe'>Golden BSP</span>")

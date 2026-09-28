@@ -109,6 +109,30 @@ exec python3 "${AERO_HOME}/bin/aero-snapshot-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-snapshot-gui"
 
+# Create global executable wrapper for aero-bluetooth GUI
+cat << 'EOF' > "${BIN_DIR}/aero-bluetooth"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-bluetooth" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-bluetooth"
+
+# Create global executable wrapper for aero-audio GUI
+cat << 'EOF' > "${BIN_DIR}/aero-audio"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-audio" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-audio"
+
+# Create global executable wrapper for aero-displays GUI
+cat << 'EOF' > "${BIN_DIR}/aero-displays"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-displays" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-displays"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -183,6 +207,39 @@ Icon=system-software-update
 Terminal=false
 Type=Application
 Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-bluetooth.desktop"
+[Desktop Entry]
+Name=Aero Bluetooth Center
+Comment=Aero Linux Bluetooth & Device Pairing Center
+Exec=${BIN_DIR}/aero-bluetooth
+Icon=bluetooth
+Terminal=false
+Type=Application
+Categories=System;Settings;HardwareSettings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-audio.desktop"
+[Desktop Entry]
+Name=Aero Sound Center
+Comment=Aero Linux Audio Output Switcher & Mixer
+Exec=${BIN_DIR}/aero-audio
+Icon=audio-volume-high
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Mixer;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-displays.desktop"
+[Desktop Entry]
+Name=Aero Displays & Scaling
+Comment=Aero Linux Screen Resolution, Refresh Rate & HiDPI Manager
+Exec=${BIN_DIR}/aero-displays
+Icon=video-display
+Terminal=false
+Type=Application
+Categories=System;Settings;HardwareSettings;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

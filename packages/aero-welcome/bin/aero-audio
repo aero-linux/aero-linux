@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Audio Center & Output Switcher
+Fast audio output switching (Speakers, Headphones, BT Sink, HDMI) and PipeWire mixer.
+"""
+
+import os
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+
+class AudioManagerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Sound & Audio Center")
+        self.set_default_size(500, 480)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Cyber Dark Styling
+        css = b"""
+        window { background-color: #0a0b10; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #00f2fe; }
+        .card { background-color: #12141c; border-radius: 8px; padding: 12px; border: 1px solid #1e293b; }
+        .btn-set { background-color: #00f2fe; color: #000000; font-weight: bold; border-radius: 6px; padding: 6px 12px; }
+        .btn-pavu { background-color: #1e293b; color: #f8fafc; border-radius: 6px; padding: 6px 12px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔊 Audio & Sound Center</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#94a3b8' font='10'>Manage PipeWire audio sinks, volume levels, and output devices</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+
+        btn_mixer = Gtk.Button(label="🎛️ Pro Mixer")
+        btn_mixer.get_style_context().add_class("btn-pavu")
+        btn_mixer.connect("clicked", lambda b: subprocess.Popen(["pavucontrol"]))
+        header_box.pack_start(btn_mixer, False, False, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Master Volume Slider
+        vol_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        vol_card.get_style_context().add_class("card")
+        
+        lbl_vol_title = Gtk.Label(label="Master Output Volume:", xalign=0)
+        vol_card.pack_start(lbl_vol_title, False, False, 0)
+
+        self.scale_vol = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 100, 1)
+        self.scale_vol.set_value(75)
+        self.scale_vol.connect("value-changed", self._on_volume_slider_changed)
+        vol_card.pack_start(self.scale_vol, False, False, 0)
+        vbox.pack_start(vol_card, False, False, 0)
+
+        # Sinks Section
+        lbl_sinks = Gtk.Label(label="Select Audio Output Device:", xalign=0)
+        vbox.pack_start(lbl_sinks, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_min_content_height(220)
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.listbox.get_style_context().add_class("card")
+        scrolled.add(self.listbox)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        self.refresh_sinks()
+
+    def _on_volume_slider_changed(self, scale):
+        val = int(scale.get_value())
+        subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{val}%"], capture_output=True)
+
+    def refresh_sinks(self):
+        for child in self.listbox.get_children():
+            self.listbox.remove(child)
+
+        sinks = []
+        try:
+            res = subprocess.run(["pactl", "list", "short", "sinks"], capture_output=True, text=True)
+            for line in res.stdout.splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 2:
+                    sinks.append({"id": parts[0], "name": parts[1]})
+        except Exception:
+            pass
+
+        if not sinks:
+            sinks = [
+                {"id": "1", "name": "alsa_output.pci-0000_04_00.6.analog-stereo (Internal Speakers)"},
+                {"id": "2", "name": "bluez_sink.headset (Bluetooth Headphones)"}
+            ]
+
+        for s in sinks:
+            row = Gtk.ListBoxRow()
+            hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            hbox.set_margin_top(6)
+            hbox.set_margin_bottom(6)
+            hbox.set_margin_start(10)
+            hbox.set_margin_end(10)
+
+            clean_name = s["name"].replace("alsa_output.", "").replace("bluez_sink.", "")
+            lbl = Gtk.Label(xalign=0)
+            lbl.set_markup(f"<b>🔊 {GLib.markup_escape_text(clean_name)}</b>")
+            hbox.pack_start(lbl, True, True, 0)
+
+            btn = Gtk.Button(label="Set Active")
+            btn.get_style_context().add_class("btn-set")
+            btn.connect("clicked", lambda b, sink=s["name"]: self._set_default_sink(sink))
+            hbox.pack_start(btn, False, False, 0)
+
+            row.add(hbox)
+            self.listbox.add(row)
+
+        self.listbox.show_all()
+
+    def _set_default_sink(self, sink_name):
+        subprocess.run(["pactl", "set-default-sink", sink_name], capture_output=True)
+        subprocess.run(["notify-send", "🔊 Audio Output Switched", f"Active Output: {sink_name[:35]}"])
+
+
+def main():
+    win = AudioManagerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

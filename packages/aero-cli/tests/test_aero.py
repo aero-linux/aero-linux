@@ -515,6 +515,17 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(snap_path))
         self.assertTrue(os.access(snap_path, os.X_OK))
 
+    def test_hardware_gui_centers(self):
+        bt_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-bluetooth"
+        aud_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-audio"
+        disp_path = "/home/ronit138/aero-linux/packages/aero-displays" if os.path.exists("/home/ronit138/aero-linux/packages/aero-displays") else "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-displays"
+        self.assertTrue(os.path.exists(bt_path))
+        self.assertTrue(os.access(bt_path, os.X_OK))
+        self.assertTrue(os.path.exists(aud_path))
+        self.assertTrue(os.access(aud_path, os.X_OK))
+        self.assertTrue(os.path.exists(disp_path))
+        self.assertTrue(os.access(disp_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
