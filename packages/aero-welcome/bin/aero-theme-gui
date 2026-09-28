@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical Theme & Customization Studio
+Visual theme switcher, accent color studio, procedural wallpaper generator & layout switcher.
+"""
+
+import os
+import shutil
+import subprocess
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.accent_manager import ACCENT_PALETTES, apply_accent_color
+from aero.wallpaper import generate_wallpaper
+
+
+class ThemeStudioWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Theme & Customization Studio")
+        self.set_default_size(580, 560)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #00f2fe; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-theme { background-color: #1f2937; color: #f8fafc; border-radius: 6px; padding: 8px 12px; font-weight: bold; }
+        .btn-theme:hover { background-color: #374151; }
+        .btn-cyan { background-color: #00f2fe; color: #000; font-weight: bold; border-radius: 6px; padding: 8px; }
+        .btn-purple { background-color: #a855f7; color: #fff; font-weight: bold; border-radius: 6px; padding: 8px; }
+        .btn-emerald { background-color: #10b981; color: #000; font-weight: bold; border-radius: 6px; padding: 8px; }
+        .btn-rose { background-color: #f43f5e; color: #fff; font-weight: bold; border-radius: 6px; padding: 8px; }
+        .btn-amber { background-color: #f59e0b; color: #000; font-weight: bold; border-radius: 6px; padding: 8px; }
+        .btn-arctic { background-color: #38bdf8; color: #000; font-weight: bold; border-radius: 6px; padding: 8px; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🎨 Aero Theme &amp; Customization Studio</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Custom accent colors, themes, layout switcher &amp; procedural wallpapers</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # 1. Desktop Layout Switcher Card
+        layout_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        layout_card.get_style_context().add_class("card")
+        lbl_layout = Gtk.Label(label="<b>🪟 Desktop Mode &amp; Workflow Layout</b>", xalign=0)
+        lbl_layout.set_use_markup(True)
+        layout_card.pack_start(lbl_layout, False, False, 0)
+
+        layout_grid = Gtk.Grid()
+        layout_grid.set_column_spacing(10)
+        layout_grid.set_column_homogeneous(True)
+
+        btn_win = Gtk.Button(label="🪟 Windows-Friendly Mode\n<span font='9' color='#9ca3af'>Bottom Taskbar &amp; Start Menu</span>")
+        btn_win.get_child().set_use_markup(True)
+        btn_win.get_style_context().add_class("btn-theme")
+        btn_win.connect("clicked", lambda b: self._switch_layout("windows"))
+        layout_grid.attach(btn_win, 0, 0, 1, 1)
+
+        btn_tile = Gtk.Button(label="⚡ Hacker Tiling Mode\n<span font='9' color='#9ca3af'>Top Waybar &amp; Dynamic BSP Tiling</span>")
+        btn_tile.get_child().set_use_markup(True)
+        btn_tile.get_style_context().add_class("btn-theme")
+        btn_tile.connect("clicked", lambda b: self._switch_layout("tiling"))
+        layout_grid.attach(btn_tile, 1, 0, 1, 1)
+
+        layout_card.pack_start(layout_grid, False, False, 0)
+        vbox.pack_start(layout_card, False, False, 0)
+
+        # 2. Accent Color Palette Studio Card
+        accent_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        accent_card.get_style_context().add_class("card")
+        lbl_accent = Gtk.Label(label="<b>🌈 Desktop Accent Glow &amp; Highlight Color</b>", xalign=0)
+        lbl_accent.set_use_markup(True)
+        accent_card.pack_start(lbl_accent, False, False, 0)
+
+        accent_grid = Gtk.Grid()
+        accent_grid.set_column_spacing(8)
+        accent_grid.set_row_spacing(8)
+        accent_grid.set_column_homogeneous(True)
+
+        accents = [
+            ("Cyber Cyan", "cyan", "btn-cyan"),
+            ("Neon Purple", "purple", "btn-purple"),
+            ("Emerald Green", "emerald", "btn-emerald"),
+            ("Cyber Rose", "rose", "btn-rose"),
+            ("Amber Glow", "amber", "btn-amber"),
+            ("Arctic Blue", "arctic", "btn-arctic"),
+        ]
+
+        for i, (name, slug, cls_name) in enumerate(accents):
+            btn = Gtk.Button(label=name)
+            btn.get_style_context().add_class(cls_name)
+            btn.connect("clicked", lambda b, s=slug: self._apply_accent(s))
+            accent_grid.attach(btn, i % 3, i // 3, 1, 1)
+
+        accent_card.pack_start(accent_grid, False, False, 0)
+        vbox.pack_start(accent_card, False, False, 0)
+
+        # 3. Procedural Cyber Wallpaper Card
+        wall_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        wall_card.get_style_context().add_class("card")
+        lbl_wall = Gtk.Label(label="<b>🖼️ Procedural SVG Cyber Wallpaper Generator</b>", xalign=0)
+        lbl_wall.set_use_markup(True)
+        wall_card.pack_start(lbl_wall, False, False, 0)
+
+        btn_wall = Gtk.Button(label="✨ Generate New Vector Cyber Wallpaper")
+        btn_wall.get_style_context().add_class("btn-theme")
+        btn_wall.connect("clicked", self._generate_wallpaper)
+        wall_card.pack_start(btn_wall, False, False, 0)
+
+        vbox.pack_start(wall_card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready to customize desktop", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Theme Studio Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _switch_layout(self, layout):
+        subprocess.run(["aero", "layout", layout], capture_output=True)
+        subprocess.run(["notify-send", "🪟 Desktop Layout", f"Switched to {layout.upper()} Mode"])
+        self.lbl_status.set_markup(f"<span color='#00f2fe' font='10'>Applied {layout.upper()} Desktop Mode</span>")
+
+    def _apply_accent(self, accent_name):
+        apply_accent_color(accent_name)
+        subprocess.run(["notify-send", "🎨 Theme Studio", f"Applied {accent_name.upper()} accent color"])
+        self.lbl_status.set_markup(f"<span color='#34d399' font='10'>Applied {accent_name.upper()} accent</span>")
+
+    def _generate_wallpaper(self, button):
+        out_path = os.path.expanduser("~/.config/aero/wallpaper.svg")
+        generate_wallpaper("cyber-cyan", out_path)
+        subprocess.run(["notify-send", "🖼️ Wallpaper Generated", "Created procedural cyber vector wallpaper"])
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>Procedural wallpaper updated successfully</span>")
+
+
+def main():
+    win = ThemeStudioWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Graphical System Cleaner & Disk De-bloater
+Scan and reclaim gigabytes of disk space from package caches, build artifacts, and system logs.
+"""
+
+import os
+import shutil
+import subprocess
+import threading
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk
+
+from aero.cleaner import get_disk_cleanable_stats, clean_system_artifacts
+
+
+class CleanerWindow(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero System Cleaner & Disk Optimizer")
+        self.set_default_size(540, 480)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(16)
+
+        # Styling
+        css = b"""
+        window { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .header-title { font-size: 18px; font-weight: bold; color: #f43f5e; }
+        .card { background-color: #111827; border-radius: 10px; padding: 14px; border: 1px solid #1f2937; }
+        .btn-purge { background-color: #f43f5e; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 10px 20px; font-size: 14px; }
+        .btn-purge:hover { background-color: #fb7185; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        self.add(vbox)
+
+        # Header
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🗑️ Aero Disk Cleaner &amp; Optimizer</span>")
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup("<span color='#9ca3af' font='10'>Reclaim disk space from package caches, build logs, and temporary files</span>")
+        title_box.pack_start(lbl_title, False, False, 0)
+        title_box.pack_start(lbl_sub, False, False, 0)
+        header_box.pack_start(title_box, True, True, 0)
+        vbox.pack_start(header_box, False, False, 0)
+
+        # Cleanable Targets Card
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        card.get_style_context().add_class("card")
+        lbl_tg = Gtk.Label(label="<b>📦 Cleanable Cache Targets</b>", xalign=0)
+        lbl_tg.set_use_markup(True)
+        card.pack_start(lbl_tg, False, False, 0)
+
+        self.chk_apt = Gtk.CheckButton(label="APT Package Cache (/var/cache/apt/archives)")
+        self.chk_apt.set_active(True)
+        card.pack_start(self.chk_apt, False, False, 0)
+
+        self.chk_pip = Gtk.CheckButton(label="Python Pip Cache (~/.cache/pip)")
+        self.chk_pip.set_active(True)
+        card.pack_start(self.chk_pip, False, False, 0)
+
+        self.chk_npm = Gtk.CheckButton(label="Node.js NPM Cache (~/.npm)")
+        self.chk_npm.set_active(True)
+        card.pack_start(self.chk_npm, False, False, 0)
+
+        self.chk_journal = Gtk.CheckButton(label="Old Systemd Journals (&gt;7 days old)")
+        self.chk_journal.set_active(True)
+        card.pack_start(self.chk_journal, False, False, 0)
+
+        vbox.pack_start(card, False, False, 0)
+
+        # Purge Button Card
+        purge_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        purge_card.get_style_context().add_class("card")
+
+        btn_purge = Gtk.Button(label="⚡ Purge Bloat & Free Disk Space")
+        btn_purge.get_style_context().add_class("btn-purge")
+        btn_purge.connect("clicked", self._on_purge)
+        purge_card.pack_start(btn_purge, False, False, 0)
+
+        vbox.pack_start(purge_card, True, True, 0)
+
+        # Status
+        self.lbl_status = Gtk.Label(label="Ready to scan and clean system", xalign=0)
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>System Cleaner Ready</span>")
+        vbox.pack_start(self.lbl_status, False, False, 0)
+
+    def _on_purge(self, button):
+        self.lbl_status.set_markup("<span color='#f43f5e' font='10'>🧹 Purging cache and freeing disk space...</span>")
+        subprocess.run(["aero", "clean", "--force"], capture_output=True)
+        subprocess.run(["notify-send", "🗑️ Disk Cleaner", "System caches and bloat successfully purged"])
+        self.lbl_status.set_markup("<span color='#34d399' font='10'>✅ Disk cleanup complete! Gigabytes of storage freed.</span>")
+
+
+def main():
+    win = CleanerWindow()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

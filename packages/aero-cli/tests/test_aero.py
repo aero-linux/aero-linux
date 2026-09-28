@@ -547,6 +547,14 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(nl_path))
         self.assertTrue(os.access(nl_path, os.X_OK))
 
+    def test_theme_and_cleaner_gui_scripts(self):
+        th_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-theme-gui"
+        cl_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-cleaner-gui"
+        self.assertTrue(os.path.exists(th_path))
+        self.assertTrue(os.access(th_path, os.X_OK))
+        self.assertTrue(os.path.exists(cl_path))
+        self.assertTrue(os.access(cl_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

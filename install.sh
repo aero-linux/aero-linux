@@ -173,6 +173,22 @@ exec python3 "${AERO_HOME}/bin/aero-nightlight-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-nightlight-gui"
 
+# Create global executable wrapper for aero-theme-gui
+cat << 'EOF' > "${BIN_DIR}/aero-theme-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-theme-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-theme-gui"
+
+# Create global executable wrapper for aero-cleaner-gui
+cat << 'EOF' > "${BIN_DIR}/aero-cleaner-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-cleaner-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-cleaner-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -335,6 +351,28 @@ Icon=display
 Terminal=false
 Type=Application
 Categories=System;Settings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-theme.desktop"
+[Desktop Entry]
+Name=Aero Theme Studio
+Comment=Aero Linux Themes, Accent Colors & Wallpaper Generator
+Exec=${BIN_DIR}/aero-theme-gui
+Icon=preferences-desktop-theme
+Terminal=false
+Type=Application
+Categories=System;Settings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-cleaner.desktop"
+[Desktop Entry]
+Name=Aero System Cleaner
+Comment=Aero Linux Disk Cleaner & Cache De-bloater
+Exec=${BIN_DIR}/aero-cleaner-gui
+Icon=user-trash
+Terminal=false
+Type=Application
+Categories=System;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
