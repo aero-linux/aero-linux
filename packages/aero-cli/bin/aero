@@ -90,6 +90,9 @@ from aero.dev_utils import convert_color, time_execution
 from aero.osd import handle_osd_action
 from aero.calc import calculate_expression
 from aero.recorder import start_recording, stop_recording, is_recording_active
+from aero.archive_tools import compress_archive, extract_archive
+from aero.file_search import search_files_by_name, search_text_content
+from aero.nvme_wear import get_ssd_wear_stats
 
 
 def print_banner():
@@ -625,6 +628,29 @@ def main():
     rec_sub.add_parser("stop", help="Stop active screen recording")
     rec_sub.add_parser("toggle", help="Toggle recording start/stop")
 
+    # Archive Management (Zip, Tar, GZ)
+    zip_parser = subparsers.add_parser("zip", help="Compress directory or files into ZIP/Tar archive")
+    zip_parser.add_argument("source", help="Source file or directory to compress")
+    zip_parser.add_argument("destination", nargs="?", default="", help="Output archive path (e.g. bundle.zip or project.tar.gz)")
+
+    unzip_parser = subparsers.add_parser("unzip", help="Extract ZIP or Tar archive into directory")
+    unzip_parser.add_argument("archive", help="Archive file to extract")
+    unzip_parser.add_argument("destination", nargs="?", default="", help="Destination directory (optional)")
+
+    # Instant File & Content Search
+    search_parser = subparsers.add_parser("search", help="Instant fuzzy filename or code text search")
+    search_sub = search_parser.add_subparsers(dest="search_action", help="Search actions")
+    s_file = search_sub.add_parser("file", help="Find files by name/glob (e.g. '*.json')")
+    s_file.add_argument("pattern", help="File pattern or glob (e.g. '*.ts' or 'config*')")
+    s_file.add_argument("--dir", "-d", default=".", help="Root search directory (default: .)")
+
+    s_text = search_sub.add_parser("text", help="Search text content inside files")
+    s_text.add_argument("query", help="Keyword or regex string to find")
+    s_text.add_argument("--dir", "-d", default=".", help="Root search directory (default: .)")
+
+    # NVMe SSD Wear Level & Lifespan Forecaster
+    subparsers.add_parser("wear", help="Audit NVMe/SSD TBW wear levels and estimated lifespan")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1126,6 +1152,21 @@ def main():
                 start_recording()
         else:
             start_recording(is_gif=getattr(args, "gif", False), region=getattr(args, "region", False))
+
+    elif args.command == "zip":
+        compress_archive(args.source, args.destination)
+
+    elif args.command == "unzip":
+        extract_archive(args.archive, args.destination)
+
+    elif args.command == "search":
+        if args.search_action == "text":
+            search_text_content(args.query, args.dir)
+        else:
+            search_files_by_name(args.pattern, args.dir)
+
+    elif args.command == "wear":
+        get_ssd_wear_stats()
 
 
 if __name__ == "__main__":

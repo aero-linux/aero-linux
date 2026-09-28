@@ -63,11 +63,18 @@ bindsym Control+Shift+r exec aero rec toggle
 # Windows-Friendly Familiar Shortcuts
 bindsym $mod+a exec aero-quick-settings
 bindsym $mod+v exec aero clip menu
+bindsym $mod+s exec wofi --show drun --allow-images
 bindsym $mod+c exec galculator || gnome-calculator || $term -e aero calc
 bindsym $mod+e exec nemo ~ || thunar ~ || pcmanfm ~
 bindsym Control+Shift+Escape exec xfce4-taskmanager || gnome-system-monitor || lxtask || $term -e aero monitor
 bindsym Mod1+Tab focus next
 bindsym $mod+r exec wofi --show run
+
+# Windows Snap Hotkeys (Half-Screen Left / Right / Maximize)
+bindsym $mod+Left focus left
+bindsym $mod+Right focus right
+bindsym $mod+Up fullscreen toggle
+bindsym $mod+Down floating toggle
 
 # Keybindings: Quick Aero Optimizations
 bindsym $mod+Shift+a exec $term -e aero doctor

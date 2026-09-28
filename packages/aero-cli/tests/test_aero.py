@@ -1,5 +1,6 @@
 import unittest
 import os
+import shutil
 from aero.doctor import run_doctor, get_cpu_info, get_memory_info, get_gpu_info
 from aero.power import PROFILES, get_current_profile
 from aero.memory import get_top_memory_processes
@@ -56,6 +57,9 @@ from aero.trash import get_trash_items, empty_trash_bin
 from aero.display import set_night_light
 from aero.calc import calculate_expression
 from aero.battery_daemon import check_battery_alerts
+from aero.archive_tools import compress_archive, extract_archive
+from aero.file_search import search_files_by_name, search_text_content
+from aero.nvme_wear import get_ssd_wear_stats
 
 
 class TestAeroCLI(unittest.TestCase):
@@ -399,6 +403,31 @@ class TestAeroCLI(unittest.TestCase):
         self.assertEqual(c2["result"], 20.0)
         bat = check_battery_alerts()
         self.assertIn("capacity", bat)
+
+    def test_archive_tools(self):
+        test_dir = "/tmp/aero_test_archive_dir"
+        os.makedirs(test_dir, exist_ok=True)
+        with open(os.path.join(test_dir, "hello.txt"), "w") as f:
+            f.write("Aero Archive Test")
+        res_zip = compress_archive(test_dir, "/tmp/aero_test_bundle.zip")
+        self.assertEqual(res_zip["status"], "created")
+        res_unzip = extract_archive("/tmp/aero_test_bundle.zip", "/tmp/aero_test_unzip_dest")
+        self.assertEqual(res_unzip["status"], "extracted")
+        # Cleanup
+        shutil.rmtree(test_dir, ignore_errors=True)
+        shutil.rmtree("/tmp/aero_test_unzip_dest", ignore_errors=True)
+        if os.path.exists("/tmp/aero_test_bundle.zip"):
+            os.remove("/tmp/aero_test_bundle.zip")
+
+    def test_file_and_content_search(self):
+        files = search_files_by_name("*.py", root_dir="/home/ronit138/aero-linux/packages/aero-cli/aero")
+        self.assertTrue(len(files) > 0)
+        matches = search_text_content("class", root_dir="/home/ronit138/aero-linux/packages/aero-cli/tests")
+        self.assertTrue(len(matches) > 0)
+
+    def test_nvme_wear_stats(self):
+        wear = get_ssd_wear_stats()
+        self.assertIn("drives", wear)
 
 
 if __name__ == "__main__":
