@@ -651,6 +651,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(disk_path))
         self.assertTrue(os.access(disk_path, os.X_OK))
 
+    def test_speed_gui_script(self):
+        speed_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-speed-gui"
+        self.assertTrue(os.path.exists(speed_path))
+        self.assertTrue(os.access(speed_path, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

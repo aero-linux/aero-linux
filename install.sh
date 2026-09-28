@@ -309,6 +309,14 @@ exec python3 "${AERO_HOME}/bin/aero-disk-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-disk-gui"
 
+# Create global executable wrapper for aero-speed-gui
+cat << 'EOF' > "${BIN_DIR}/aero-speed-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-speed-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-speed-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -658,6 +666,17 @@ Icon=drive-harddisk
 Terminal=false
 Type=Application
 Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-speed.desktop"
+[Desktop Entry]
+Name=Aero Network Speed & Latency
+Comment=Aero Linux Latency Profiler & DNS Speed Tester
+Exec=${BIN_DIR}/aero-speed-gui
+Icon=network-wireless
+Terminal=false
+Type=Application
+Categories=System;Network;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
