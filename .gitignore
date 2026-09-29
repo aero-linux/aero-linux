@@ -11,7 +11,8 @@ release-artifacts/
 *.iso.sha256
 *.tar.gz
 dist/
-build/
+build/tmp/
+build/iso/
 *.egg-info/
 
 # Logs

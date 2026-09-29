@@ -1,0 +1,45 @@
+name: CI & Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Unit Tests & Build Deb
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install System Test Dependencies (GTK3 & GIR)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-gi gir1.2-gtk-3.0 gir1.2-gdkpixbuf-2.0 libgirepository1.0-dev
+
+    - name: Verify Python Bytecode Compilation
+      run: |
+        python3 -m py_compile packages/aero-cli/aero/*.py
+        python3 -m py_compile packages/aero-welcome/bin/*
+
+    - name: Run Test Suite (130 Tests)
+      run: |
+        make test
+
+    - name: Build Debian Package
+      run: |
+        make deb
+
+    - name: Upload Debian Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: aero-linux-deb
+        path: dist/*.deb

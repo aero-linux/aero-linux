@@ -1,0 +1,82 @@
+# Aero Linux Base Package Manifest
+# Core System
+linux-image-generic
+linux-headers-generic
+systemd
+systemd-sysv
+grub-efi-amd64-bin
+grub-pc-bin
+shim-signed
+live-boot
+live-config
+# Networking, WiFi & Bluetooth
+network-manager
+network-manager-gnome
+bluez
+bluez-tools
+blueman
+libspa-0.2-bluetooth
+net-tools
+curl
+wget
+git
+ca-certificates
+sudo
+zram-tools
+tlp
+tlp-rdw
+gamemode
+
+# Hardware, Mobile MTP & Printers
+gvfs-backends
+gvfs-fuse
+libmtp-runtime
+usbmuxd
+ifuse
+cups
+system-config-printer
+
+# Desktop Environment & Wayland/X11
+sway
+swaylock
+swayidle
+waybar
+wofi
+nemo
+nemo-fileroller
+ffmpegthumbnailer
+webp-pixbuf-loader
+tumbler
+poppler-utils
+flatpak
+alacritty
+kitty
+fonts-inter
+fonts-jetbrains-mono
+fonts-noto-color-emoji
+fonts-liberation2
+papirus-icon-theme
+brightnessctl
+pavucontrol
+pipewire
+pipewire-pulse
+wireplumber
+wf-recorder
+slurp
+grim
+gammastep
+
+# Core Developer Toolchains
+python3
+python3-pip
+python3-venv
+python3-gi
+gir1.2-gtk-3.0
+build-essential
+cmake
+htop
+neovim
+
+# Installer
+calamares
+calamares-settings-ubuntu
