@@ -792,6 +792,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(bench_gui))
         self.assertTrue(os.access(bench_gui, os.X_OK))
 
+    def test_diff_gui_script(self):
+        diff_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-diff-gui"
+        self.assertTrue(os.path.exists(diff_gui))
+        self.assertTrue(os.access(diff_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

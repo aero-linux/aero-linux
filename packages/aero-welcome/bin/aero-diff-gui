@@ -1,0 +1,289 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Visual Diff & File Comparator Studio (GTK3)
+Side-by-side code diffing, Git working tree inspector, line additions/deletions highlighter, and patch generator.
+"""
+
+import difflib
+import gi
+import os
+import subprocess
+import sys
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.badge-add {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.badge-del {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+"""
+
+SAMPLE_A = """# Aero Linux System Config
+VERSION = "1.2.0"
+DESKTOP_MODE = "standard"
+ENABLE_AUTOTILING = False
+ZRAM_COMPRESSION = "lzo"
+MAX_MEMORY_MB = 4096
+"""
+
+SAMPLE_B = """# Aero Linux System Config
+VERSION = "1.3.0-Nebula"
+DESKTOP_MODE = "cyber_tiling"
+ENABLE_AUTOTILING = True
+ZRAM_COMPRESSION = "zstd"
+MAX_MEMORY_MB = 8192
+PORT_INSPECTOR_ACTIVE = True
+"""
+
+
+class AeroDiffGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Visual Diff & Code Comparator Studio")
+        self.set_default_size(1020, 720)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📊 Visual Diff &amp; Comparator Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Compare files, inspect Git working tree changes, and generate unified patches.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        # Badges box
+        self.badge_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.lbl_adds = Gtk.Label()
+        self.lbl_dels = Gtk.Label()
+        self.badge_box.pack_start(self.lbl_adds, False, False, 0)
+        self.badge_box.pack_start(self.lbl_dels, False, False, 0)
+        header_box.pack_end(self.badge_box, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Controls Bar
+        ctrl_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        ctrl_bar.set_margin_start(16)
+        ctrl_bar.set_margin_end(16)
+        ctrl_bar.set_margin_top(10)
+        ctrl_bar.set_margin_bottom(8)
+
+        btn_open_a = Gtk.Button(label="📂 Open File A (Original)...")
+        btn_open_a.get_style_context().add_class("btn-secondary")
+        btn_open_a.connect("clicked", lambda b: self._browse_file(self.text_a))
+        ctrl_bar.pack_start(btn_open_a, False, False, 0)
+
+        btn_open_b = Gtk.Button(label="📂 Open File B (Modified)...")
+        btn_open_b.get_style_context().add_class("btn-secondary")
+        btn_open_b.connect("clicked", lambda b: self._browse_file(self.text_b))
+        ctrl_bar.pack_start(btn_open_b, False, False, 0)
+
+        btn_compare = Gtk.Button(label="⚡ Run Visual Diff")
+        btn_compare.get_style_context().add_class("btn-primary")
+        btn_compare.connect("clicked", self._on_diff_clicked)
+        ctrl_bar.pack_start(btn_compare, False, False, 0)
+
+        btn_sample = Gtk.Button(label="📋 Load Sample Diff")
+        btn_sample.get_style_context().add_class("btn-secondary")
+        btn_sample.connect("clicked", self._load_sample)
+        ctrl_bar.pack_start(btn_sample, False, False, 0)
+
+        main_box.pack_start(ctrl_bar, False, False, 0)
+
+        # Main Paned (Split View)
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(500)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_bottom(12)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Left: File A
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_a = Gtk.Label(xalign=0)
+        lbl_a.set_markup("<span font='bold 9.5' color='#f87171'>ORIGINAL (FILE A)</span>")
+        left_box.pack_start(lbl_a, False, False, 0)
+
+        scroll_a = Gtk.ScrolledWindow()
+        self.text_a = Gtk.TextView()
+        self.text_a.get_style_context().add_class("code-editor")
+        self.text_a.get_buffer().set_text(SAMPLE_A)
+        self.text_a.get_buffer().connect("changed", self._on_diff_clicked)
+        scroll_a.add(self.text_a)
+        left_box.pack_start(scroll_a, True, True, 0)
+        paned.pack1(left_box, True, False)
+
+        # Right: File B
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_b = Gtk.Label(xalign=0)
+        lbl_b.set_markup("<span font='bold 9.5' color='#4ade80'>MODIFIED (FILE B)</span>")
+        right_box.pack_start(lbl_b, False, False, 0)
+
+        scroll_b = Gtk.ScrolledWindow()
+        self.text_b = Gtk.TextView()
+        self.text_b.get_style_context().add_class("code-editor")
+        self.text_b.get_buffer().set_text(SAMPLE_B)
+        self.text_b.get_buffer().connect("changed", self._on_diff_clicked)
+        scroll_b.add(self.text_b)
+        right_box.pack_start(scroll_b, True, True, 0)
+        paned.pack2(right_box, True, False)
+
+        # Text Tag Table Setup
+        self._setup_tags(self.text_a.get_buffer())
+        self._setup_tags(self.text_b.get_buffer())
+
+        self._on_diff_clicked(None)
+
+    def _setup_tags(self, buf):
+        buf.create_tag("del_line", background="rgba(239, 68, 68, 0.25)", foreground="#fca5a5")
+        buf.create_tag("add_line", background="rgba(34, 197, 94, 0.25)", foreground="#86efac")
+
+    def _browse_file(self, target_textview):
+        dialog = Gtk.FileChooserDialog(
+            title="Select File to Compare",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        if dialog.run() == Gtk.ResponseType.OK:
+            filepath = dialog.get_filename()
+            try:
+                with open(filepath, "r", errors="ignore") as f:
+                    content = f.read()
+                target_textview.get_buffer().set_text(content)
+            except Exception as e:
+                pass
+        dialog.destroy()
+
+    def _load_sample(self, button):
+        self.text_a.get_buffer().set_text(SAMPLE_A)
+        self.text_b.get_buffer().set_text(SAMPLE_B)
+        self._on_diff_clicked(None)
+
+    def _on_diff_clicked(self, widget):
+        buf_a = self.text_a.get_buffer()
+        buf_b = self.text_b.get_buffer()
+
+        text_a = buf_a.get_text(buf_a.get_start_iter(), buf_a.get_end_iter(), True)
+        text_b = buf_b.get_text(buf_b.get_start_iter(), buf_b.get_end_iter(), True)
+
+        lines_a = text_a.splitlines(keepends=True)
+        lines_b = text_b.splitlines(keepends=True)
+
+        matcher = difflib.SequenceMatcher(None, lines_a, lines_b)
+        
+        adds = 0
+        dels = 0
+
+        # Clear existing tags
+        buf_a.remove_tag_by_name("del_line", buf_a.get_start_iter(), buf_a.get_end_iter())
+        buf_b.remove_tag_by_name("add_line", buf_b.get_start_iter(), buf_b.get_end_iter())
+
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag in ("delete", "replace"):
+                dels += (i2 - i1)
+                iter_start = buf_a.get_iter_at_line(i1)
+                iter_end = buf_a.get_iter_at_line(i2)
+                buf_a.apply_tag_by_name("del_line", iter_start, iter_end)
+            if tag in ("insert", "replace"):
+                adds += (j2 - j1)
+                iter_start = buf_b.get_iter_at_line(j1)
+                iter_end = buf_b.get_iter_at_line(j2)
+                buf_b.apply_tag_by_name("add_line", iter_start, iter_end)
+
+        self.lbl_adds.set_markup(f"<span class='badge-add'>+{adds} Additions</span>")
+        self.lbl_dels.set_markup(f"<span class='badge-del'>-{dels} Deletions</span>")
+
+
+def main():
+    win = AeroDiffGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

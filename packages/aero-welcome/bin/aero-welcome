@@ -142,7 +142,8 @@ class AeroWelcomeApp(Gtk.Window):
             ("🛡️ Firewall & Security Shield", "aero-firewall-gui", 1, 8),
             ("🗂️ Virtual Desktops & Workspaces", "aero-workspaces-gui", 0, 9),
             ("⌨️ Keyboard Shortcuts Guide", "aero-shortcuts-gui", 1, 9),
-            ("🔒 Developer Secrets Vault", "aero-vault-gui", 0, 10),
+            ("📊 Visual Diff & Comparator", "aero-diff-gui", 0, 10),
+            ("🔒 Developer Secrets Vault", "aero-vault-gui", 1, 10),
         ]
 
         for text, cmd, col, row in dev_tools:

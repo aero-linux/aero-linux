@@ -453,6 +453,14 @@ exec python3 "${AERO_HOME}/bin/aero-benchmark-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-benchmark-gui"
 
+# Create global executable wrapper for aero-diff-gui
+cat << 'EOF' > "${BIN_DIR}/aero-diff-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-diff-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-diff-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -1000,6 +1008,17 @@ Icon=utilities-system-monitor
 Terminal=false
 Type=Application
 Categories=System;Benchmark;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-diff.desktop"
+[Desktop Entry]
+Name=Aero Visual Diff Studio
+Comment=Aero Linux Side-by-Side Code Diff & File Comparator
+Exec=${BIN_DIR}/aero-diff-gui
+Icon=text-editor
+Terminal=false
+Type=Application
+Categories=Development;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
