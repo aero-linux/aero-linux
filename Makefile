@@ -7,7 +7,8 @@ GUI_DIR := packages/aero-welcome
 help:
 	@echo "⚡ Aero Linux Developer Makefile"
 	@echo "=========================================="
-	@echo "  make test        - Run complete 56+ unit test suite"
+	@echo "  make test        - Run complete 107+ unit test suite"
+	@echo "  make deb         - Build standalone Debian .deb package"
 	@echo "  make install     - Install Aero CLI & Control Center locally"
 	@echo "  make doctor      - Run real-time hardware diagnostics"
 	@echo "  make benchmark   - Run multi-core CPU & RAM benchmark"
@@ -17,6 +18,9 @@ help:
 test:
 	@echo "Running Aero test suite..."
 	@cd $(CLI_DIR) && PYTHONPATH=. $(PYTHON) -m unittest discover -s tests -v
+
+deb:
+	@bash build/package_deb.sh
 
 install:
 	@bash install.sh
