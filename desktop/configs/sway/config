@@ -93,6 +93,10 @@ bindsym $mod+p exec aero-color-gui
 bindsym $mod+s exec wofi --show drun --allow-images
 bindsym $mod+c exec galculator || gnome-calculator || $term -e aero calc
 bindsym $mod+e exec nemo ~ || thunar ~ || pcmanfm ~
+bindsym $mod+g exec aero-gamehub
+bindsym $mod+k exec aero-ports-gui
+bindsym $mod+slash exec aero-shortcuts-gui
+bindsym $mod+question exec aero-shortcuts-gui
 bindsym Control+Shift+Escape exec aero-monitor || xfce4-taskmanager || gnome-system-monitor || $term -e aero monitor
 bindsym Mod1+Tab focus next
 bindsym $mod+r exec wofi --show run
