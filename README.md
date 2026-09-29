@@ -164,14 +164,33 @@ aero ssh [status|gen|copy|test] # Ed25519 SSH key management
 
 ## 🎛️ Complete Zero-Terminal Graphical Application Suite
 
-Aero Linux includes **30 dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
+Aero Linux includes **45 dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
 
 | Application | Command / Shortcut | Description |
 | :--- | :--- | :--- |
 | **Aero Spotlight** | `Alt + Space` / `aero-spotlight` | Floating Raycast-style command palette, inline math evaluator & app launcher |
 | **Aero Control Center** | `aero-welcome` | 6-tab central hardware, developer suite, maintenance, power, theme, and store hub |
 | **Aero Local AI Studio**| `aero-ai-gui` | Offline Ollama LLM model manager, VRAM estimator & local AI prompt playground |
-| **Aero Snapshots Studio**| `aero-snapshots-gui` | 1-Click TimeMachine system restore points creator & instant config rollback |
+| **Aero Markdown Studio**| `aero-markdown-gui` | Real-time split Markdown editor, live structure parser & 1-click HTML exporter |
+| **Aero HTTPS Tunnel** | `aero-tunnel-gui` | Expose localhost dev servers to instant public HTTPS URLs |
+| **Aero Code Sandbox** | `aero-sandbox-gui` | Live multi-language code scratchpad (Python, Node, Bash, C) with microsecond profiler |
+| **Aero GPU Studio** | `aero-gpu-gui` | GPU load, VRAM allocation, temperature sensors & 1-click hybrid graphics switcher |
+| **Aero Git Graph** | `aero-gitgraph-gui` | Visual commit graph tree, stage/unstage file selector & conventional commit generator |
+| **Aero Archive Studio** | `aero-archive-gui` | Inspect archive trees without extracting; create ZIP, TAR.GZ & TAR.XZ packages |
+| **Aero QR Code Studio** | `aero-qr-gui` | Vector QR code generator for URLs, staging servers & 1-tap phone Wi-Fi pairing |
+| **Aero Screen Recorder**| `aero-recorder-gui` | Instant MP4/GIF desktop capture, PipeWire audio toggle & recordings gallery |
+| **Aero Visual Diff** | `aero-diff-gui` | Side-by-side code diffing, additions/deletions visualizer & patch generator |
+| **Aero Benchmarks** | `aero-benchmark-gui` | Multi-core CPU compute, RAM memory bandwidth & NVMe disk I/O benchmark suite |
+| **Aero Package Studio** | `aero-deps-gui` | System package inspector, shared library analyzer (`ldd`) & orphan cleaner |
+| **Aero Mock Server** | `aero-mock-gui` | Local mock REST API server, response simulator & live webhook inspector |
+| **Aero Crypto & JWT** | `aero-crypto-gui` | Visual JWT token decoder, cryptographic hash calculator (SHA256/512) & UUID generator |
+| **Aero Cron Scheduler** | `aero-cron-gui` | Visual scheduled tasks manager, human-readable cron builder & test runner |
+| **Aero SQL & Database** | `aero-db-gui` | SQLite database explorer, table viewer & interactive SQL console |
+| **Aero Regex Studio** | `aero-regex-gui` | Regular expression pattern evaluator, live capture group matcher & preset library |
+| **Aero Project .env** | `aero-env-gui` | Environment variables studio, masked secrets editor & `.env.example` sync |
+| **Aero Native API** | `aero-api-gui` | High-speed REST/HTTP client (GET/POST/PUT/DELETE) with JSON body editor |
+| **Aero Docker Studio** | `aero-docker-gui` | Docker container cards, live resource telemetry, streaming logs & 1-click prune |
+| **Aero Snapshots** | `aero-snapshots-gui` | 1-Click TimeMachine system restore points creator & instant config rollback |
 | **Aero Workspaces** | `aero-workspaces-gui` | Multi-monitor virtual workspace switcher, window organizer & tagger |
 | **Aero SSL & Dev Certs**| `aero-ssl-gui` | Local HTTPS SSL/TLS cert generator with Node.js, FastAPI & Nginx snippets |
 | **Aero SSH & Servers** | `aero-ssh-gui` | Ed25519 keypair generator, `~/.ssh/config` bookmarks & 1-click connect |

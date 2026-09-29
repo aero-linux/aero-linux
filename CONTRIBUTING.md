@@ -14,8 +14,9 @@ Thank you for your interest in contributing to Aero Linux! We welcome pull reque
 
 2. **Run the Test Suite:**
    ```bash
-   cd packages/aero-cli
-   PYTHONPATH=. python3 -m unittest discover -s tests -v
+   make test
+   # Or directly:
+   cd packages/aero-cli && python3 -m unittest discover -s tests -v
    ```
 
 3. **Verify Bytecode Compilation:**
@@ -41,6 +42,6 @@ Thank you for your interest in contributing to Aero Linux! We welcome pull reque
 
 Before submitting your pull request:
 - [ ] Added unit tests under `packages/aero-cli/tests/test_aero.py` for new commands.
-- [ ] All 23+ unit tests pass cleanly (`python3 -m unittest discover`).
+- [ ] All 130+ unit tests pass cleanly (`make test`).
 - [ ] Maintained zero third-party pip dependencies (standard library only).
 - [ ] Updated command documentation in `docs/COMMANDS.md` and `README.md`.

@@ -58,6 +58,19 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 * `aero share [path]`: Zero-config local network HTTP file sharing server.
 * `aero ssh [status|gen|copy|test]`: Ed25519 SSH key management and GitHub auth test.
 * `aero git [status|scan|clean|graph|churn]`: Workspace status, multi-repo scanner, ASCII commit graph, and code churn analyzer.
+* `aero shell`: Interactive developer CLI REPL with hardware telemetry prompt and stopwatch.
+* `aero calc <expr>`: Zero-dependency terminal calculator and memory unit converter.
+* `aero diff <file1> <file2>`: Colorized terminal side-by-side diff inspector.
+* `aero qr [encode|wifi]`: Generate ASCII & vector QR codes for URLs and 1-tap phone Wi-Fi pairing.
+* `aero archive [compress|extract|list]`: Multi-format ZIP, TAR.GZ, and TAR.XZ archive utility.
+* `aero sandbox run <script>`: Micro-jail Linux namespace sandbox execution.
+* `aero tunnel <port>`: Expose localhost dev servers to instant public HTTPS endpoints.
+* `aero mock serve [--port <port>]`: Local mock REST API server with custom JSON endpoints.
+* `aero regex <pattern> <text>`: Regex pattern evaluator with named capture groups.
+* `aero search [name|content]`: Fast ripgrep-style multi-threaded file and text search.
+* `aero turbo [mount|status]`: 10GB/s tmpfs RAM-disk compilation accelerator.
+* `aero cron [status|auto-maintenance]`: Scheduled maintenance and task manager.
+* `aero crypto [jwt|hash|uuid|b64]`: Local JWT payload decoder, multi-hash calculator, and UUID generator.
 
 ---
 
@@ -73,3 +86,5 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 * `aero security [audit|harden]`: UFW firewall and kernel ASLR hardening.
 * `aero snapshot [create|list|restore]`: Zero-latency system restore points via Timeshift/Btrfs.
 * `aero keys`: Display desktop keyboard shortcuts cheatsheet.
+* `aero zoom [set|in|out|reset]`: Fractional screen magnifier (100% to 200%).
+* `aero gpu [integrated|hybrid|dedicated|status]`: Pop!_OS-style hybrid graphics profile switcher.
