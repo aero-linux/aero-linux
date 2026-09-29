@@ -236,6 +236,7 @@ Aero Linux includes **45 dedicated native GTK3 graphical management tools**, ens
 ## 📖 In-Depth Documentation
 
 * 📐 [**System Architecture Specification**](docs/ARCHITECTURE.md) — Kernel parameters, memory layout, and daemon specs.
+* 🗺️ [**Strategic Engineering Roadmap**](docs/ROADMAP.md) — Future release progression (v1.5-Pulsar to v2.0-Singularity).
 * 🛠️ [**Complete CLI Reference Manual**](docs/COMMANDS.md) — Detailed reference for all 25+ `aero` subcommands.
 * 🪟 [**Windows Dual-Boot & Partition Safety Guide**](docs/DUAL_BOOT_GUIDE.md) — Safe dual-booting with Windows 10/11 and BitLocker.
 
