@@ -1,0 +1,465 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Mock API Server & Webhook Inspector Studio (GTK3)
+Instant local REST mock server, response simulator, latency throttling, and live webhook inspector.
+"""
+
+import gi
+import http.server
+import json
+import os
+import socketserver
+import sys
+import threading
+import time
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-danger:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+.badge-running {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 9pt;
+    font-weight: 700;
+}
+.badge-stopped {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 9pt;
+    font-weight: 700;
+}
+.entry-custom {
+    background-color: #080d1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Monospace';
+    padding: 6px 10px;
+}
+"""
+
+ROUTES_REGISTRY = {
+    "/api/users": {
+        "method": "GET",
+        "status": 200,
+        "body": json.dumps([
+            {"id": 1, "name": "Ronit Gupta", "role": "Systems Lead"},
+            {"id": 2, "name": "Alex Vance", "role": "Full-Stack Dev"},
+        ], indent=2),
+    },
+    "/api/health": {
+        "method": "GET",
+        "status": 200,
+        "body": json.dumps({"status": "healthy", "uptime": "99.99%"}, indent=2),
+    },
+    "/webhook/stripe": {
+        "method": "POST",
+        "status": 200,
+        "body": json.dumps({"received": True, "event": "payment_intent.succeeded"}, indent=2),
+    },
+}
+
+
+class MockServerThread(threading.Thread):
+    def __init__(self, port, callback_log, latency_sec=0.0):
+        super().__init__(daemon=True)
+        self.port = port
+        self.callback_log = callback_log
+        self.latency_sec = latency_sec
+        self.server = None
+        self.is_running = False
+
+    def run(self):
+        callback_log = self.callback_log
+        latency_sec = self.latency_sec
+
+        class DynamicHandler(http.server.BaseHTTPRequestHandler):
+            def log_message(self, format, *args):
+                pass
+
+            def do_GET(self):
+                self._handle_request("GET")
+
+            def do_POST(self):
+                self._handle_request("POST")
+
+            def do_PUT(self):
+                self._handle_request("PUT")
+
+            def do_DELETE(self):
+                self._handle_request("DELETE")
+
+            def _handle_request(self, method):
+                if latency_sec > 0:
+                    time.sleep(latency_sec)
+
+                path = self.path.split("?")[0]
+                length = int(self.headers.get("content-length", 0))
+                req_body = self.rfile.read(length).decode("utf-8", errors="replace") if length > 0 else ""
+
+                # Look up route
+                route_info = ROUTES_REGISTRY.get(path, {
+                    "method": method,
+                    "status": 404,
+                    "body": json.dumps({"error": f"Endpoint '{path}' not found in Aero Mock Server"}, indent=2),
+                })
+
+                status_code = route_info.get("status", 200)
+                body_content = route_info.get("body", "{}")
+
+                self.send_response(status_code)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                self.send_header("Access-Control-Allow-Headers", "*")
+                self.end_headers()
+                self.wfile.write(body_content.encode("utf-8"))
+
+                # Dispatch log event
+                log_entry = {
+                    "time": time.strftime("%H:%M:%S"),
+                    "client": self.client_address[0],
+                    "method": method,
+                    "path": self.path,
+                    "status": status_code,
+                    "body": req_body,
+                }
+                GLib.idle_add(callback_log, log_entry)
+
+        try:
+            socketserver.TCPServer.allow_reuse_address = True
+            with socketserver.TCPServer(("0.0.0.0", self.port), DynamicHandler) as httpd:
+                self.server = httpd
+                self.is_running = True
+                httpd.serve_forever()
+        except Exception as e:
+            GLib.idle_add(callback_log, {"error": str(e)})
+
+    def stop(self):
+        if self.server:
+            self.server.shutdown()
+            self.server.server_close()
+            self.is_running = False
+
+
+class AeroMockGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Mock API Server & Webhook Inspector")
+        self.set_default_size(980, 680)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.server_thread = None
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🧪 Mock Server &amp; Webhook Inspector</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Spin up local mock REST endpoints, simulate latency, and inspect inbound payloads.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Server Control Bar
+        ctrl_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        ctrl_bar.set_margin_start(16)
+        ctrl_bar.set_margin_end(16)
+        ctrl_bar.set_margin_top(12)
+        ctrl_bar.set_margin_bottom(10)
+
+        lbl_port = Gtk.Label(label="Port:")
+        ctrl_bar.pack_start(lbl_port, False, False, 0)
+
+        self.entry_port = Gtk.Entry()
+        self.entry_port.set_text("8080")
+        self.entry_port.set_width_chars(6)
+        self.entry_port.get_style_context().add_class("entry-custom")
+        ctrl_bar.pack_start(self.entry_port, False, False, 0)
+
+        self.btn_toggle_server = Gtk.Button(label="▶️ Start Server")
+        self.btn_toggle_server.get_style_context().add_class("btn-primary")
+        self.btn_toggle_server.connect("clicked", self._on_toggle_server)
+        ctrl_bar.pack_start(self.btn_toggle_server, False, False, 0)
+
+        self.lbl_server_status = Gtk.Label()
+        self.lbl_server_status.set_markup("<span class='badge-stopped'>● STOPPED</span>")
+        ctrl_bar.pack_start(self.lbl_server_status, False, False, 0)
+
+        # Latency slider
+        lbl_lat = Gtk.Label(label="Latency:")
+        ctrl_bar.pack_start(lbl_lat, False, False, 10)
+
+        self.scale_latency = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 2000, 100)
+        self.scale_latency.set_value(0)
+        self.scale_latency.set_width_request(140)
+        self.scale_latency.set_value_pos(Gtk.PositionType.RIGHT)
+        ctrl_bar.pack_start(self.scale_latency, False, False, 0)
+
+        lbl_ms = Gtk.Label(label="ms")
+        ctrl_bar.pack_start(lbl_ms, False, False, 0)
+
+        main_box.pack_start(ctrl_bar, False, False, 0)
+
+        # Main Paned (Routes on Left vs Logs on Right)
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(460)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_bottom(14)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Left: Routes Editor
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        
+        lbl_routes_hdr = Gtk.Label(xalign=0)
+        lbl_routes_hdr.set_markup("<span font='bold 10' color='#94a3b8'>MOCK ENDPOINTS CONFIGURATION</span>")
+        left_box.pack_start(lbl_routes_hdr, False, False, 0)
+
+        route_sel_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.combo_routes = Gtk.ComboBoxText()
+        for path in ROUTES_REGISTRY.keys():
+            self.combo_routes.append_text(path)
+        self.combo_routes.set_active(0)
+        self.combo_routes.connect("changed", self._on_route_selected)
+        route_sel_box.pack_start(self.combo_routes, True, True, 0)
+
+        self.entry_path = Gtk.Entry()
+        self.entry_path.set_text("/api/users")
+        self.entry_path.get_style_context().add_class("entry-custom")
+        route_sel_box.pack_start(self.entry_path, True, True, 0)
+        left_box.pack_start(route_sel_box, False, False, 0)
+
+        # Method & Status
+        meta_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        
+        self.combo_method = Gtk.ComboBoxText()
+        for m in ["GET", "POST", "PUT", "DELETE"]:
+            self.combo_method.append_text(m)
+        self.combo_method.set_active(0)
+        meta_box.pack_start(self.combo_method, False, False, 0)
+
+        self.combo_status = Gtk.ComboBoxText()
+        for s in ["200 OK", "201 Created", "400 Bad Request", "401 Unauthorized", "404 Not Found", "500 Internal Error"]:
+            self.combo_status.append_text(s)
+        self.combo_status.set_active(0)
+        meta_box.pack_start(self.combo_status, False, False, 0)
+
+        btn_save_route = Gtk.Button(label="💾 Save Route")
+        btn_save_route.get_style_context().add_class("btn-primary")
+        btn_save_route.connect("clicked", self._on_save_route)
+        meta_box.pack_end(btn_save_route, False, False, 0)
+
+        left_box.pack_start(meta_box, False, False, 0)
+
+        # Response Body
+        lbl_resp_hdr = Gtk.Label(xalign=0)
+        lbl_resp_hdr.set_markup("<span font='bold 9' color='#38bdf8'>RESPONSE JSON / BODY:</span>")
+        left_box.pack_start(lbl_resp_hdr, False, False, 0)
+
+        scroll_resp = Gtk.ScrolledWindow()
+        self.resp_view = Gtk.TextView()
+        self.resp_view.get_style_context().add_class("code-editor")
+        self.resp_view.get_buffer().set_text(ROUTES_REGISTRY["/api/users"]["body"])
+        scroll_resp.add(self.resp_view)
+        left_box.pack_start(scroll_resp, True, True, 0)
+
+        paned.pack1(left_box, True, False)
+
+        # Right: Live Inbound Logs Viewer
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        
+        logs_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl_logs_hdr = Gtk.Label(xalign=0)
+        lbl_logs_hdr.set_markup("<span font='bold 10' color='#94a3b8'>INBOUND REQUESTS &amp; WEBHOOK STREAM</span>")
+        logs_top.pack_start(lbl_logs_hdr, True, True, 0)
+
+        btn_clear_logs = Gtk.Button(label="🧹 Clear")
+        btn_clear_logs.get_style_context().add_class("btn-secondary")
+        btn_clear_logs.connect("clicked", lambda b: self.logs_view.get_buffer().set_text(""))
+        logs_top.pack_start(btn_clear_logs, False, False, 0)
+
+        right_box.pack_start(logs_top, False, False, 0)
+
+        scroll_logs = Gtk.ScrolledWindow()
+        self.logs_view = Gtk.TextView()
+        self.logs_view.set_editable(False)
+        self.logs_view.get_style_context().add_class("code-editor")
+        self.logs_view.set_wrap_mode(Gtk.WrapMode.CHAR)
+        scroll_logs.add(self.logs_view)
+        right_box.pack_start(scroll_logs, True, True, 0)
+
+        paned.pack2(right_box, True, False)
+
+    def _on_route_selected(self, combo):
+        path = combo.get_active_text()
+        if path and path in ROUTES_REGISTRY:
+            info = ROUTES_REGISTRY[path]
+            self.entry_path.set_text(path)
+            self.resp_view.get_buffer().set_text(info["body"])
+            
+            # Match method
+            for idx, m in enumerate(["GET", "POST", "PUT", "DELETE"]):
+                if m == info["method"]:
+                    self.combo_method.set_active(idx)
+                    break
+
+    def _on_save_route(self, button):
+        path = self.entry_path.get_text().strip()
+        if not path:
+            return
+        if not path.startswith("/"):
+            path = "/" + path
+
+        method = self.combo_method.get_active_text()
+        status_text = self.combo_status.get_active_text()
+        status_code = int(status_text.split()[0])
+        
+        buf = self.resp_view.get_buffer()
+        body = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+
+        ROUTES_REGISTRY[path] = {
+            "method": method,
+            "status": status_code,
+            "body": body,
+        }
+
+        # Refresh dropdown
+        current_paths = [self.combo_routes.get_model()[i][0] for i in range(len(self.combo_routes.get_model()))]
+        if path not in current_paths:
+            self.combo_routes.append_text(path)
+
+    def _on_toggle_server(self, button):
+        if self.server_thread and self.server_thread.is_running:
+            self.server_thread.stop()
+            self.server_thread = None
+            self.btn_toggle_server.set_label("▶️ Start Server")
+            self.btn_toggle_server.get_style_context().remove_class("btn-danger")
+            self.btn_toggle_server.get_style_context().add_class("btn-primary")
+            self.lbl_server_status.set_markup("<span class='badge-stopped'>● STOPPED</span>")
+        else:
+            try:
+                port = int(self.entry_port.get_text().strip())
+            except ValueError:
+                port = 8080
+
+            latency_sec = self.scale_latency.get_value() / 1000.0
+            self.server_thread = MockServerThread(port, self._log_incoming_request, latency_sec)
+            self.server_thread.start()
+
+            self.btn_toggle_server.set_label("⏹️ Stop Server")
+            self.btn_toggle_server.get_style_context().remove_class("btn-primary")
+            self.btn_toggle_server.get_style_context().add_class("btn-danger")
+            self.lbl_server_status.set_markup(f"<span class='badge-running'>● RUNNING on http://127.0.0.1:{port}</span>")
+
+    def _log_incoming_request(self, entry):
+        buf = self.logs_view.get_buffer()
+        if "error" in entry:
+            msg = f"❌ Server Error: {entry['error']}\n"
+        else:
+            msg = (
+                f"[{entry['time']}] {entry['method']} {entry['path']} ➔ {entry['status']} (from {entry['client']})\n"
+            )
+            if entry.get("body"):
+                msg += f"Payload:\n{entry['body']}\n"
+            msg += "───────────────────────────────────────────────────────\n"
+
+        iter_end = buf.get_end_iter()
+        buf.insert(iter_end, msg)
+
+
+def main():
+    win = AeroMockGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

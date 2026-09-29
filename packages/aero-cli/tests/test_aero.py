@@ -777,6 +777,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(crypto_gui))
         self.assertTrue(os.access(crypto_gui, os.X_OK))
 
+    def test_mock_gui_script(self):
+        mock_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-mock-gui"
+        self.assertTrue(os.path.exists(mock_gui))
+        self.assertTrue(os.access(mock_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
