@@ -469,6 +469,14 @@ exec python3 "${AERO_HOME}/bin/aero-qr-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-qr-gui"
 
+# Create global executable wrapper for aero-recorder-gui
+cat << 'EOF' > "${BIN_DIR}/aero-recorder-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-recorder-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-recorder-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -1038,6 +1046,17 @@ Icon=camera-photo
 Terminal=false
 Type=Application
 Categories=Utility;Network;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-recorder.desktop"
+[Desktop Entry]
+Name=Aero Screen Recorder
+Comment=Aero Linux Screen & Media Recorder Studio
+Exec=${BIN_DIR}/aero-recorder-gui
+Icon=media-record
+Terminal=false
+Type=Application
+Categories=AudioVideo;Recorder;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

@@ -144,7 +144,8 @@ class AeroWelcomeApp(Gtk.Window):
             ("⌨️ Keyboard Shortcuts Guide", "aero-shortcuts-gui", 1, 9),
             ("📊 Visual Diff & Comparator", "aero-diff-gui", 0, 10),
             ("📱 QR Code & Device Link", "aero-qr-gui", 1, 10),
-            ("🔒 Developer Secrets Vault", "aero-vault-gui", 0, 11),
+            ("🎥 Screen & Media Recorder", "aero-recorder-gui", 0, 11),
+            ("🔒 Developer Secrets Vault", "aero-vault-gui", 1, 11),
         ]
 
         for text, cmd, col, row in dev_tools:

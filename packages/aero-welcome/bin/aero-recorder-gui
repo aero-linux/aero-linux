@@ -1,0 +1,323 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Screen & Media Recorder Studio (GTK3)
+Instant screen recording, animated GIF creation, audio capture, and recordings gallery.
+"""
+
+import datetime
+import gi
+import os
+import shutil
+import signal
+import subprocess
+import sys
+import threading
+import time
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+PID_FILE = "/tmp/aero_recorder.pid"
+RECORDINGS_DIR = os.path.expanduser("~/Videos/Recordings")
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px;
+}
+.btn-record {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 11pt;
+    border-radius: 8px;
+    padding: 10px 24px;
+    border: none;
+}
+.btn-record:hover {
+    opacity: 0.9;
+}
+.btn-stop {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 11pt;
+    border-radius: 8px;
+    padding: 10px 24px;
+    border: none;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.badge-idle {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 9pt;
+    font-weight: 700;
+}
+.badge-rec {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 9pt;
+    font-weight: 700;
+}
+.card-box {
+    background-color: #0d1527;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+}
+"""
+
+
+class AeroRecorderGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Screen & Media Recorder Studio")
+        self.set_default_size(860, 620)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        os.makedirs(RECORDINGS_DIR, exist_ok=True)
+        self.rec_process = None
+        self.start_timestamp = 0
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🎥 Screen &amp; Media Recorder Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Capture full screen or region screencasts, animated GIFs, and developer demos.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.lbl_status_badge = Gtk.Label(xalign=1)
+        self.lbl_status_badge.set_markup("<span class='badge-idle'>● READY</span>")
+        header_box.pack_end(self.lbl_status_badge, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Body Container
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_start(16)
+        content_box.set_margin_end(16)
+        content_box.set_margin_top(14)
+        content_box.set_margin_bottom(14)
+        main_box.pack_start(content_box, True, True, 0)
+
+        # 1. Capture Settings Card
+        card_settings = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        card_settings.get_style_context().add_class("card-box")
+
+        lbl_settings_hdr = Gtk.Label(xalign=0)
+        lbl_settings_hdr.set_markup("<span font='bold 10' color='#00f2fe'>RECORDING CONFIGURATION</span>")
+        card_settings.pack_start(lbl_settings_hdr, False, False, 0)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(16)
+        grid.set_row_spacing(10)
+
+        # Capture Mode
+        lbl_m = Gtk.Label(label="Capture Mode:", xalign=0)
+        self.combo_mode = Gtk.ComboBoxText()
+        self.combo_mode.append_text("🖥️ Full Screen Display")
+        self.combo_mode.append_text("📐 Selected Window / Region")
+        self.combo_mode.append_text("🎙️ Audio Only (Voice Memo)")
+        self.combo_mode.set_active(0)
+        grid.attach(lbl_m, 0, 0, 1, 1)
+        grid.attach(self.combo_mode, 1, 0, 1, 1)
+
+        # Output Format
+        lbl_f = Gtk.Label(label="Video Format:", xalign=0)
+        self.combo_format = Gtk.ComboBoxText()
+        self.combo_format.append_text("MP4 Video (H.264 / AAC)")
+        self.combo_format.append_text("Animated GIF (.gif)")
+        self.combo_format.append_text("MKV High-Quality (.mkv)")
+        self.combo_format.set_active(0)
+        grid.attach(lbl_f, 2, 0, 1, 1)
+        grid.attach(self.combo_format, 3, 0, 1, 1)
+
+        # Audio Toggle
+        self.chk_mic = Gtk.CheckButton(label="🎙️ Record Microphone")
+        self.chk_mic.set_active(True)
+        grid.attach(self.chk_mic, 0, 1, 2, 1)
+
+        self.chk_desktop_audio = Gtk.CheckButton(label="🔊 Record Desktop Audio (PipeWire)")
+        self.chk_desktop_audio.set_active(False)
+        grid.attach(self.chk_desktop_audio, 2, 1, 2, 1)
+
+        card_settings.pack_start(grid, False, False, 0)
+        content_box.pack_start(card_settings, False, False, 0)
+
+        # 2. Main Recording Action Button
+        action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        action_bar.set_halign(Gtk.Align.CENTER)
+
+        self.btn_rec_toggle = Gtk.Button(label="🔴 Start Recording")
+        self.btn_rec_toggle.get_style_context().add_class("btn-record")
+        self.btn_rec_toggle.connect("clicked", self._on_toggle_recording)
+        action_bar.pack_start(self.btn_rec_toggle, False, False, 0)
+
+        btn_open_folder = Gtk.Button(label="📁 Open Recordings Folder")
+        btn_open_folder.get_style_context().add_class("btn-secondary")
+        btn_open_folder.connect("clicked", lambda b: subprocess.Popen(["xdg-open", RECORDINGS_DIR]))
+        action_bar.pack_start(btn_open_folder, False, False, 0)
+
+        content_box.pack_start(action_bar, False, False, 4)
+
+        # 3. Recent Recordings List
+        lbl_recents_hdr = Gtk.Label(xalign=0)
+        lbl_recents_hdr.set_markup("<span font='bold 10' color='#94a3b8'>RECENT RECORDINGS</span>")
+        content_box.pack_start(lbl_recents_hdr, False, False, 0)
+
+        self.rec_store = Gtk.ListStore(str, str, str)
+        scroll = Gtk.ScrolledWindow()
+        self.tree_rec = Gtk.TreeView(model=self.rec_store)
+        self.tree_rec.get_style_context().add_class("code-editor")
+
+        for i, title in enumerate(["File Name", "Size", "Date Modified"]):
+            renderer = Gtk.CellRendererText()
+            col = Gtk.TreeViewColumn(title, renderer, text=i)
+            col.set_sort_column_id(i)
+            if i == 0:
+                col.set_min_width(320)
+            self.tree_rec.append_column(col)
+
+        scroll.add(self.tree_rec)
+        content_box.pack_start(scroll, True, True, 0)
+
+        self._refresh_recents()
+        GLib.timeout_add_seconds(1, self._timer_tick)
+
+    def _refresh_recents(self):
+        self.rec_store.clear()
+        if not os.path.exists(RECORDINGS_DIR):
+            return
+
+        files = sorted(os.listdir(RECORDINGS_DIR), reverse=True)
+        for f in files:
+            if f.endswith((".mp4", ".gif", ".mkv", ".wav", ".mp3")):
+                fp = os.path.join(RECORDINGS_DIR, f)
+                sz_bytes = os.path.getsize(fp)
+                if sz_bytes > 1024 * 1024:
+                    sz_str = f"{sz_bytes / (1024 * 1024):.1f} MB"
+                else:
+                    sz_str = f"{sz_bytes / 1024:.1f} KB"
+                mod_time = datetime.datetime.fromtimestamp(os.path.getmtime(fp)).strftime("%Y-%m-%d %H:%M")
+                self.rec_store.append([f, sz_str, mod_time])
+
+    def _timer_tick(self):
+        if self.rec_process and self.rec_process.poll() is None:
+            elapsed = int(time.time() - self.start_timestamp)
+            mins = elapsed // 60
+            secs = elapsed % 60
+            self.lbl_status_badge.set_markup(f"<span class='badge-rec'>● RECORDING {mins:02d}:{secs:02d}</span>")
+        return True
+
+    def _on_toggle_recording(self, button):
+        if self.rec_process and self.rec_process.poll() is None:
+            # Stop Recording
+            try:
+                self.rec_process.send_signal(signal.SIGINT)
+                self.rec_process.wait(timeout=3)
+            except Exception:
+                try:
+                    self.rec_process.terminate()
+                except Exception:
+                    pass
+
+            self.rec_process = None
+            if os.path.exists(PID_FILE):
+                os.remove(PID_FILE)
+
+            self.btn_rec_toggle.set_label("🔴 Start Recording")
+            self.btn_rec_toggle.get_style_context().remove_class("btn-stop")
+            self.btn_rec_toggle.get_style_context().add_class("btn-record")
+            self.lbl_status_badge.set_markup("<span class='badge-idle'>● SAVED</span>")
+            self._refresh_recents()
+        else:
+            # Start Recording
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            fmt_idx = self.combo_format.get_active()
+            ext = "gif" if fmt_idx == 1 else ("mkv" if fmt_idx == 2 else "mp4")
+            out_file = os.path.join(RECORDINGS_DIR, f"capture_{timestamp}.{ext}")
+
+            cmd = ["wf-recorder", "-f", out_file] if shutil.which("wf-recorder") else ["ffmpeg", "-y", "-f", "x11grab", "-i", ":0.0", out_file]
+            
+            try:
+                self.rec_process = subprocess.Popen(cmd)
+                self.start_timestamp = time.time()
+                with open(PID_FILE, "w") as f:
+                    f.write(str(self.rec_process.pid))
+
+                self.btn_rec_toggle.set_label("⏹️ Stop Recording")
+                self.btn_rec_toggle.get_style_context().remove_class("btn-record")
+                self.btn_rec_toggle.get_style_context().add_class("btn-stop")
+                self.lbl_status_badge.set_markup("<span class='badge-rec'>● RECORDING 00:00</span>")
+            except Exception as e:
+                self.lbl_status_badge.set_markup(f"<span class='badge-rec'>Error: {e}</span>")
+
+
+def main():
+    win = AeroRecorderGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
