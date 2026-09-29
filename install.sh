@@ -17,7 +17,7 @@ echo "  / /| | / __/  / /_/ / / / /  / /    / / |  \| / / / / /|_/ / "
 echo " / ___ |/ /___ / _, _/ /_/ /  / /____/ /  | \  / /_/ / /  / /  "
 echo "/_/  |_/_____//_/ |_|\____/  /_____/___/  |_|\_/\____/_/  /_/   "
 echo -e "${NC}"
-echo -e "${CYAN}⚡ Aero Linux 1.0-Edge — Universal System Installer${NC}"
+echo -e "${CYAN}⚡ Aero Linux 1.4-Supernova — Universal System Installer${NC}"
 echo -e "${YELLOW}──────────────────────────────────────────────────────────────────────────${NC}"
 
 # Detect installation directory

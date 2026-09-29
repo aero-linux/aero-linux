@@ -277,7 +277,7 @@ class AeroCryptoGUI(Gtk.Window):
         scroll_in.set_min_content_height(100)
         self.hash_input = Gtk.TextView()
         self.hash_input.get_style_context().add_class("code-editor")
-        self.hash_input.get_buffer().set_text("Aero Linux 1.3-Nebula")
+        self.hash_input.get_buffer().set_text("Aero Linux 1.4-Supernova")
         self.hash_input.get_buffer().connect("changed", self._on_hash_changed)
         scroll_in.add(self.hash_input)
         box.pack_start(scroll_in, False, False, 0)
@@ -351,7 +351,7 @@ class AeroCryptoGUI(Gtk.Window):
         scroll_src = Gtk.ScrolledWindow()
         self.enc_source = Gtk.TextView()
         self.enc_source.get_style_context().add_class("code-editor")
-        self.enc_source.get_buffer().set_text("Hello from Aero Linux 1.3-Nebula!")
+        self.enc_source.get_buffer().set_text("Hello from Aero Linux 1.4-Supernova!")
         scroll_src.add(self.enc_source)
         box.pack_start(scroll_src, True, True, 0)
 

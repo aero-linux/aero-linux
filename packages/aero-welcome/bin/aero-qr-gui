@@ -270,7 +270,7 @@ class AeroQRStudioGUI(Gtk.Window):
         box_text.pack_start(lbl_t, False, False, 0)
         self.entry_text = Gtk.TextView()
         self.entry_text.get_style_context().add_class("code-editor")
-        self.entry_text.get_buffer().set_text("Hello from Aero Linux 1.3-Nebula!")
+        self.entry_text.get_buffer().set_text("Hello from Aero Linux 1.4-Supernova!")
         self.entry_text.get_buffer().connect("changed", self._update_qr)
         scroll_t = Gtk.ScrolledWindow()
         scroll_t.set_min_content_height(100)

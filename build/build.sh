@@ -6,7 +6,7 @@ set -euo pipefail
 # ==============================================================================
 
 DIST_NAME="Aero-Linux"
-DIST_VERSION="1.2-Titan"
+DIST_VERSION="1.4-Supernova"
 ARCH="amd64"
 OUTPUT_DIR="output"
 WORK_DIR="work"

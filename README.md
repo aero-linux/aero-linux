@@ -49,7 +49,7 @@ Tested on identical physical hardware (**AMD Ryzen 5 5600H, 12 Cores, 15GB RAM, 
 | :--- | :---: | :---: | :---: | :---: |
 | **Windows 11** | ~3,850 MB | ~11.5 GB | High (SSD Swapping) | ❌ Third-party app |
 | **Ubuntu 24.04 (GNOME)** | ~1,420 MB | ~14.0 GB | High (SSD Swapping) | ❌ Manual script |
-| **⚡ Aero Linux (1.0-Edge)** | **312 MB** | **~15.1 GB** | **Nanoseconds (zRAM ZSTD)** | **✅ Built-in (`aero power`)** |
+| **⚡ Aero Linux (1.4-Supernova)** | **312 MB** | **~15.1 GB** | **Nanoseconds (zRAM ZSTD)** | **✅ Built-in (`aero power`)** |
 
 ---
 
