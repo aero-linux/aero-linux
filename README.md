@@ -12,14 +12,15 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-130%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
-[![Release](https://img.shields.io/badge/Release-v1.4.0--Supernova-00f2fe.svg)](https://github.com/ronitgupta138/aero-linux/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
-[![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
-[![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()
-[![Architecture](https://img.shields.io/badge/Architecture-x86__64-orange.svg)]()
+[![Web Portal](https://img.shields.io/badge/Web_Portal-Live_Portal-00f2fe.svg?style=flat-square)](https://ronitgupta138.github.io/aero-linux/)
+[![Release](https://img.shields.io/badge/Release-v1.4.0--Supernova-00f2fe.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux/releases)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-130%20Passed-10b981.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux)
+[![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-10b981.svg?style=flat-square)]()
+[![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-38bdf8.svg?style=flat-square)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Architecture](https://img.shields.io/badge/Architecture-x86__64-orange.svg?style=flat-square)]()
 
-*Engineered for systems programmers, backend engineers, and local AI builders. Sub-350MB idle footprint, dynamic in-memory zRAM ZSTD compression, 1-click local LLM inference, and zero background bloat.*
+*Engineered for systems programmers, backend engineers, and local AI builders. Sub-350MB idle footprint, dynamic in-memory zRAM ZSTD compression, 1-click local LLM inference, 49 native GTK3 applications, and zero background bloat.*
 
 </div>
 
