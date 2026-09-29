@@ -172,7 +172,7 @@ aero ssh [status|gen|copy|test] # Ed25519 SSH key management
 
 ## 🎛️ Complete Zero-Terminal Graphical Application Suite
 
-Aero Linux includes **45 dedicated native GTK3 graphical management tools**, ensuring users never need a terminal for common workflows:
+Aero Linux includes **49 dedicated native GTK3 graphical management tools**, ensuring developers and users never need a terminal for common workflows:
 
 | Application | Command / Shortcut | Description |
 | :--- | :--- | :--- |
