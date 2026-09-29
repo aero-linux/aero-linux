@@ -826,10 +826,184 @@ body {
   margin: 20px 0;
 }
 
-/* Comparison */
+/* Comparison & Benchmarks */
 .comparison {
   padding: 80px 0;
   background: rgba(255, 255, 255, 0.01);
+}
+
+.benchmark-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.benchmark-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* RAM Bar Chart */
+.ram-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ram-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ram-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.distro-name {
+  font-weight: 500;
+}
+
+.ram-val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.highlight-aero {
+  color: #00f2fe !important;
+  font-weight: 700;
+}
+
+.ram-bar-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ram-bar-fill {
+  height: 100%;
+  background: #64748b;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.ram-bar-fill.aero-fill {
+  background: linear-gradient(90deg, #00f2fe, #4facfe);
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
+}
+
+/* zRAM Calculator */
+.calculator-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.custom-range-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: #1e293b;
+  outline: none;
+  cursor: pointer;
+}
+
+.custom-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #00f2fe;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00f2fe;
+  transition: all 0.2s;
+}
+
+.custom-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #64748b;
+  font-family: var(--font-mono);
+  margin-top: -6px;
+}
+
+.calc-results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.calc-result-stat {
+  background: rgba(13, 15, 20, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.calc-result-stat.highlight-calc {
+  background: rgba(0, 242, 254, 0.08);
+  border-color: rgba(0, 242, 254, 0.4);
+}
+
+.calc-stat-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.calc-stat-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #fff;
+}
+
+.highlight-calc .calc-stat-val {
+  color: #00f2fe;
+  font-size: 1.25rem;
+}
+
+.workload-breakdown {
+  background: rgba(13, 15, 20, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.workload-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.workload-tag {
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #cbd5e1;
 }
 
 .table-wrapper {
@@ -883,6 +1057,9 @@ footer {
   }
   .download-card-grid {
     grid-template-columns: 1fr !important;
+  }
+  .benchmark-grid {
+    grid-template-columns: 1fr;
   }
 }
 
