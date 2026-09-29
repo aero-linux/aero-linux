@@ -9,6 +9,7 @@ help:
 	@echo "=========================================="
 	@echo "  make test        - Run complete 107+ unit test suite"
 	@echo "  make deb         - Build standalone Debian .deb package"
+	@echo "  make iso         - Build bootable Live ISO image"
 	@echo "  make install     - Install Aero CLI & Control Center locally"
 	@echo "  make doctor      - Run real-time hardware diagnostics"
 	@echo "  make benchmark   - Run multi-core CPU & RAM benchmark"
@@ -21,6 +22,9 @@ test:
 
 deb:
 	@bash build/package_deb.sh
+
+iso:
+	@bash build/build_iso.sh
 
 install:
 	@bash install.sh

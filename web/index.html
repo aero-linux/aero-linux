@@ -161,12 +161,15 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 25px 0;">
-              <a id="rel-download-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem;">
-                ⚡ Source (.tar.gz)
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin: 25px 0;">
+              <a id="rel-iso-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_supernova_amd64.iso" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);">
+                💿 Live ISO (.iso)
               </a>
               <a id="rel-deb-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_amd64.deb" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                 📦 Debian (.deb)
+              </a>
+              <a id="rel-download-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz" class="btn btn-secondary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem;">
+                ⚡ Source (.tar.gz)
               </a>
               <a id="rel-github-btn" href="https://github.com/ronitgupta138/aero-linux/releases/tag/v1.4.0-supernova" target="_blank" class="btn btn-secondary" style="padding: 12px; gap: 6px; font-size: 0.9rem;">
                 🌐 GitHub Assets
@@ -518,18 +521,20 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
       'v14': {
         title: 'Aero Linux 1.4-Supernova',
         badge: 'LATEST PRODUCTION RELEASE',
-        desc: '64-bit (x86_64) • Complete 45-App GUI Suite • Markdown, Tunnels, Sandbox & GPU Studios • 128 Tests Passing',
-        size: '2.4 GB',
+        desc: '64-bit (x86_64) • Complete 45-App GUI Suite • Live Bootable ISO • Sub-350MB Idle RAM • 130 Tests Passing',
+        size: '872 KB (Live ISO) / 474 KB (.deb)',
+        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_supernova_amd64.iso',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz',
         debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_amd64.deb',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.4.0-supernova',
-        sha: 'ad8a236db540f8e5a4c3ba78b1694d51b838a2523d4707080b5a2f305b9fa7a4'
+        sha: '006dd0b7ecdf59d436a47a52a407b9fad3748fafb4b4f25777ada64689f9e121 (ISO) | 2a8c775aa2a73209f536c93bbde5e5b47d49b1f27097ce6f136948c507208ee2 (.deb)'
       },
       'v13': {
         title: 'Aero Linux 1.3-Nebula',
         badge: 'STABLE RELEASE (NEBULA)',
         desc: '64-bit (x86_64) • Wayland / Sway • Complete 30-App GUI Suite • 107+ Tests Passing',
-        size: '2.2 GB',
+        size: '444 KB (.deb)',
+        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.3.0-nebula',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.3.0-nebula/aero-linux-1.3-nebula-src.tar.gz',
         debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.3.0-nebula/aero-linux_1.3.0_amd64.deb',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.3.0-nebula',
@@ -540,6 +545,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         badge: 'STABLE RELEASE (TITAN)',
         desc: '64-bit (x86_64) • Autonomous Power Engine • Visual Wi-Fi & Network Center • 73+ Tests',
         size: '2.1 GB',
+        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.2.0-titan',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.2.0-titan/aero-linux-1.2-titan-src.tar.gz',
         debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.2.0-titan',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.2.0-titan',
@@ -550,6 +556,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         badge: 'STABLE RELEASE (EDGE)',
         desc: '64-bit (x86_64) • 56+ Systems Power Modules • 1-Click App Store • 56 Tests Passing',
         size: '2.0 GB',
+        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.1.0-edge',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.1.0-edge',
         debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.1.0-edge',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.1.0-edge',
@@ -560,6 +567,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         badge: 'INITIAL BASE RELEASE',
         desc: '64-bit (x86_64) • Sub-350MB Idle RAM Baseline • Dynamic in-memory zRAM ZSTD',
         size: '1.8 GB',
+        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.0.0-edge',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.0.0-edge',
         debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.0.0-edge',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.0.0-edge',
@@ -575,6 +583,9 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
       document.getElementById('rel-badge').textContent = data.badge;
       document.getElementById('rel-desc').textContent = data.desc;
       document.getElementById('rel-size').textContent = data.size;
+      if (document.getElementById('rel-iso-btn')) {
+        document.getElementById('rel-iso-btn').setAttribute('href', data.isoUrl || data.downloadUrl);
+      }
       document.getElementById('rel-download-btn').setAttribute('href', data.downloadUrl);
       if (document.getElementById('rel-deb-btn')) {
         document.getElementById('rel-deb-btn').setAttribute('href', data.debUrl || data.downloadUrl);
