@@ -837,6 +837,22 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(gitgraph_gui))
         self.assertTrue(os.access(gitgraph_gui, os.X_OK))
 
+    def test_completions_sync_and_completeness(self):
+        for shell, filename in [("bash", "aero.bash"), ("fish", "aero.fish"), ("zsh", "aero.zsh")]:
+            path = f"/home/ronit138/aero-linux/build/completions/{filename}"
+            self.assertTrue(os.path.exists(path))
+            with open(path, "r") as f:
+                content = f.read()
+            for cmd in ["doctor", "memory", "power", "ai", "vault", "dev", "net", "diff", "qr", "archive", "sandbox", "tunnel", "markdown", "gpu"]:
+                self.assertIn(cmd, content)
+
+    def test_desktop_applications_directory_integrity(self):
+        bin_dir = "/home/ronit138/aero-linux/packages/aero-welcome/bin"
+        for fname in os.listdir(bin_dir):
+            full_path = os.path.join(bin_dir, fname)
+            if os.path.isfile(full_path):
+                self.assertTrue(os.access(full_path, os.X_OK), f"{full_path} is not executable")
+
 
 if __name__ == "__main__":
     unittest.main()
