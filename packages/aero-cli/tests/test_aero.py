@@ -720,6 +720,19 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(snap_path))
         self.assertTrue(os.access(snap_path, os.X_OK))
 
+    def test_shell_repl_module(self):
+        from aero.shell_repl import _print_help
+        # Verify help executes without throwing exceptions
+        _print_help()
+
+    def test_deb_and_completions_scripts(self):
+        deb_script = "/home/ronit138/aero-linux/build/package_deb.sh"
+        self.assertTrue(os.path.exists(deb_script))
+        self.assertTrue(os.access(deb_script, os.X_OK))
+        for sh in ["aero.bash", "aero.fish", "aero.zsh"]:
+            c_path = f"/home/ronit138/aero-linux/build/completions/{sh}"
+            self.assertTrue(os.path.exists(c_path))
+
 
 if __name__ == "__main__":
     unittest.main()
