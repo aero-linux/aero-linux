@@ -77,9 +77,13 @@
         <a href="#gui-suite">GUI Suite (49 Apps)</a>
         <a href="#benchmarks">Benchmarks</a>
         <a href="#download">Downloads</a>
+        <a href="javascript:void(0)" onclick="openHotkeysModal()" style="color: #00f2fe; font-weight: 600;">⌨️ Hotkeys</a>
         <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="github-link">GitHub</a>
       </nav>
-      <a href="#download" class="btn btn-primary nav-btn">Download ISO</a>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button onclick="openHotkeysModal()" class="btn btn-secondary nav-btn" style="padding: 7px 12px; font-size: 0.8rem; cursor: pointer;">⌨️ Win+?</button>
+        <a href="#download" class="btn btn-primary nav-btn">Download ISO</a>
+      </div>
     </div>
   </header>
 
@@ -1883,10 +1887,151 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
       });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      selectRelease('v14');
-      termTimer = setInterval(autoCycleTerminal, 5000);
-    });
-  </script>
+    <!-- Floating Hotkeys Trigger -->
+    <div class="floating-hotkeys-btn" onclick="openHotkeysModal()" title="View Keyboard Shortcuts (or press ?)">
+      <span>⌨️ Hotkeys</span>
+      <kbd>Win+?</kbd>
+    </div>
+
+    <!-- Interactive Hotkeys Cheatsheet Modal -->
+    <div class="modal-backdrop" id="hotkeys-modal-backdrop" onclick="handleBackdropClick(event)">
+      <div class="hotkeys-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span>⚡</span>
+            <span>Aero Linux Keyboard Shortcuts</span>
+          </div>
+          <button class="modal-close-btn" onclick="closeHotkeysModal()" title="Close (Esc)">✕</button>
+        </div>
+        <div class="modal-search-bar">
+          <input type="text" class="modal-search-input" id="hotkey-search-input" placeholder="Search shortcuts (e.g. terminal, split, lock, kill, port, notes)..." oninput="filterHotkeys()" />
+          <div class="modal-category-pills">
+            <button class="modal-cat-btn active" id="hk-cat-all" onclick="setHotkeyCategory('all')">All (<span id="hk-count">20</span>)</button>
+            <button class="modal-cat-btn" id="hk-cat-tiling" onclick="setHotkeyCategory('tiling')">⚡ Sway / Tiling</button>
+            <button class="modal-cat-btn" id="hk-cat-dev" onclick="setHotkeyCategory('dev')">🛠️ Dev Tools</button>
+            <button class="modal-cat-btn" id="hk-cat-windows" onclick="setHotkeyCategory('windows')">🪟 Windows Mode</button>
+            <button class="modal-cat-btn" id="hk-cat-system" onclick="setHotkeyCategory('system')">⚙️ System &amp; OSD</button>
+          </div>
+        </div>
+        <div class="modal-body" id="hotkeys-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const HOTKEYS_DATA = [
+        { desc: "Open Terminal (Alacritty)", keys: ["Win", "Enter"], cat: "tiling", tag: "Sway / Tiling" },
+        { desc: "Universal Spotlight Launcher", keys: ["Alt", "Space"], cat: "tiling", tag: "Spotlight" },
+        { desc: "Keyboard Shortcuts Guide", keys: ["Win", "?"], cat: "dev", tag: "Documentation" },
+        { desc: "Kill Port & Dev Server Inspector", keys: ["Win", "K"], cat: "dev", tag: "Networking" },
+        { desc: "Floating Scratchpad Markdown Notes", keys: ["Win", "N"], cat: "dev", tag: "Productivity" },
+        { desc: "Color Dropper & Screen Swatch", keys: ["Win", "P"], cat: "dev", tag: "Design Studio" },
+        { desc: "Aero Game Hub & Proton Accelerator", keys: ["Win", "G"], cat: "dev", tag: "Gaming" },
+        { desc: "Interactive Snipping Tool", keys: ["Win", "Shift", "S"], cat: "dev", tag: "Screen Snip" },
+        { desc: "System Monitor & Task Manager", keys: ["Ctrl", "Shift", "Esc"], cat: "system", tag: "System HUD" },
+        { desc: "Open Nemo File Explorer", keys: ["Win", "E"], cat: "windows", tag: "Files" },
+        { desc: "Quick Settings & Wireless Hub", keys: ["Win", "A"], cat: "windows", tag: "Hardware" },
+        { desc: "Secret Keyring & Clipboard History", keys: ["Win", "V"], cat: "dev", tag: "Clipboard" },
+        { desc: "Close / Kill Focused Window", keys: ["Win", "Shift", "Q"], cat: "tiling", tag: "Window Manager" },
+        { desc: "Switch to Workspace 1–5", keys: ["Win", "1..5"], cat: "tiling", tag: "Workspaces" },
+        { desc: "Move Window to Workspace 1–5", keys: ["Win", "Shift", "1..5"], cat: "tiling", tag: "Workspaces" },
+        { desc: "Toggle Fullscreen Mode", keys: ["Win", "F"], cat: "tiling", tag: "Window Layout" },
+        { desc: "Toggle Floating Window", keys: ["Win", "Shift", "Space"], cat: "tiling", tag: "Window Layout" },
+        { desc: "Lock Screen (Swaylock)", keys: ["Win", "L"], cat: "system", tag: "Security" },
+        { desc: "Screen Magnifier Zoom In / Out", keys: ["Win", "+ / -"], cat: "system", tag: "Accessibility" },
+        { desc: "Reset Screen Magnifier", keys: ["Win", "0 / Esc"], cat: "system", tag: "Accessibility" },
+        { desc: "Fast Window App Switcher", keys: ["Alt", "Tab"], cat: "windows", tag: "Navigation" }
+      ];
+
+      let activeHotkeyCategory = 'all';
+
+      function renderHotkeys(items) {
+        const container = document.getElementById('hotkeys-container');
+        if (!container) return;
+        if (items.length === 0) {
+          container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.95rem;">🔍 No matching keyboard shortcuts found.</div>';
+          return;
+        }
+        container.innerHTML = items.map(hk => `
+          <div class="hotkey-item">
+            <div class="hotkey-meta">
+              <div class="hotkey-desc">${hk.desc}</div>
+              <div class="hotkey-cat-tag">${hk.tag}</div>
+            </div>
+            <div class="hotkey-keys">
+              ${hk.keys.map(k => `<kbd>${k}</kbd>`).join('<span style="color: var(--text-muted); font-size: 0.8rem;">+</span>')}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function filterHotkeys() {
+        const query = (document.getElementById('hotkey-search-input')?.value || '').toLowerCase().trim();
+        const filtered = HOTKEYS_DATA.filter(hk => {
+          const matchCat = activeHotkeyCategory === 'all' || hk.cat === activeHotkeyCategory;
+          const matchQuery = !query || hk.desc.toLowerCase().includes(query) || hk.tag.toLowerCase().includes(query) || hk.keys.some(k => k.toLowerCase().includes(query));
+          return matchCat && matchQuery;
+        });
+        const countBadge = document.getElementById('hk-count');
+        if (countBadge) countBadge.textContent = filtered.length;
+        renderHotkeys(filtered);
+      }
+
+      function setHotkeyCategory(cat) {
+        activeHotkeyCategory = cat;
+        ['all', 'tiling', 'dev', 'windows', 'system'].forEach(c => {
+          const btn = document.getElementById('hk-cat-' + c);
+          if (btn) {
+            if (c === cat) btn.classList.add('active');
+            else btn.classList.remove('active');
+          }
+        });
+        filterHotkeys();
+      }
+
+      function openHotkeysModal() {
+        const modal = document.getElementById('hotkeys-modal-backdrop');
+        if (modal) {
+          modal.classList.add('active');
+          filterHotkeys();
+          setTimeout(() => {
+            document.getElementById('hotkey-search-input')?.focus();
+          }, 100);
+        }
+      }
+
+      function closeHotkeysModal() {
+        const modal = document.getElementById('hotkeys-modal-backdrop');
+        if (modal) modal.classList.remove('active');
+      }
+
+      function handleBackdropClick(e) {
+        if (e.target.id === 'hotkeys-modal-backdrop') {
+          closeHotkeysModal();
+        }
+      }
+
+      // Global Key Listener (? or / opens, Esc closes)
+      document.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement?.tagName?.toLowerCase();
+        if (activeTag === 'input' || activeTag === 'textarea') {
+          if (e.key === 'Escape') closeHotkeysModal();
+          return;
+        }
+        if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+          e.preventDefault();
+          openHotkeysModal();
+        } else if (e.key === 'Escape') {
+          closeHotkeysModal();
+        }
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        selectRelease('v14');
+        termTimer = setInterval(autoCycleTerminal, 5000);
+        renderHotkeys(HOTKEYS_DATA);
+      });
+    </script>
 </body>
 </html>
