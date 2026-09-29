@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Aero Linux Automated Live ISO Builder
-# Builds a bootable live ISO with squashfs root, grub bootloader & Calamares
+# Universally builds bootable live ISOs for current and future releases
 # ==============================================================================
 
 set -euo pipefail
 
-DIST_NAME="aero-linux"
-VERSION="1.4.0"
-RELEASE_CODENAME="supernova"
-ARCH="amd64"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Auto-detect version from setup.py or environment
+DETECTED_VER=$(grep "version=" "${ROOT_DIR}/packages/aero-cli/setup.py" | head -n1 | cut -d'"' -f2 || echo "1.4.0")
+VERSION="${VERSION:-$DETECTED_VER}"
+RELEASE_CODENAME="${RELEASE_CODENAME:-supernova}"
+DIST_NAME="aero-linux"
+ARCH="amd64"
 DIST_DIR="${ROOT_DIR}/dist"
 ISO_NAME="${DIST_NAME}_${VERSION}_${RELEASE_CODENAME}_${ARCH}.iso"
 ISO_PATH="${DIST_DIR}/${ISO_NAME}"
 WORK_DIR="${DIST_DIR}/iso_work"
 ROOTFS_DIR="${WORK_DIR}/rootfs"
 CD_DIR="${WORK_DIR}/cd"
+
 
 echo "⚡ Assembling Aero Linux v${VERSION}-${RELEASE_CODENAME} Live ISO..."
 
