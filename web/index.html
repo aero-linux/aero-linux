@@ -748,6 +748,61 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
       }
     }
 
+    // 49-App Suite Live Search & Category Filter
+    let activeAppCategory = 'all';
+
+    function setAppCategory(cat, ev) {
+      activeAppCategory = cat;
+      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+      if (ev && ev.currentTarget) {
+        ev.currentTarget.classList.add('active');
+      }
+      filterApps();
+    }
+
+    function filterApps() {
+      const query = (document.getElementById('app-search-input').value || '').trim().toLowerCase();
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.style.display = query.length > 0 ? 'inline-block' : 'none';
+
+      const cards = document.querySelectorAll('.app-card');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const cat = card.getAttribute('data-category');
+        const kw = card.getAttribute('data-keywords') || '';
+        
+        const matchesCategory = (activeAppCategory === 'all') || (cat === activeAppCategory);
+        const matchesSearch = !query || kw.includes(query);
+
+        if (matchesCategory && matchesSearch) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      const countBadge = document.getElementById('app-filter-count');
+      if (countBadge) {
+        countBadge.textContent = `Showing ${visibleCount} of ${cards.length} apps`;
+      }
+
+      const noState = document.getElementById('no-apps-state');
+      if (noState) {
+        noState.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+    }
+
+    function clearAppSearch() {
+      document.getElementById('app-search-input').value = '';
+      activeAppCategory = 'all';
+      document.querySelectorAll('.cat-tab').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-cat') === 'all');
+      });
+      filterApps();
+    }
+
     const RELEASES_DATA = {
       'v14': {
         title: 'Aero Linux 1.4-Supernova',
