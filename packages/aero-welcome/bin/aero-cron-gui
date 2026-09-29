@@ -1,0 +1,352 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Cron & Scheduled Tasks Studio (GTK3)
+Visual scheduled tasks manager, human-readable cron builder, 1-click test runner, and system maintenance scheduler.
+"""
+
+import gi
+import os
+import subprocess
+import sys
+import threading
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+# Setup PYTHONPATH for aero modules
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+CLI_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../aero-cli"))
+if CLI_DIR not in sys.path:
+    sys.path.insert(0, CLI_DIR)
+
+from aero.cron_mgr import get_cron_jobs, add_cron_job, delete_cron_job, toggle_cron_job, humanize_cron, enable_auto_maintenance
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.job-card {
+    background-color: #0d1527;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 8px;
+}
+.job-card:hover {
+    border-color: rgba(0, 242, 254, 0.4);
+    background-color: #111c33;
+}
+.badge-cron {
+    background-color: rgba(0, 242, 254, 0.15);
+    color: #00f2fe;
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: 'JetBrains Mono', 'Monospace';
+    font-size: 9pt;
+    font-weight: 700;
+}
+.badge-human {
+    background-color: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 600;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-danger:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+.entry-custom {
+    background-color: #080d1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Monospace';
+    padding: 6px 10px;
+}
+"""
+
+PRESETS = [
+    ("Daily at Midnight (00:00)", "0 0 * * *"),
+    ("Daily at 3:00 AM (Maintenance)", "0 3 * * *"),
+    ("Every Hour", "0 * * * *"),
+    ("Every 15 Minutes", "*/15 * * * *"),
+    ("Every 5 Minutes", "*/5 * * * *"),
+    ("Weekly on Sunday (00:00)", "0 0 * * 0"),
+    ("At System Startup (@reboot)", "@reboot"),
+]
+
+
+class AeroCronGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Cron & Scheduled Tasks Studio")
+        self.set_default_size(920, 620)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>⏰ Cron &amp; Scheduled Tasks Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Automate recurring maintenance scripts, database backups, and cron daemons.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        btn_auto = Gtk.Button(label="⚡ Enable Auto-Maintenance")
+        btn_auto.get_style_context().add_class("btn-primary")
+        btn_auto.connect("clicked", self._on_enable_auto_maint)
+        header_box.pack_start(btn_auto, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Main List ScrolledWindow
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.jobs_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.jobs_box.set_margin_top(14)
+        self.jobs_box.set_margin_bottom(14)
+        self.jobs_box.set_margin_start(16)
+        self.jobs_box.set_margin_end(16)
+        scroll.add(self.jobs_box)
+        main_box.pack_start(scroll, True, True, 0)
+
+        # Add Job Bottom Panel
+        add_panel = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        add_panel.set_margin_start(16)
+        add_panel.set_margin_end(16)
+        add_panel.set_margin_bottom(14)
+        add_panel.set_margin_top(6)
+
+        self.combo_preset = Gtk.ComboBoxText()
+        for name, sched in PRESETS:
+            self.combo_preset.append_text(name)
+        self.combo_preset.set_active(0)
+        self.combo_preset.connect("changed", self._on_preset_changed)
+        add_panel.pack_start(self.combo_preset, False, False, 0)
+
+        self.entry_sched = Gtk.Entry()
+        self.entry_sched.set_text("0 0 * * *")
+        self.entry_sched.set_width_chars(12)
+        self.entry_sched.get_style_context().add_class("entry-custom")
+        add_panel.pack_start(self.entry_sched, False, False, 0)
+
+        self.entry_cmd = Gtk.Entry()
+        self.entry_cmd.set_placeholder_text("Command (e.g. /home/user/backup.sh)")
+        self.entry_cmd.get_style_context().add_class("entry-custom")
+        add_panel.pack_start(self.entry_cmd, True, True, 0)
+
+        btn_add = Gtk.Button(label="➕ Add Task")
+        btn_add.get_style_context().add_class("btn-primary")
+        btn_add.connect("clicked", self._on_add_task)
+        add_panel.pack_start(btn_add, False, False, 0)
+
+        main_box.pack_start(add_panel, False, False, 0)
+
+        # Initial Load
+        self._load_jobs()
+
+    def _load_jobs(self):
+        for child in self.jobs_box.get_children():
+            self.jobs_box.remove(child)
+
+        jobs = get_cron_jobs()
+        if not jobs:
+            lbl_empty = Gtk.Label()
+            lbl_empty.set_markup("<span color='#94a3b8' font='11'>No active scheduled cron tasks found.\nAdd a task below or click 'Enable Auto-Maintenance' to start.</span>")
+            lbl_empty.set_margin_top(40)
+            self.jobs_box.pack_start(lbl_empty, True, True, 0)
+            self.show_all()
+            return
+
+        for idx, j in enumerate(jobs):
+            card = self._create_job_card(idx, j)
+            self.jobs_box.pack_start(card, False, False, 0)
+
+        self.show_all()
+
+    def _create_job_card(self, idx, j):
+        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        card.get_style_context().add_class("job-card")
+
+        # Toggle Switch
+        switch = Gtk.Switch()
+        switch.set_active(j.get("enabled", True))
+        switch.set_valign(Gtk.Align.CENTER)
+        switch.connect("state-set", lambda s, state, i=idx: self._on_toggle(i))
+        card.pack_start(switch, False, False, 0)
+
+        # Details
+        info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        
+        top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        badge_sched = Gtk.Label()
+        badge_sched.set_markup(f"<span class='badge-cron'>{j['schedule']}</span>")
+        top_row.pack_start(badge_sched, False, False, 0)
+
+        badge_h = Gtk.Label()
+        badge_h.set_markup(f"<span class='badge-human'>{j.get('human', humanize_cron(j['schedule']))}</span>")
+        top_row.pack_start(badge_h, False, False, 0)
+        info.pack_start(top_row, False, False, 0)
+
+        lbl_cmd = Gtk.Label(xalign=0)
+        lbl_cmd.set_markup(f"<tt color='#ffffff'>{GLib.markup_escape_text(j['command'])}</tt>")
+        info.pack_start(lbl_cmd, False, False, 0)
+
+        card.pack_start(info, True, True, 0)
+
+        # Action Buttons
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+
+        btn_run = Gtk.Button(label="▶️ Run Now")
+        btn_run.get_style_context().add_class("btn-secondary")
+        btn_run.connect("clicked", lambda b, cmd=j['command']: self._on_run_now(cmd))
+        btn_box.pack_start(btn_run, False, False, 0)
+
+        btn_del = Gtk.Button(label="🗑️")
+        btn_del.get_style_context().add_class("btn-danger")
+        btn_del.connect("clicked", lambda b, i=idx: self._on_delete(i))
+        btn_box.pack_start(btn_del, False, False, 0)
+
+        card.pack_start(btn_box, False, False, 0)
+        return card
+
+    def _on_preset_changed(self, combo):
+        idx = combo.get_active()
+        if 0 <= idx < len(PRESETS):
+            self.entry_sched.set_text(PRESETS[idx][1])
+
+    def _on_add_task(self, button):
+        sched = self.entry_sched.get_text().strip()
+        cmd = self.entry_cmd.get_text().strip()
+        if not sched or not cmd:
+            return
+
+        add_cron_job(sched, cmd)
+        self.entry_cmd.set_text("")
+        self._load_jobs()
+
+    def _on_toggle(self, index):
+        toggle_cron_job(index)
+        return False
+
+    def _on_delete(self, index):
+        delete_cron_job(index)
+        self._load_jobs()
+
+    def _on_enable_auto_maint(self, button):
+        enable_auto_maintenance()
+        self._load_jobs()
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text="Auto-Maintenance Enabled",
+        )
+        dialog.format_secondary_text("Daily cache prune & zRAM compaction scheduled at 3:00 AM.")
+        dialog.run()
+        dialog.destroy()
+
+    def _on_run_now(self, cmd):
+        def worker():
+            start_t = time.perf_counter()
+            try:
+                proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=15)
+                out = proc.stdout if proc.returncode == 0 else (proc.stderr or f"Exit code {proc.returncode}")
+                elapsed = (time.perf_counter() - start_t) * 1000
+                res_txt = f"Status: Exit Code {proc.returncode} ({elapsed:.1f}ms)\n\nOutput:\n{out or '(No output)'}"
+            except Exception as e:
+                res_txt = f"Execution Error: {e}"
+
+            def show_result():
+                dialog = Gtk.MessageDialog(
+                    transient_for=self,
+                    flags=0,
+                    message_type=Gtk.MessageType.INFO,
+                    buttons=Gtk.ButtonsType.OK,
+                    text="Cron Task Execution Test",
+                )
+                dialog.format_secondary_text(res_txt)
+                dialog.run()
+                dialog.destroy()
+
+            GLib.idle_add(show_result)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+
+def main():
+    win = AeroCronGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

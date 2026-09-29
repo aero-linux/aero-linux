@@ -762,6 +762,16 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(db_gui))
         self.assertTrue(os.access(db_gui, os.X_OK))
 
+    def test_cron_gui_and_mgr(self):
+        cron_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-cron-gui"
+        self.assertTrue(os.path.exists(cron_gui))
+        self.assertTrue(os.access(cron_gui, os.X_OK))
+        from aero.cron_mgr import humanize_cron, get_cron_jobs
+        h = humanize_cron("0 0 * * *")
+        self.assertIn("Daily", h)
+        jobs = get_cron_jobs()
+        self.assertIsInstance(jobs, list)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -413,6 +413,14 @@ exec python3 "${AERO_HOME}/bin/aero-db-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-db-gui"
 
+# Create global executable wrapper for aero-cron-gui
+cat << 'EOF' > "${BIN_DIR}/aero-cron-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-cron-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-cron-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -905,6 +913,17 @@ Icon=server-database
 Terminal=false
 Type=Application
 Categories=Development;Database;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-cron.desktop"
+[Desktop Entry]
+Name=Aero Scheduled Tasks
+Comment=Aero Linux Cron & Scheduled Task Automation Studio
+Exec=${BIN_DIR}/aero-cron-gui
+Icon=alarm
+Terminal=false
+Type=Application
+Categories=System;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
