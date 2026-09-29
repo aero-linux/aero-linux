@@ -1,0 +1,329 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Regular Expression & Pattern Studio (GTK3)
+Real-time regex evaluator, named capture group inspector, syntax validator, and pattern library.
+"""
+
+import gi
+import re
+import sys
+import time
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.pattern-entry {
+    background-color: #0d1527;
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    border-radius: 6px;
+    color: #00f2fe;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 11pt;
+    font-weight: bold;
+    padding: 8px 12px;
+}
+.pattern-entry:focus {
+    border-color: #00f2fe;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #f8fafc;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 10pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.tree-view {
+    background-color: #080d1a;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+}
+.badge-ok {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.badge-err {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+"""
+
+REGEX_PRESETS = [
+    ("Custom Pattern", ""),
+    ("📧 Email Address", r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
+    ("🌐 HTTP/HTTPS URL", r"https?://(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)"),
+    ("🔢 IPv4 Address", r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"),
+    ("🔑 UUID (v4)", r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}"),
+    ("🎨 Hex Color Code", r"#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b"),
+    ("📅 ISO 8601 Date", r"\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?"),
+    ("🏷️ SemVer Version", r"v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"),
+    ("🔤 Named Words Capture", r"(?P<word>\b[A-Za-z]+\b)"),
+]
+
+
+class AeroRegexGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Regular Expression & Pattern Studio")
+        self.set_default_size(920, 640)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔬 Regex &amp; Pattern Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Real-time regular expression parser, capture groups extractor, and pattern tester.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        # Preset Dropdown
+        self.preset_combo = Gtk.ComboBoxText()
+        for label, _ in REGEX_PRESETS:
+            self.preset_combo.append_text(label)
+        self.preset_combo.set_active(1)  # Default to Email
+        self.preset_combo.connect("changed", self._on_preset_changed)
+        header_box.pack_start(self.preset_combo, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Pattern Entry Box
+        pat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        pat_box.set_margin_start(16)
+        pat_box.set_margin_end(16)
+        pat_box.set_margin_top(12)
+        pat_box.set_margin_bottom(6)
+
+        lbl_slash1 = Gtk.Label(label="/")
+        lbl_slash1.set_markup("<span font='bold 14' color='#00f2fe'>/</span>")
+        pat_box.pack_start(lbl_slash1, False, False, 0)
+
+        self.pat_entry = Gtk.Entry()
+        self.pat_entry.set_text(REGEX_PRESETS[1][1])
+        self.pat_entry.get_style_context().add_class("pattern-entry")
+        self.pat_entry.connect("changed", self._on_evaluate)
+        pat_box.pack_start(self.pat_entry, True, True, 0)
+
+        lbl_slash2 = Gtk.Label(label="/")
+        lbl_slash2.set_markup("<span font='bold 14' color='#00f2fe'>/</span>")
+        pat_box.pack_start(lbl_slash2, False, False, 0)
+
+        # Flags checkboxes
+        self.chk_i = Gtk.CheckButton(label="i (ignorecase)")
+        self.chk_i.connect("toggled", self._on_evaluate)
+        pat_box.pack_start(self.chk_i, False, False, 0)
+
+        self.chk_m = Gtk.CheckButton(label="m (multiline)")
+        self.chk_m.connect("toggled", self._on_evaluate)
+        pat_box.pack_start(self.chk_m, False, False, 0)
+
+        self.chk_s = Gtk.CheckButton(label="s (dotall)")
+        self.chk_s.connect("toggled", self._on_evaluate)
+        pat_box.pack_start(self.chk_s, False, False, 0)
+
+        main_box.pack_start(pat_box, False, False, 0)
+
+        # Status & Stats Bar
+        status_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        status_bar.set_margin_start(16)
+        status_bar.set_margin_end(16)
+        status_bar.set_margin_bottom(8)
+
+        self.lbl_status = Gtk.Label(xalign=0)
+        self.lbl_status.set_markup("<span class='badge-ok'>Valid Pattern</span>")
+        status_bar.pack_start(self.lbl_status, False, False, 0)
+
+        self.lbl_matches = Gtk.Label(xalign=0)
+        self.lbl_matches.set_markup("<span color='#94a3b8' font='9'>0 Matches</span>")
+        status_bar.pack_start(self.lbl_matches, True, True, 0)
+
+        main_box.pack_start(status_bar, False, False, 0)
+
+        # Main Paned: Test String on top, Matches Tree on bottom
+        paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
+        paned.set_position(240)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_bottom(14)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Top: Target Text Editor
+        top_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_target = Gtk.Label(xalign=0)
+        lbl_target.set_markup("<span font='bold 9.5' color='#94a3b8'>TEST STRING</span>")
+        top_box.pack_start(lbl_target, False, False, 0)
+
+        scroll_text = Gtk.ScrolledWindow()
+        self.text_view = Gtk.TextView()
+        self.text_view.get_style_context().add_class("code-editor")
+        self.text_view.set_wrap_mode(Gtk.WrapMode.CHAR)
+        
+        # Sample text with multiple test entities
+        sample_text = (
+            "Contact team at support@aerolinux.org or admin@dev.io for inquiries.\n"
+            "Server cluster: https://api.aerolinux.org/v1 and http://127.0.0.1:8080\n"
+            "Session UUID: 89140abd-2311-48f6-96c5-d337ec748020\n"
+            "Build release v1.3.0-nebula deployed at 2026-09-29T13:30:00Z with accent #00f2fe."
+        )
+        self.text_view.get_buffer().set_text(sample_text)
+        self.text_view.get_buffer().connect("changed", self._on_evaluate)
+        scroll_text.add(self.text_view)
+        top_box.pack_start(scroll_text, True, True, 0)
+        paned.pack1(top_box, True, False)
+
+        # Bottom: Matches TreeView
+        bot_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_res = Gtk.Label(xalign=0)
+        lbl_res.set_markup("<span font='bold 9.5' color='#94a3b8'>MATCH INSPECTOR &amp; CAPTURE GROUPS</span>")
+        bot_box.pack_start(lbl_res, False, False, 0)
+
+        scroll_tree = Gtk.ScrolledWindow()
+        # Columns: Index (str), Span (str), Match (str), Groups (str), Named Groups (str)
+        self.store = Gtk.ListStore(str, str, str, str, str)
+        self.tree = Gtk.TreeView(model=self.store)
+        self.tree.get_style_context().add_class("tree-view")
+
+        col_idx = Gtk.TreeViewColumn("#", Gtk.CellRendererText(), text=0)
+        col_idx.set_min_width(40)
+        self.tree.append_column(col_idx)
+
+        col_span = Gtk.TreeViewColumn("Span", Gtk.CellRendererText(), text=1)
+        col_span.set_min_width(90)
+        self.tree.append_column(col_span)
+
+        col_match = Gtk.TreeViewColumn("Full Match", Gtk.CellRendererText(), text=2)
+        col_match.set_min_width(220)
+        self.tree.append_column(col_match)
+
+        col_groups = Gtk.TreeViewColumn("Capture Groups", Gtk.CellRendererText(), text=3)
+        col_groups.set_min_width(180)
+        self.tree.append_column(col_groups)
+
+        col_named = Gtk.TreeViewColumn("Named Groups", Gtk.CellRendererText(), text=4)
+        col_named.set_min_width(180)
+        self.tree.append_column(col_named)
+
+        scroll_tree.add(self.tree)
+        bot_box.pack_start(scroll_tree, True, True, 0)
+        paned.pack2(bot_box, True, False)
+
+        # Initial eval
+        self._on_evaluate(None)
+
+    def _on_preset_changed(self, combo):
+        idx = combo.get_active()
+        if 0 <= idx < len(REGEX_PRESETS):
+            pat = REGEX_PRESETS[idx][1]
+            if pat:
+                self.pat_entry.set_text(pat)
+
+    def _on_evaluate(self, widget):
+        pat_str = self.pat_entry.get_text()
+        buf = self.text_view.get_buffer()
+        text_str = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+
+        self.store.clear()
+
+        if not pat_str:
+            self.lbl_status.set_markup("<span class='badge-err'>Empty Pattern</span>")
+            self.lbl_matches.set_markup("<span color='#94a3b8'>0 Matches</span>")
+            return
+
+        flags = 0
+        if self.chk_i.get_active():
+            flags |= re.IGNORECASE
+        if self.chk_m.get_active():
+            flags |= re.MULTILINE
+        if self.chk_s.get_active():
+            flags |= re.DOTALL
+
+        try:
+            compiled = re.compile(pat_str, flags)
+            self.lbl_status.set_markup("<span class='badge-ok'>✔ Valid Regex</span>")
+        except re.error as e:
+            self.lbl_status.set_markup(f"<span class='badge-err'>Syntax Error: {e}</span>")
+            self.lbl_matches.set_markup("<span color='#f87171'>Invalid Expression</span>")
+            return
+
+        matches = list(compiled.finditer(text_str))
+        self.lbl_matches.set_markup(f"<span color='#38bdf8' font='bold 9.5'>Found {len(matches)} match(es)</span>")
+
+        for idx, m in enumerate(matches, 1):
+            span_str = f"[{m.start()}:{m.end()}]"
+            full_match = m.group(0)
+            groups_str = str(m.groups()) if m.groups() else "-"
+            named_str = str(m.groupdict()) if m.groupdict() else "-"
+            self.store.append([str(idx), span_str, full_match, groups_str, named_str])
+
+
+def main():
+    win = AeroRegexGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

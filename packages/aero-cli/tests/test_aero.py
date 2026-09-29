@@ -752,6 +752,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(env_gui))
         self.assertTrue(os.access(env_gui, os.X_OK))
 
+    def test_regex_gui_script(self):
+        rg_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-regex-gui"
+        self.assertTrue(os.path.exists(rg_gui))
+        self.assertTrue(os.access(rg_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

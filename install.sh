@@ -397,6 +397,14 @@ exec python3 "${AERO_HOME}/bin/aero-env-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-env-gui"
 
+# Create global executable wrapper for aero-regex-gui
+cat << 'EOF' > "${BIN_DIR}/aero-regex-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-regex-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-regex-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -867,6 +875,17 @@ Icon=security-high
 Terminal=false
 Type=Application
 Categories=Development;Settings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-regex.desktop"
+[Desktop Entry]
+Name=Aero Regex Studio
+Comment=Aero Linux Regular Expression & Pattern Evaluator
+Exec=${BIN_DIR}/aero-regex-gui
+Icon=text-editor
+Terminal=false
+Type=Application
+Categories=Development;Utility;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
