@@ -23,7 +23,7 @@
 
 <p align="center" style="margin-top: 10px;">
   <a href="https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral" target="_blank">
-    <img src="https://alternativeto.net/static/badges/badge-compact-dark.svg" alt="Aero Linux on AlternativeTo" width="190" height="60" />
+    <img src="https://alternativeto.net/static/badges/badge-wide-dark.svg" alt="Aero Linux | AlternativeTo" width="320" height="60" style="max-width: 100%; height: auto;" />
   </a>
 </p>
 
