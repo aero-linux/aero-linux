@@ -40,51 +40,186 @@
           <a href="#download" class="btn btn-primary btn-lg">Download Aero 1.4-Supernova (amd64)</a>
           <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="btn btn-secondary btn-lg">View Source Code</a>
         </div>
-        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; padding: 12px 20px; font-family: monospace; font-size: 14px; color: #34d399; margin-bottom: 25px; display: inline-block;">
-          <span style="color: #64748b;"># 1-Command Instant Install:</span><br/>
-          <span style="color: #00f2fe;">curl -fsSL</span> https://raw.githubusercontent.com/ronitgupta138/aero-linux/main/install.sh | bash
+
+        <!-- Interactive 1-Click Install Command Bar with Copy Button -->
+        <div class="install-bar-container">
+          <div class="install-bar" onclick="copyInstallCmd()">
+            <div class="install-cmd">
+              <span class="install-prefix">$</span>
+              <span class="install-code" id="install-cmd-text">curl -fsSL https://raw.githubusercontent.com/ronitgupta138/aero-linux/main/install.sh | bash</span>
+            </div>
+            <button class="copy-btn" id="copy-btn" title="Copy to clipboard">
+              <span id="copy-icon">📋</span>
+              <span id="copy-text">Copy</span>
+            </button>
+          </div>
+          <div class="install-badge">⚡ 1-Command Universal Auto-Installer • Non-destructive &amp; Safe</div>
         </div>
-        <div class="code-preview">
+
+        <!-- Interactive Terminal Simulator -->
+        <div class="code-preview" id="hero-terminal" onmouseenter="pauseTerminalTimer()" onmouseleave="resumeTerminalTimer()">
           <div class="code-header">
-            <span class="dot red"></span>
-            <span class="dot yellow"></span>
-            <span class="dot green"></span>
-            <span class="code-title">aero-terminal — interactive</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+              <span class="code-title">aero-terminal — interactive</span>
+            </div>
+            <div id="term-status" style="font-size: 0.75rem; color: #34d399; font-family: var(--font-mono);">● Live REPL</div>
           </div>
           <div class="terminal-tabs">
-            <button class="tab-btn active" onclick="showTab('doctor', event)">aero doctor</button>
-            <button class="tab-btn" onclick="showTab('ai', event)">aero ai</button>
-            <button class="tab-btn" onclick="showTab('vault', event)">aero vault</button>
-            <button class="tab-btn" onclick="showTab('dev', event)">aero dev</button>
-            <button class="tab-btn" onclick="showTab('net', event)">aero net</button>
+            <button class="tab-btn active" id="term-tab-doctor" onclick="showTab('doctor', event)">aero doctor</button>
+            <button class="tab-btn" id="term-tab-ai" onclick="showTab('ai', event)">aero ai</button>
+            <button class="tab-btn" id="term-tab-turbo" onclick="showTab('turbo', event)">aero turbo</button>
+            <button class="tab-btn" id="term-tab-vault" onclick="showTab('vault', event)">aero vault</button>
+            <button class="tab-btn" id="term-tab-power" onclick="showTab('power', event)">aero power</button>
           </div>
+          
           <pre id="tab-doctor"><code><span class="prompt">$</span> aero doctor
 <span class="text-cyan">OS:</span> Aero Linux 1.4-Supernova [Kernel: 7.0-generic]
-<span class="text-cyan">Memory:</span> 312MB used / 15.2GB total [zRAM ZSTD Active]
-<span class="text-cyan">Governor:</span> powersave (Quiet Fan Profile)
-<span class="text-cyan">Battery:</span> 79% (Hardware Charge Threshold: 80% Active)
-<span class="text-cyan">AI Runtime:</span> Ollama + CUDA 12.4 + ROCm Ready</code></pre>
+<span class="text-cyan">Memory:</span> 312MB used / 15.2GB total [zRAM ZSTD Active • 2.8:1 Compression]
+<span class="text-cyan">Governor:</span> powersave (Quiet Fan Profile • ACPI 80% Charge Cap Active)
+<span class="text-cyan">Storage:</span> NVMe 100% Health (0.0% TBW Wear)
+<span class="text-cyan">AI Runtime:</span> Ollama + CUDA 12.4 + AMD ROCm Ready (1-Click Local Models)</code></pre>
 
           <pre id="tab-ai" style="display: none;"><code><span class="prompt">$</span> aero ai run deepseek-r1:8b
-<span class="text-green">⚡ Launching interactive session with deepseek-r1:8b...</span>
-<span class="text-cyan">&gt;&gt;&gt;</span> Explain the difference between zRAM and disk swap in 2 sentences.
-<span class="text-white">zRAM compresses memory pages into a dynamic RAM block device at nanosecond speeds.
-Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.</span></code></pre>
+<span class="text-green">⚡ Launching zero-overhead local inference session with deepseek-r1:8b...</span>
+<span class="text-cyan">&gt;&gt;&gt;</span> Explain the advantage of in-memory zRAM over SSD swap in 2 lines.
+<span class="text-white">zRAM compresses memory pages into dynamic RAM blocks at ~10GB/s nanosecond speeds.
+Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compilation.</span></code></pre>
+
+          <pre id="tab-turbo" style="display: none;"><code><span class="prompt">$</span> aero turbo ./my-rust-project
+<span class="text-green">🚀 Mounting in-memory tmpfs compilation sandbox (10GB/s I/O throughput)...</span>
+<span class="text-cyan">⚡ Compilation time:</span> 4.2s (reduced from 19.8s on NVMe)
+<span class="text-cyan">✅ Build succeeded:</span> zero SSD write cycle degradation.</code></pre>
 
           <pre id="tab-vault" style="display: none;"><code><span class="prompt">$</span> aero vault set OPENAI_API_KEY sk-proj-aero...
 <span class="text-green">🔒 Secret 'OPENAI_API_KEY' safely encrypted in AES-256 local vault.</span>
 <span class="prompt">$</span> aero vault export .env
-<span class="text-cyan">✅ Exported 4 encrypted keys directly to .env</span></code></pre>
+<span class="text-cyan">✅ Exported 4 encrypted developer keys directly to local .env</span></code></pre>
 
-          <pre id="tab-dev" style="display: none;"><code><span class="prompt">$</span> aero dev setup node
-<span class="text-green">🚀 1-Click Installing Node.js 22 LTS, npm &amp; TypeScript...</span>
-<span class="text-cyan">node:</span> v22.9.0 | <span class="text-cyan">npm:</span> 10.8.3 | <span class="text-cyan">corepack:</span> 0.29.3 Ready</code></pre>
+          <pre id="tab-power" style="display: none;"><code><span class="prompt">$</span> aero power --threshold 80
+<span class="text-green">🔋 Battery charge threshold capped at 80% via kernel ACPI controller.</span>
+<span class="text-cyan">⚡ Governor:</span> AMD P-State EPP = balance_performance (AC Boost Enabled)
+<span class="text-cyan">❄️ Acoustics:</span> 0 RPM Silent Profile active.</code></pre>
+        </div>
 
-          <pre id="tab-net" style="display: none;"><code><span class="prompt">$</span> aero net bbr
-<span class="text-green">⚡ Enabling Google BBR TCP Congestion Control...</span>
-<span class="text-cyan">✅ BBR active (maximum bandwidth, zero bufferbloat).</span>
-<span class="prompt">$</span> aero net dns cloudflare
-<span class="text-cyan">✅ Switched to Cloudflare DNS-over-TLS (1.1.1.1).</span></code></pre>
+        <!-- Interactive Dual Desktop Engine Live Showcase -->
+        <div class="desktop-engine-showcase">
+          <div class="engine-header">
+            <div>
+              <span class="engine-badge">⚡ DUAL DESKTOP ENGINE</span>
+              <h3 style="font-size: 1.5rem; font-weight: 800; margin-top: 6px;">Switch Layouts with 1 Command</h3>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Never lose your muscle memory. Toggle floating Windows mode or tiling Sway mode anytime.</p>
+            </div>
+            <div class="engine-toggle-group">
+              <button id="mode-btn-windows" class="mode-btn active" onclick="setDesktopMode('windows')">
+                <span>🪟 Windows Floating Mode</span>
+              </button>
+              <button id="mode-btn-tiling" class="mode-btn" onclick="setDesktopMode('tiling')">
+                <span>⚡ Cyber Tiling Mode</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mock Interactive Screen Preview -->
+          <div class="mock-screen" id="mock-screen">
+            
+            <!-- Windows Layout View -->
+            <div id="view-windows" class="mock-view active">
+              <div class="mock-wallpaper windows-wall">
+                <!-- Floating Window 1: Database Studio -->
+                <div class="mock-window" style="top: 25px; left: 30px; width: 420px; z-index: 2;">
+                  <div class="mock-win-titlebar">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #00f2fe;">🗄️ Aero SQLite &amp; SQL Studio</span>
+                    <div class="mock-win-controls">
+                      <span>─</span><span>□</span><span style="color:#ff5f56;">✕</span>
+                    </div>
+                  </div>
+                  <div class="mock-win-body">
+                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 6px;">SELECT * FROM users ORDER BY created_at DESC LIMIT 3;</div>
+                    <table class="mock-table">
+                      <tr><th>id</th><th>name</th><th>role</th><th>status</th></tr>
+                      <tr><td>1</td><td>Ronit</td><td>lead_dev</td><td style="color:#34d399;">online</td></tr>
+                      <tr><td>2</td><td>DeepSeek</td><td>ai_assistant</td><td style="color:#00f2fe;">ready</td></tr>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Floating Window 2: Task Manager -->
+                <div class="mock-window" style="top: 110px; right: 30px; width: 360px; z-index: 3;">
+                  <div class="mock-win-titlebar">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #34d399;">📊 Task Manager (Ctrl+Shift+Esc)</span>
+                    <div class="mock-win-controls">
+                      <span>─</span><span>□</span><span style="color:#ff5f56;">✕</span>
+                    </div>
+                  </div>
+                  <div class="mock-win-body">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 8px;">
+                      <span>CPU: <b>1.8%</b> (AMD 5600H)</span>
+                      <span>RAM: <b>312 MB</b> (Idle)</span>
+                    </div>
+                    <div class="mock-meter"><div style="width: 2%;"></div></div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 8px;">Hotkeys: <kbd>Win+E</kbd> Files • <kbd>Alt+Tab</kbd> Switcher • <kbd>Win+L</kbd> Lock</div>
+                  </div>
+                </div>
+
+                <!-- Windows Taskbar -->
+                <div class="mock-taskbar-bottom">
+                  <div class="mock-start-btn">⚡ Start</div>
+                  <div class="mock-taskbar-icons">
+                    <span title="Spotlight">🔍</span>
+                    <span title="Database Studio">🗄️</span>
+                    <span title="Docker">🐳</span>
+                    <span title="Terminal">💻</span>
+                  </div>
+                  <div class="mock-tray">
+                    <span style="color: #34d399;">🔋 80% (Cap)</span>
+                    <span>10:42 PM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tiling Layout View -->
+            <div id="view-tiling" class="mock-view" style="display: none;">
+              <div class="mock-wallpaper tiling-wall">
+                <!-- Top Waybar -->
+                <div class="mock-waybar-top">
+                  <div style="display: flex; gap: 8px;">
+                    <span class="waybar-pill active">1: dev</span>
+                    <span class="waybar-pill">2: web</span>
+                    <span class="waybar-pill">3: ai</span>
+                  </div>
+                  <div style="color: #00f2fe; font-weight: 700; font-size: 0.8rem;">⚡ AERO SWAY WORKSPACE</div>
+                  <div style="display: flex; gap: 12px; font-size: 0.75rem;">
+                    <span style="color:#00f2fe;">🧠 zRAM: 2.8x</span>
+                    <span style="color:#34d399;">⚡ RAM: 312MB</span>
+                    <span style="color:#f59e0b;">🤖 AI: Ollama</span>
+                    <span>22:42</span>
+                  </div>
+                </div>
+
+                <!-- Tiling Split Matrix -->
+                <div class="tiling-grid">
+                  <div class="tile-card tile-focused">
+                    <div class="tile-header">💻 code / src/main.rs (Vim / Helix)</div>
+                    <pre class="tile-code"><code><span style="color:#00f2fe;">fn</span> <span style="color:#34d399;">main</span>() {
+    println!(<span style="color:#fcd34d;">"⚡ Aero Linux Tiling Engine"</span>);
+    <span style="color:#64748b;">// Sub-350MB memory footprint</span>
+}</code></pre>
+                  </div>
+                  <div class="tile-card">
+                    <div class="tile-header">🤖 aero ai / reasoning</div>
+                    <pre class="tile-code"><code><span class="prompt">$</span> aero ai status
+<span style="color:#34d399;">● Model: DeepSeek-R1-8B</span>
+<span style="color:#00f2fe;">● VRAM: 5.4GB / 15.2GB zRAM</span></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </section>
@@ -505,16 +640,91 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
   </footer>
 
   <script>
+    // Copy 1-Command Installer
+    function copyInstallCmd() {
+      const text = document.getElementById('install-cmd-text').textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        const copyBtn = document.getElementById('copy-btn');
+        const copyIcon = document.getElementById('copy-icon');
+        const copyText = document.getElementById('copy-text');
+        
+        copyBtn.classList.add('copied');
+        copyIcon.textContent = '✅';
+        copyText.textContent = 'Copied!';
+        
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyIcon.textContent = '📋';
+          copyText.textContent = 'Copy';
+        }, 2200);
+      }).catch(err => {
+        console.error('Clipboard write failed:', err);
+      });
+    }
+
+    // Terminal Tabs & Auto-cycling
+    const TERM_TABS = ['doctor', 'ai', 'turbo', 'vault', 'power'];
+    let termIndex = 0;
+    let termTimer = null;
+    let isTermPaused = false;
+
     function showTab(tabId, ev) {
       document.querySelectorAll('.code-preview pre').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
       const activePre = document.getElementById('tab-' + tabId);
       if (activePre) activePre.style.display = 'block';
-      if (ev && ev.currentTarget) {
-        ev.currentTarget.classList.add('active');
+      
+      const targetBtn = document.getElementById('term-tab-' + tabId);
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      termIndex = TERM_TABS.indexOf(tabId);
+      if (ev) {
+        pauseTerminalTimer();
+      }
+    }
+
+    function autoCycleTerminal() {
+      if (isTermPaused) return;
+      termIndex = (termIndex + 1) % TERM_TABS.length;
+      showTab(TERM_TABS[termIndex]);
+    }
+
+    function pauseTerminalTimer() {
+      isTermPaused = true;
+      const status = document.getElementById('term-status');
+      if (status) status.textContent = '⏸ Paused';
+    }
+
+    function resumeTerminalTimer() {
+      isTermPaused = false;
+      const status = document.getElementById('term-status');
+      if (status) status.textContent = '● Live REPL';
+    }
+
+    // Dual Desktop Engine Toggle
+    function setDesktopMode(mode) {
+      const viewWindows = document.getElementById('view-windows');
+      const viewTiling = document.getElementById('view-tiling');
+      const btnWindows = document.getElementById('mode-btn-windows');
+      const btnTiling = document.getElementById('mode-btn-tiling');
+
+      if (mode === 'windows') {
+        viewWindows.style.display = 'block';
+        viewWindows.classList.add('active');
+        viewTiling.style.display = 'none';
+        viewTiling.classList.remove('active');
+        
+        btnWindows.classList.add('active');
+        btnTiling.classList.remove('active');
       } else {
-        const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
-        if (btn) btn.classList.add('active');
+        viewWindows.style.display = 'none';
+        viewWindows.classList.remove('active');
+        viewTiling.style.display = 'block';
+        viewTiling.classList.add('active');
+        
+        btnWindows.classList.remove('active');
+        btnTiling.classList.add('active');
       }
     }
 
@@ -612,6 +822,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
 
     document.addEventListener('DOMContentLoaded', () => {
       selectRelease('v14');
+      termTimer = setInterval(autoCycleTerminal, 5000);
     });
   </script>
 </body>
