@@ -477,6 +477,14 @@ exec python3 "${AERO_HOME}/bin/aero-recorder-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-recorder-gui"
 
+# Create global executable wrapper for aero-archive-gui
+cat << 'EOF' > "${BIN_DIR}/aero-archive-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-archive-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-archive-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -1057,6 +1065,17 @@ Icon=media-record
 Terminal=false
 Type=Application
 Categories=AudioVideo;Recorder;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-archive.desktop"
+[Desktop Entry]
+Name=Aero Archive Studio
+Comment=Aero Linux Archive & Compression Studio
+Exec=${BIN_DIR}/aero-archive-gui
+Icon=package-x-generic
+Terminal=false
+Type=Application
+Categories=Utility;Archiving;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

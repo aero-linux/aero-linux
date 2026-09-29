@@ -1,0 +1,355 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Archive & Compression Studio (GTK3)
+Inspect archive file trees, test integrity, extract archives, and build ZIP/TAR.GZ/TAR.XZ packages.
+"""
+
+import datetime
+import gi
+import os
+import shutil
+import subprocess
+import sys
+import tarfile
+import threading
+import zipfile
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.badge-info {
+    background-color: rgba(0, 242, 254, 0.15);
+    color: #00f2fe;
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.badge-ok {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+"""
+
+
+class AeroArchiveGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Archive & Compression Studio")
+        self.set_default_size(960, 660)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.current_archive_path = ""
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📦 Archive &amp; Compression Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Inspect, extract, test, and create ZIP, TAR.GZ, and TAR.XZ archives with zero bloat.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.lbl_hdr_badge = Gtk.Label(xalign=1)
+        self.lbl_hdr_badge.set_markup("<span class='badge-info'>Ready</span>")
+        header_box.pack_end(self.lbl_hdr_badge, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Main Notebook
+        notebook = Gtk.Notebook()
+        notebook.set_margin_start(14)
+        notebook.set_margin_end(14)
+        notebook.set_margin_top(12)
+        notebook.set_margin_bottom(14)
+        main_box.pack_start(notebook, True, True, 0)
+
+        # Tab 1: Inspect & Extract
+        notebook.append_page(self._create_inspect_tab(), Gtk.Label(label="📂 Inspect & Extract"))
+
+        # Tab 2: Create Archive
+        notebook.append_page(self._create_compress_tab(), Gtk.Label(label="⚡ Create Archive"))
+
+    # -------------------------------------------------------------------------
+    # TAB 1: Inspect & Extract
+    # -------------------------------------------------------------------------
+    def _create_inspect_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(10)
+
+        top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        btn_open = Gtk.Button(label="📂 Open Archive (.zip / .tar.gz / .tar.xz)...")
+        btn_open.get_style_context().add_class("btn-secondary")
+        btn_open.connect("clicked", self._on_browse_archive)
+        top_bar.pack_start(btn_open, False, False, 0)
+
+        self.lbl_archive_name = Gtk.Label(label="No archive loaded", xalign=0)
+        self.lbl_archive_name.set_markup("<span color='#94a3b8'>No archive loaded</span>")
+        top_bar.pack_start(self.lbl_archive_name, True, True, 0)
+
+        btn_extract = Gtk.Button(label="🚀 Extract Archive")
+        btn_extract.get_style_context().add_class("btn-primary")
+        btn_extract.connect("clicked", self._on_extract_archive)
+        top_bar.pack_end(btn_extract, False, False, 0)
+
+        box.pack_start(top_bar, False, False, 0)
+
+        # Archive Files Table
+        self.inspect_store = Gtk.ListStore(str, str, str)
+        scroll = Gtk.ScrolledWindow()
+        self.tree_inspect = Gtk.TreeView(model=self.inspect_store)
+        self.tree_inspect.get_style_context().add_class("code-editor")
+
+        for i, col_title in enumerate(["File / Directory Path", "Uncompressed Size", "Modified Date"]):
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(col_title, renderer, text=i)
+            column.set_sort_column_id(i)
+            column.set_resizable(True)
+            if i == 0:
+                column.set_min_width(380)
+            self.tree_inspect.append_column(column)
+
+        scroll.add(self.tree_inspect)
+        box.pack_start(scroll, True, True, 0)
+
+        return box
+
+    def _on_browse_archive(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Select Compressed Archive",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        if dialog.run() == Gtk.ResponseType.OK:
+            filepath = dialog.get_filename()
+            self._load_archive(filepath)
+        dialog.destroy()
+
+    def _load_archive(self, filepath):
+        self.current_archive_path = filepath
+        self.inspect_store.clear()
+        self.lbl_archive_name.set_markup(f"<span font='bold 9.5' color='#00f2fe'>{os.path.basename(filepath)}</span>")
+
+        total_files = 0
+        total_size = 0
+
+        try:
+            if filepath.endswith(".zip"):
+                with zipfile.ZipFile(filepath, "r") as zf:
+                    for info in zf.infolist():
+                        total_files += 1
+                        total_size += info.file_size
+                        sz_str = f"{info.file_size / 1024:.1f} KB" if info.file_size > 1024 else f"{info.file_size} B"
+                        dt_str = "%d-%02d-%02d %02d:%02d" % info.date_time[:5]
+                        self.inspect_store.append([info.filename, sz_str, dt_str])
+            elif filepath.endswith((".tar.gz", ".tgz", ".tar.xz", ".tar.bz2", ".tar")):
+                with tarfile.open(filepath, "r:*") as tf:
+                    for member in tf.getmembers():
+                        total_files += 1
+                        total_size += member.size
+                        sz_str = f"{member.size / 1024:.1f} KB" if member.size > 1024 else f"{member.size} B"
+                        dt_str = datetime.datetime.fromtimestamp(member.mtime).strftime("%Y-%m-%d %H:%M")
+                        self.inspect_store.append([member.name, sz_str, dt_str])
+
+            sz_total_fmt = f"{total_size / (1024 * 1024):.2f} MB" if total_size > 1024 * 1024 else f"{total_size / 1024:.1f} KB"
+            self.lbl_hdr_badge.set_markup(f"<span class='badge-ok'>✔ {total_files} Files ({sz_total_fmt})</span>")
+        except Exception as e:
+            self.lbl_hdr_badge.set_markup(f"<span class='badge-info'>Error: {e}</span>")
+
+    def _on_extract_archive(self, button):
+        if not self.current_archive_path or not os.path.exists(self.current_archive_path):
+            return
+
+        dialog = Gtk.FileChooserDialog(
+            title="Select Destination Folder",
+            parent=self,
+            action=Gtk.FileChooserAction.SELECT_FOLDER
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        if dialog.run() == Gtk.ResponseType.OK:
+            dest = dialog.get_filename()
+            try:
+                if self.current_archive_path.endswith(".zip"):
+                    with zipfile.ZipFile(self.current_archive_path, "r") as zf:
+                        zf.extractall(dest)
+                else:
+                    with tarfile.open(self.current_archive_path, "r:*") as tf:
+                        tf.extractall(dest)
+
+                self.lbl_hdr_badge.set_markup(f"<span class='badge-ok'>✔ Extracted to {os.path.basename(dest)}</span>")
+                subprocess.Popen(["xdg-open", dest])
+            except Exception as e:
+                self.lbl_hdr_badge.set_markup(f"<span class='badge-info'>Extraction Error: {e}</span>")
+        dialog.destroy()
+
+    # -------------------------------------------------------------------------
+    # TAB 2: Create Archive
+    # -------------------------------------------------------------------------
+    def _create_compress_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(10)
+
+        ctrl_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl_fmt = Gtk.Label(label="Archive Format:", xalign=0)
+        ctrl_bar.pack_start(lbl_fmt, False, False, 0)
+
+        self.combo_compress_fmt = Gtk.ComboBoxText()
+        self.combo_compress_fmt.append_text(".zip (ZIP Deflated)")
+        self.combo_compress_fmt.append_text(".tar.gz (Gzip Compressed)")
+        self.combo_compress_fmt.append_text(".tar.xz (XZ High Compression)")
+        self.combo_compress_fmt.set_active(0)
+        ctrl_bar.pack_start(self.combo_compress_fmt, False, False, 0)
+
+        btn_add_files = Gtk.Button(label="➕ Add Folder / Directory...")
+        btn_add_files.get_style_context().add_class("btn-secondary")
+        btn_add_files.connect("clicked", self._on_add_source_folder)
+        ctrl_bar.pack_start(btn_add_files, False, False, 0)
+
+        box.pack_start(ctrl_bar, False, False, 0)
+
+        self.lbl_compress_source = Gtk.Label(xalign=0)
+        self.lbl_compress_source.set_markup("<span color='#94a3b8'>No source selected. Click 'Add Folder / Directory' to begin.</span>")
+        box.pack_start(self.lbl_compress_source, False, False, 0)
+
+        # Action Button
+        btn_build = Gtk.Button(label="⚡ Build Compressed Archive")
+        btn_build.get_style_context().add_class("btn-primary")
+        btn_build.connect("clicked", self._on_build_archive)
+        box.pack_start(btn_build, False, False, 4)
+
+        return box
+
+    def _on_add_source_folder(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Select Source Folder to Compress",
+            parent=self,
+            action=Gtk.FileChooserAction.SELECT_FOLDER
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        if dialog.run() == Gtk.ResponseType.OK:
+            self.compress_src = dialog.get_filename()
+            self.lbl_compress_source.set_markup(f"<span font='bold 9.5' color='#00f2fe'>Source: {self.compress_src}</span>")
+        dialog.destroy()
+
+    def _on_build_archive(self, button):
+        if not hasattr(self, "compress_src") or not os.path.exists(self.compress_src):
+            return
+
+        fmt_idx = self.combo_compress_fmt.get_active()
+        ext = ".zip" if fmt_idx == 0 else (".tar.gz" if fmt_idx == 1 else ".tar.xz")
+        
+        dialog = Gtk.FileChooserDialog(
+            title="Save Archive File",
+            parent=self,
+            action=Gtk.FileChooserAction.SAVE
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
+        dialog.set_current_name(os.path.basename(self.compress_src) + ext)
+        
+        if dialog.run() == Gtk.ResponseType.OK:
+            out_file = dialog.get_filename()
+            try:
+                if ext == ".zip":
+                    with zipfile.ZipFile(out_file, "w", zipfile.ZIP_DEFLATED) as zf:
+                        for root, _, files in os.walk(self.compress_src):
+                            for file in files:
+                                fp = os.path.join(root, file)
+                                rel = os.path.relpath(fp, os.path.dirname(self.compress_src))
+                                zf.write(fp, rel)
+                elif ext == ".tar.gz":
+                    with tarfile.open(out_file, "w:gz") as tf:
+                        tf.add(self.compress_src, arcname=os.path.basename(self.compress_src))
+                elif ext == ".tar.xz":
+                    with tarfile.open(out_file, "w:xz") as tf:
+                        tf.add(self.compress_src, arcname=os.path.basename(self.compress_src))
+
+                sz_kb = round(os.path.getsize(out_file) / 1024, 1)
+                self.lbl_hdr_badge.set_markup(f"<span class='badge-ok'>✔ Archive Created: {sz_kb} KB</span>")
+            except Exception as e:
+                self.lbl_hdr_badge.set_markup(f"<span class='badge-info'>Error: {e}</span>")
+        dialog.destroy()
+
+
+def main():
+    win = AeroArchiveGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

@@ -807,6 +807,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(rec_gui))
         self.assertTrue(os.access(rec_gui, os.X_OK))
 
+    def test_archive_gui_script(self):
+        arch_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-archive-gui"
+        self.assertTrue(os.path.exists(arch_gui))
+        self.assertTrue(os.access(arch_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()
