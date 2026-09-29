@@ -782,6 +782,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(mock_gui))
         self.assertTrue(os.access(mock_gui, os.X_OK))
 
+    def test_deps_gui_script(self):
+        deps_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-deps-gui"
+        self.assertTrue(os.path.exists(deps_gui))
+        self.assertTrue(os.access(deps_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

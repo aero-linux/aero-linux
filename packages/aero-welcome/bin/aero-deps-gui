@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - System Packages & Binary Dependencies Studio (GTK3)
+Visual package inspector, shared library analyzer (ldd), and orphaned package cleaner.
+"""
+
+import gi
+import os
+import shutil
+import subprocess
+import sys
+import threading
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-danger:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+.badge-count {
+    background-color: rgba(0, 242, 254, 0.15);
+    color: #00f2fe;
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.entry-search {
+    background-color: #080d1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Monospace';
+    padding: 6px 10px;
+}
+"""
+
+
+class AeroDepsGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Package & Library Inspector Studio")
+        self.set_default_size(960, 680)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📦 Package &amp; Binary Dependencies Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Inspect installed system packages, analyze dynamic .so shared libraries, and purge orphaned packages.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.lbl_hdr_count = Gtk.Label(xalign=1)
+        self.lbl_hdr_count.set_markup("<span class='badge-count'>Scanning...</span>")
+        header_box.pack_end(self.lbl_hdr_count, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Main Notebook
+        notebook = Gtk.Notebook()
+        notebook.set_margin_start(14)
+        notebook.set_margin_end(14)
+        notebook.set_margin_top(12)
+        notebook.set_margin_bottom(14)
+        main_box.pack_start(notebook, True, True, 0)
+
+        # Tab 1: Installed Packages
+        notebook.append_page(self._create_packages_tab(), Gtk.Label(label="📦 Installed Packages"))
+
+        # Tab 2: Binary Shared Libraries (ldd)
+        notebook.append_page(self._create_ldd_tab(), Gtk.Label(label="🧩 Binary Shared Libraries (ldd)"))
+
+        # Tab 3: Orphaned Clean-Up
+        notebook.append_page(self._create_orphans_tab(), Gtk.Label(label="🧹 Orphaned Cleanup"))
+
+        # Initial background scan
+        threading.Thread(target=self._scan_installed_packages, daemon=True).start()
+
+    # -------------------------------------------------------------------------
+    # TAB 1: Installed Packages
+    # -------------------------------------------------------------------------
+    def _create_packages_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(10)
+
+        top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.entry_pkg_search = Gtk.Entry()
+        self.entry_pkg_search.set_placeholder_text("🔍 Filter packages (e.g. python, libc, git, docker)...")
+        self.entry_pkg_search.get_style_context().add_class("entry-search")
+        self.entry_pkg_search.connect("changed", self._on_filter_changed)
+        top_bar.pack_start(self.entry_pkg_search, True, True, 0)
+
+        btn_refresh = Gtk.Button(label="🔄 Refresh")
+        btn_refresh.get_style_context().add_class("btn-secondary")
+        btn_refresh.connect("clicked", lambda b: threading.Thread(target=self._scan_installed_packages, daemon=True).start())
+        top_bar.pack_start(btn_refresh, False, False, 0)
+        box.pack_start(top_bar, False, False, 0)
+
+        # TreeView: Name, Version, Architecture, Size
+        self.pkg_store = Gtk.ListStore(str, str, str, str)
+        self.pkg_filter = self.pkg_store.filter_new()
+        self.pkg_filter.set_visible_func(self._pkg_filter_func)
+
+        scroll = Gtk.ScrolledWindow()
+        self.tree_pkgs = Gtk.TreeView(model=self.pkg_filter)
+        self.tree_pkgs.get_style_context().add_class("code-editor")
+
+        for i, col_title in enumerate(["Package Name", "Version", "Arch", "Installed Size"]):
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(col_title, renderer, text=i)
+            column.set_sort_column_id(i)
+            column.set_resizable(True)
+            if i == 0:
+                column.set_min_width(260)
+            elif i == 1:
+                column.set_min_width(200)
+            self.tree_pkgs.append_column(column)
+
+        scroll.add(self.tree_pkgs)
+        box.pack_start(scroll, True, True, 0)
+
+        return box
+
+    def _pkg_filter_func(self, model, iter, data):
+        query = self.entry_pkg_search.get_text().lower().strip()
+        if not query:
+            return True
+        name = (model[iter][0] or "").lower()
+        version = (model[iter][1] or "").lower()
+        return query in name or query in version
+
+    def _on_filter_changed(self, widget):
+        self.pkg_filter.refilter()
+
+    def _scan_installed_packages(self):
+        try:
+            # Query dpkg-query with name, version, architecture, and installed size in KB
+            res = subprocess.run(
+                ["dpkg-query", "-W", "-f=${binary:Package}\t${Version}\t${Architecture}\t${Installed-Size}\n"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True
+            )
+            rows = []
+            for line in res.stdout.strip().splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 4:
+                    pkg, ver, arch, sz_kb = parts[0], parts[1], parts[2], parts[3]
+                    try:
+                        sz_num = int(sz_kb)
+                        if sz_num > 1024:
+                            sz_fmt = f"{sz_num / 1024:.1f} MB"
+                        else:
+                            sz_fmt = f"{sz_num} KB"
+                    except ValueError:
+                        sz_fmt = f"{sz_kb} KB"
+                    rows.append((pkg, ver, arch, sz_fmt))
+
+            def update_ui():
+                self.pkg_store.clear()
+                for r in rows:
+                    self.pkg_store.append(list(r))
+                self.lbl_hdr_count.set_markup(f"<span class='badge-count'>📦 {len(rows):,} Packages Installed</span>")
+
+            GLib.idle_add(update_ui)
+        except Exception as e:
+            GLib.idle_add(lambda: self.lbl_hdr_count.set_markup(f"<span class='badge-count'>Scan Error: {e}</span>"))
+
+    # -------------------------------------------------------------------------
+    # TAB 2: Binary Shared Libraries (ldd)
+    # -------------------------------------------------------------------------
+    def _create_ldd_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(10)
+
+        top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl_sel = Gtk.Label(label="Binary Executable:", xalign=0)
+        top_bar.pack_start(lbl_sel, False, False, 0)
+
+        self.combo_bin = Gtk.ComboBoxText()
+        common_bins = ["/usr/bin/python3", "/usr/bin/git", "/usr/bin/bash", "/usr/bin/ssh", "/usr/bin/curl", "/usr/bin/tar"]
+        for b in common_bins:
+            if os.path.exists(b):
+                self.combo_bin.append_text(b)
+        self.combo_bin.set_active(0)
+        self.combo_bin.connect("changed", self._on_ldd_bin_changed)
+        top_bar.pack_start(self.combo_bin, False, False, 0)
+
+        btn_browse = Gtk.Button(label="📁 Browse Custom Binary...")
+        btn_browse.get_style_context().add_class("btn-secondary")
+        btn_browse.connect("clicked", self._on_browse_binary)
+        top_bar.pack_start(btn_browse, False, False, 0)
+
+        box.pack_start(top_bar, False, False, 0)
+
+        # Results Scrolled TextView
+        scroll = Gtk.ScrolledWindow()
+        self.ldd_view = Gtk.TextView()
+        self.ldd_view.set_editable(False)
+        self.ldd_view.get_style_context().add_class("code-editor")
+        scroll.add(self.ldd_view)
+        box.pack_start(scroll, True, True, 0)
+
+        self._on_ldd_bin_changed(None)
+        return box
+
+    def _on_ldd_bin_changed(self, widget):
+        bin_path = self.combo_bin.get_active_text()
+        if bin_path and os.path.exists(bin_path):
+            self._run_ldd(bin_path)
+
+    def _on_browse_binary(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Select Executable Binary",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        if dialog.run() == Gtk.ResponseType.OK:
+            filename = dialog.get_filename()
+            self.combo_bin.append_text(filename)
+            self.combo_bin.set_active(len(self.combo_bin.get_model()) - 1)
+        dialog.destroy()
+
+    def _run_ldd(self, bin_path):
+        try:
+            res = subprocess.run(["ldd", bin_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            output = f"Dynamic Linked Shared Libraries for: {bin_path}\n"
+            output += "═" * 70 + "\n"
+            output += res.stdout
+            if res.stderr:
+                output += f"\nErrors:\n{res.stderr}"
+            self.ldd_view.get_buffer().set_text(output)
+        except Exception as e:
+            self.ldd_view.get_buffer().set_text(f"ldd execution error: {e}")
+
+    # -------------------------------------------------------------------------
+    # TAB 3: Orphaned Clean-Up
+    # -------------------------------------------------------------------------
+    def _create_orphans_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        box.set_margin_top(12)
+
+        info_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        lbl_info = Gtk.Label(xalign=0)
+        lbl_info.set_markup("<span font='bold 10' color='#f87171'>Dangling &amp; Orphaned Package Discovery</span>\n<span font='9' color='#94a3b8'>Packages automatically installed as dependencies that are no longer required by any active application.</span>")
+        info_box.pack_start(lbl_info, True, True, 0)
+
+        btn_scan_orphans = Gtk.Button(label="🔍 Scan for Orphaned Packages")
+        btn_scan_orphans.get_style_context().add_class("btn-secondary")
+        btn_scan_orphans.connect("clicked", self._scan_orphans)
+        info_box.pack_start(btn_scan_orphans, False, False, 0)
+
+        box.pack_start(info_box, False, False, 0)
+
+        scroll = Gtk.ScrolledWindow()
+        self.orphans_view = Gtk.TextView()
+        self.orphans_view.set_editable(False)
+        self.orphans_view.get_style_context().add_class("code-editor")
+        self.orphans_view.get_buffer().set_text("Click 'Scan for Orphaned Packages' to inspect dangling packages.")
+        scroll.add(self.orphans_view)
+        box.pack_start(scroll, True, True, 0)
+
+        btn_clean = Gtk.Button(label="🧹 1-Click Purge Orphaned Packages (sudo apt-get autoremove)")
+        btn_clean.get_style_context().add_class("btn-danger")
+        btn_clean.connect("clicked", self._purge_orphans)
+        box.pack_start(btn_clean, False, False, 0)
+
+        return box
+
+    def _scan_orphans(self, button):
+        self.orphans_view.get_buffer().set_text("Scanning system packages with apt-get autoremove --dry-run...")
+        def scan_worker():
+            try:
+                res = subprocess.run(["apt-get", "-s", "autoremove"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                lines = res.stdout
+                GLib.idle_add(lambda: self.orphans_view.get_buffer().set_text(lines))
+            except Exception as e:
+                GLib.idle_add(lambda: self.orphans_view.get_buffer().set_text(f"Scan error: {e}"))
+        threading.Thread(target=scan_worker, daemon=True).start()
+
+    def _purge_orphans(self, button):
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.YES_NO,
+            text="Purge Orphaned Packages?"
+        )
+        dialog.format_secondary_text("This will execute 'pkexec apt-get autoremove -y' to clean dangling libraries.")
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.YES:
+            subprocess.Popen(["x-terminal-emulator", "-e", "sudo apt-get autoremove -y && echo 'Done! Press Enter to exit.' && read _"])
+
+
+def main():
+    win = AeroDepsGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
