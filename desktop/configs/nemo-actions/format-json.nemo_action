@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Format & Validate JSON
+Comment=Prettify and check JSON syntax
+Exec=alacritty --title "Aero JSON Formatter" -e bash -c "aero json format \"%F\"; echo ''; read -p 'Press Enter to close...' "
+Icon-Name=text-x-generic
+Selection=s
+Extensions=json;JSON;
+Quote=double

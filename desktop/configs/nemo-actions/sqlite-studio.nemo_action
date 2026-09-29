@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Open in Aero SQL Studio
+Comment=Launch visual SQLite database browser and query editor
+Exec=aero-db-gui "%F"
+Icon-Name=drive-harddisk
+Selection=s
+Extensions=db;sqlite;sqlite3;db3;DB;SQLITE;SQLITE3;
+Quote=double

@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Launch Local HTTP Live Server
+Comment=Start instant zero-config Python web server in this directory
+Exec=alacritty --title "Aero Live HTTP Server" -e bash -c "cd \"%F\" && echo -e '\033[1;36m⚡ Aero Live HTTP Server Running at http://localhost:8000\033[0m' && echo 'Press Ctrl+C to stop the server.' && echo '' && python3 -m http.server 8000"
+Icon-Name=network-workgroup
+Selection=s
+Extensions=dir;
+Quote=double

@@ -1,0 +1,28 @@
+[Nemo Action]
+Name=Scaffold Docker Container
+Comment=Analyze directory stack and generate production Dockerfile
+Exec=alacritty --title "Aero Docker Scaffold" -e bash -c "cd \"%F\" && echo -e '\033[1;36m🐳 Aero Project Containerizer\033[0m' && python3 -c \"
+import os
+if os.path.exists('package.json'):
+    df = '''FROM node:20-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 3000\nCMD [\\\"npm\\\", \\\"start\\\"]\n'''
+    with open('Dockerfile', 'w') as f: f.write(df)
+    print('✔ Generated Node.js Dockerfile')
+elif os.path.exists('requirements.txt') or os.path.exists('pyproject.toml'):
+    df = '''FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt* ./\nRUN pip install --no-cache-dir -r requirements.txt 2>/dev/null || true\nCOPY . .\nEXPOSE 8000\nCMD [\\\"python\\\", \\\"main.py\\\"]\n'''
+    with open('Dockerfile', 'w') as f: f.write(df)
+    print('✔ Generated Python Dockerfile')
+elif os.path.exists('Cargo.toml'):
+    df = '''FROM rust:alpine as builder\nWORKDIR /app\nCOPY . .\nRUN cargo build --release\nFROM alpine:latest\nCOPY --from=builder /app/target/release/* /usr/local/bin/\nCMD [\\\"app\\\"]\n'''
+    with open('Dockerfile', 'w') as f: f.write(df)
+    print('✔ Generated Rust Multi-Stage Dockerfile')
+elif os.path.exists('go.mod'):
+    df = '''FROM golang:alpine as builder\nWORKDIR /app\nCOPY . .\nRUN go build -o app .\nFROM alpine:latest\nCOPY --from=builder /app/app /usr/local/bin/app\nCMD [\\\"app\\\"]\n'''
+    with open('Dockerfile', 'w') as f: f.write(df)
+    print('✔ Generated Go Multi-Stage Dockerfile')
+else:
+    print('⚠ Unknown stack type; please check directory contents.')
+\"; echo ''; read -p 'Press Enter to close...' "
+Icon-Name=application-x-executable
+Selection=s
+Extensions=dir;
+Quote=double

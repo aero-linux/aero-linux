@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Copy SHA256 Hash to Clipboard
+Comment=Compute SHA256 checksum and copy directly to clipboard
+Exec=bash -c "HASH=\$(sha256sum \"%F\" | cut -d' ' -f1); echo -n \"\$HASH\" | (xclip -selection clipboard 2>/dev/null || wl-copy 2>/dev/null || aero clip 2>/dev/null); notify-send 'Aero Checksum' \"SHA256 copied: \$HASH\" -i document-properties 2>/dev/null || echo \"SHA256: \$HASH\""
+Icon-Name=edit-copy
+Selection=s
+Extensions=nodirs;any;
+Quote=double

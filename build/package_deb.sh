@@ -73,6 +73,10 @@ cp "${ROOT_DIR}/build/completions/aero.bash" "${PKG_DIR}/usr/share/bash-completi
 cp "${ROOT_DIR}/build/completions/aero.fish" "${PKG_DIR}/usr/share/fish/vendor_completions.d/aero.fish"
 cp "${ROOT_DIR}/build/completions/aero.zsh" "${PKG_DIR}/usr/share/zsh/vendor-completions/_aero"
 
+# 5.1 Nemo Context Actions
+mkdir -p "${PKG_DIR}/usr/share/nemo/actions"
+cp -r "${ROOT_DIR}/desktop/configs/nemo-actions/"*.nemo_action "${PKG_DIR}/usr/share/nemo/actions/" 2>/dev/null || true
+
 # 6. Desktop Entries
 desktop_entries=(
   "aero-welcome:Aero Control Center:System Settings and Control Hub:aero:System;Settings;GTK;"
