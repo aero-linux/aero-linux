@@ -772,6 +772,11 @@ class TestAeroCLI(unittest.TestCase):
         jobs = get_cron_jobs()
         self.assertIsInstance(jobs, list)
 
+    def test_crypto_gui_script(self):
+        crypto_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-crypto-gui"
+        self.assertTrue(os.path.exists(crypto_gui))
+        self.assertTrue(os.access(crypto_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

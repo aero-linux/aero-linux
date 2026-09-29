@@ -1,0 +1,500 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Cryptography, JWT & Developer Utilities Studio (GTK3)
+Visual JWT token decoder, cryptographic hash calculator, Base64/URL converter, and secure token generator.
+"""
+
+import base64
+import datetime
+import gi
+import hashlib
+import json
+import os
+import secrets
+import string
+import sys
+import urllib.parse
+import uuid
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.hash-row {
+    background-color: #0d1527;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+}
+.badge-ok {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.badge-err {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+"""
+
+SAMPLE_JWT = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJzdWIiOiJ1c2VyXzEyMzQ1NiIsIm5hbWUiOiJSb25pdCBHdXB0YSIsInJvbGUiOiJBZG1pbiIsImlhdCI6MTUxNjIzOTAyMiwiZXhwIjoxODk5OTk5OTk5fQ."
+    "4dc386927a4457e5d8f28d8cb30b427dfb36e890c5f47d3d2c88d8b9ec47f123"
+)
+
+
+class AeroCryptoGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Cryptography & Developer Utilities Studio")
+        self.set_default_size(960, 680)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🛡️ Cryptography &amp; JWT Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Inspect JWT claims, compute cryptographic hashes, convert encodings, and generate secure tokens.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Main Notebook
+        notebook = Gtk.Notebook()
+        notebook.set_margin_start(14)
+        notebook.set_margin_end(14)
+        notebook.set_margin_top(12)
+        notebook.set_margin_bottom(14)
+        main_box.pack_start(notebook, True, True, 0)
+
+        # 1. JWT Inspector Tab
+        notebook.append_page(self._create_jwt_tab(), Gtk.Label(label="🔑 JWT Inspector"))
+
+        # 2. Hashes & Checksums Tab
+        notebook.append_page(self._create_hashes_tab(), Gtk.Label(label="🛡️ Hashes & Checksums"))
+
+        # 3. Base64 & URL Converter Tab
+        notebook.append_page(self._create_encoding_tab(), Gtk.Label(label="🔤 Base64 & URL"))
+
+        # 4. Secure Generators Tab
+        notebook.append_page(self._create_generators_tab(), Gtk.Label(label="🎲 Secure Generators"))
+
+    # -------------------------------------------------------------------------
+    # TAB 1: JWT Inspector
+    # -------------------------------------------------------------------------
+    def _create_jwt_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(10)
+
+        top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl_token = Gtk.Label(xalign=0)
+        lbl_token.set_markup("<span font='bold 9.5' color='#94a3b8'>ENCODED JWT TOKEN:</span>")
+        top_bar.pack_start(lbl_token, True, True, 0)
+
+        btn_sample = Gtk.Button(label="📋 Load Sample JWT")
+        btn_sample.get_style_context().add_class("btn-secondary")
+        btn_sample.connect("clicked", lambda b: self.jwt_input.get_buffer().set_text(SAMPLE_JWT))
+        top_bar.pack_start(btn_sample, False, False, 0)
+        box.pack_start(top_bar, False, False, 0)
+
+        scroll_in = Gtk.ScrolledWindow()
+        scroll_in.set_min_content_height(90)
+        self.jwt_input = Gtk.TextView()
+        self.jwt_input.get_style_context().add_class("code-editor")
+        self.jwt_input.set_wrap_mode(Gtk.WrapMode.CHAR)
+        self.jwt_input.get_buffer().set_text(SAMPLE_JWT)
+        self.jwt_input.get_buffer().connect("changed", self._on_jwt_changed)
+        scroll_in.add(self.jwt_input)
+        box.pack_start(scroll_in, False, False, 0)
+
+        # Status Bar
+        self.lbl_jwt_status = Gtk.Label(xalign=0)
+        self.lbl_jwt_status.set_markup("<span class='badge-ok'>Valid Structure</span>")
+        box.pack_start(self.lbl_jwt_status, False, False, 0)
+
+        # Decoded Paned (Header vs Payload)
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(360)
+
+        # Left: Header
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_h = Gtk.Label(label="HEADER: ALGORITHM & TOKEN TYPE", xalign=0)
+        lbl_h.set_markup("<span font='bold 9' color='#38bdf8'>HEADER (ALGORITHM &amp; TYPE)</span>")
+        left_box.pack_start(lbl_h, False, False, 0)
+
+        scroll_h = Gtk.ScrolledWindow()
+        self.jwt_header_view = Gtk.TextView()
+        self.jwt_header_view.set_editable(False)
+        self.jwt_header_view.get_style_context().add_class("code-editor")
+        scroll_h.add(self.jwt_header_view)
+        left_box.pack_start(scroll_h, True, True, 0)
+        paned.pack1(left_box, True, False)
+
+        # Right: Payload Claims
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_p = Gtk.Label(xalign=0)
+        lbl_p.set_markup("<span font='bold 9' color='#a855f7'>PAYLOAD DATA &amp; CLAIMS</span>")
+        right_box.pack_start(lbl_p, False, False, 0)
+
+        scroll_p = Gtk.ScrolledWindow()
+        self.jwt_payload_view = Gtk.TextView()
+        self.jwt_payload_view.set_editable(False)
+        self.jwt_payload_view.get_style_context().add_class("code-editor")
+        scroll_p.add(self.jwt_payload_view)
+        right_box.pack_start(scroll_p, True, True, 0)
+        paned.pack2(right_box, True, False)
+
+        box.pack_start(paned, True, True, 0)
+        self._on_jwt_changed(None)
+        return box
+
+    def _on_jwt_changed(self, widget):
+        buf = self.jwt_input.get_buffer()
+        token = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True).strip()
+        parts = token.split(".")
+
+        if len(parts) < 2:
+            self.lbl_jwt_status.set_markup("<span class='badge-err'>Invalid JWT Format (Requires 3 dot-separated parts)</span>")
+            self.jwt_header_view.get_buffer().set_text("")
+            self.jwt_payload_view.get_buffer().set_text("")
+            return
+
+        def decode_seg(seg):
+            rem = len(seg) % 4
+            if rem > 0:
+                seg += "=" * (4 - rem)
+            return json.loads(base64.urlsafe_b64decode(seg.encode("utf-8")).decode("utf-8", errors="replace"))
+
+        try:
+            h_obj = decode_seg(parts[0])
+            p_obj = decode_seg(parts[1])
+            
+            self.jwt_header_view.get_buffer().set_text(json.dumps(h_obj, indent=2))
+            self.jwt_payload_view.get_buffer().set_text(json.dumps(p_obj, indent=2))
+
+            status_str = "<span class='badge-ok'>✔ Valid Decoded JWT</span>"
+            if "exp" in p_obj and isinstance(p_obj["exp"], (int, float)):
+                exp_dt = datetime.datetime.fromtimestamp(p_obj["exp"])
+                if datetime.datetime.now() > exp_dt:
+                    status_str += f" <span class='badge-err'>Expired on: {exp_dt}</span>"
+                else:
+                    status_str += f" <span class='badge-ok'>Expires on: {exp_dt}</span>"
+            self.lbl_jwt_status.set_markup(status_str)
+        except Exception as e:
+            self.lbl_jwt_status.set_markup(f"<span class='badge-err'>Decode Error: {e}</span>")
+
+    # -------------------------------------------------------------------------
+    # TAB 2: Hashes & Checksums
+    # -------------------------------------------------------------------------
+    def _create_hashes_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(10)
+
+        lbl_input = Gtk.Label(xalign=0)
+        lbl_input.set_markup("<span font='bold 9.5' color='#94a3b8'>INPUT TEXT:</span>")
+        box.pack_start(lbl_input, False, False, 0)
+
+        scroll_in = Gtk.ScrolledWindow()
+        scroll_in.set_min_content_height(100)
+        self.hash_input = Gtk.TextView()
+        self.hash_input.get_style_context().add_class("code-editor")
+        self.hash_input.get_buffer().set_text("Aero Linux 1.3-Nebula")
+        self.hash_input.get_buffer().connect("changed", self._on_hash_changed)
+        scroll_in.add(self.hash_input)
+        box.pack_start(scroll_in, False, False, 0)
+
+        # Hashes List
+        lbl_hashes = Gtk.Label(xalign=0)
+        lbl_hashes.set_markup("<span font='bold 9.5' color='#94a3b8'>CRYPTOGRAPHIC HASHES &amp; CHECKSUMS:</span>")
+        box.pack_start(lbl_hashes, False, False, 0)
+
+        self.hash_labels = {}
+        for algo in ["SHA-256", "SHA-512", "SHA-1", "MD5", "BLAKE2b"]:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.get_style_context().add_class("hash-row")
+
+            lbl_name = Gtk.Label(xalign=0)
+            lbl_name.set_markup(f"<span font='bold 9.5' color='#00f2fe'>{algo:<10}</span>")
+            lbl_name.set_min_width(90)
+            row.pack_start(lbl_name, False, False, 0)
+
+            lbl_val = Gtk.Label(xalign=0)
+            lbl_val.set_selectable(True)
+            lbl_val.set_markup("<tt color='#ffffff'>-</tt>")
+            row.pack_start(lbl_val, True, True, 0)
+            self.hash_labels[algo] = lbl_val
+
+            btn_copy = Gtk.Button(label="📋")
+            btn_copy.get_style_context().add_class("btn-secondary")
+            btn_copy.connect("clicked", lambda b, a=algo: self._copy_hash(a))
+            row.pack_start(btn_copy, False, False, 0)
+
+            box.pack_start(row, False, False, 0)
+
+        self._on_hash_changed(None)
+        return box
+
+    def _on_hash_changed(self, widget):
+        buf = self.hash_input.get_buffer()
+        text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+        data = text.encode("utf-8")
+
+        hashes = {
+            "SHA-256": hashlib.sha256(data).hexdigest(),
+            "SHA-512": hashlib.sha512(data).hexdigest(),
+            "SHA-1": hashlib.sha1(data).hexdigest(),
+            "MD5": hashlib.md5(data).hexdigest(),
+            "BLAKE2b": hashlib.blake2b(data).hexdigest(),
+        }
+
+        for algo, h_val in hashes.items():
+            if algo in self.hash_labels:
+                self.hash_labels[algo].set_markup(f"<tt color='#ffffff'>{h_val}</tt>")
+
+    def _copy_hash(self, algo):
+        if algo in self.hash_labels:
+            lbl = self.hash_labels[algo]
+            txt = lbl.get_text()
+            clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            clip.set_text(txt, -1)
+
+    # -------------------------------------------------------------------------
+    # TAB 3: Base64 & URL Converter
+    # -------------------------------------------------------------------------
+    def _create_encoding_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box.set_margin_top(10)
+
+        lbl_src = Gtk.Label(xalign=0)
+        lbl_src.set_markup("<span font='bold 9.5' color='#94a3b8'>SOURCE TEXT:</span>")
+        box.pack_start(lbl_src, False, False, 0)
+
+        scroll_src = Gtk.ScrolledWindow()
+        self.enc_source = Gtk.TextView()
+        self.enc_source.get_style_context().add_class("code-editor")
+        self.enc_source.get_buffer().set_text("Hello from Aero Linux 1.3-Nebula!")
+        scroll_src.add(self.enc_source)
+        box.pack_start(scroll_src, True, True, 0)
+
+        # Action Buttons
+        btn_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        
+        btn_b64e = Gtk.Button(label="🔒 Base64 Encode")
+        btn_b64e.get_style_context().add_class("btn-secondary")
+        btn_b64e.connect("clicked", self._on_b64_encode)
+        btn_bar.pack_start(btn_b64e, False, False, 0)
+
+        btn_b64d = Gtk.Button(label="🔓 Base64 Decode")
+        btn_b64d.get_style_context().add_class("btn-secondary")
+        btn_b64d.connect("clicked", self._on_b64_decode)
+        btn_bar.pack_start(btn_b64d, False, False, 0)
+
+        btn_urle = Gtk.Button(label="🌐 URL Encode")
+        btn_urle.get_style_context().add_class("btn-secondary")
+        btn_urle.connect("clicked", self._on_url_encode)
+        btn_bar.pack_start(btn_urle, False, False, 0)
+
+        btn_urld = Gtk.Button(label="🌐 URL Decode")
+        btn_urld.get_style_context().add_class("btn-secondary")
+        btn_urld.connect("clicked", self._on_url_decode)
+        btn_bar.pack_start(btn_urld, False, False, 0)
+
+        box.pack_start(btn_bar, False, False, 0)
+
+        lbl_dst = Gtk.Label(xalign=0)
+        lbl_dst.set_markup("<span font='bold 9.5' color='#94a3b8'>CONVERTED RESULT:</span>")
+        box.pack_start(lbl_dst, False, False, 0)
+
+        scroll_dst = Gtk.ScrolledWindow()
+        self.enc_dest = Gtk.TextView()
+        self.enc_dest.get_style_context().add_class("code-editor")
+        scroll_dst.add(self.enc_dest)
+        box.pack_start(scroll_dst, True, True, 0)
+
+        return box
+
+    def _get_enc_text(self):
+        buf = self.enc_source.get_buffer()
+        return buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+
+    def _set_enc_result(self, res_text):
+        self.enc_dest.get_buffer().set_text(res_text)
+
+    def _on_b64_encode(self, button):
+        txt = self._get_enc_text()
+        self._set_enc_result(base64.b64encode(txt.encode("utf-8")).decode("utf-8"))
+
+    def _on_b64_decode(self, button):
+        txt = self._get_enc_text()
+        rem = len(txt) % 4
+        if rem > 0:
+            txt += "=" * (4 - rem)
+        try:
+            self._set_enc_result(base64.b64decode(txt.encode("utf-8")).decode("utf-8", errors="replace"))
+        except Exception as e:
+            self._set_enc_result(f"Base64 Decode Error: {e}")
+
+    def _on_url_encode(self, button):
+        txt = self._get_enc_text()
+        self._set_enc_result(urllib.parse.quote(txt))
+
+    def _on_url_decode(self, button):
+        txt = self._get_enc_text()
+        self._set_enc_result(urllib.parse.unquote(txt))
+
+    # -------------------------------------------------------------------------
+    # TAB 4: Secure Generators
+    # -------------------------------------------------------------------------
+    def _create_generators_tab(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        box.set_margin_top(14)
+
+        # 1. UUID v4
+        row1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row1.get_style_context().add_class("hash-row")
+        lbl_u = Gtk.Label(label="UUID v4:", xalign=0)
+        lbl_u.set_markup("<span font='bold 9.5' color='#00f2fe'>UUID v4:</span>")
+        lbl_u.set_min_width(120)
+        row1.pack_start(lbl_u, False, False, 0)
+
+        self.lbl_uuid_val = Gtk.Label(xalign=0)
+        self.lbl_uuid_val.set_selectable(True)
+        self.lbl_uuid_val.set_markup(f"<tt color='#ffffff'>{uuid.uuid4()}</tt>")
+        row1.pack_start(self.lbl_uuid_val, True, True, 0)
+
+        btn_gen_uuid = Gtk.Button(label="🎲 Generate")
+        btn_gen_uuid.get_style_context().add_class("btn-secondary")
+        btn_gen_uuid.connect("clicked", lambda b: self.lbl_uuid_val.set_markup(f"<tt color='#ffffff'>{uuid.uuid4()}</tt>"))
+        row1.pack_start(btn_gen_uuid, False, False, 0)
+        box.pack_start(row1, False, False, 0)
+
+        # 2. Secure API Key (32-bytes hex)
+        row2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row2.get_style_context().add_class("hash-row")
+        lbl_k = Gtk.Label(xalign=0)
+        lbl_k.set_markup("<span font='bold 9.5' color='#38bdf8'>API Secret Key:</span>")
+        lbl_k.set_min_width(120)
+        row2.pack_start(lbl_k, False, False, 0)
+
+        self.lbl_key_val = Gtk.Label(xalign=0)
+        self.lbl_key_val.set_selectable(True)
+        self.lbl_key_val.set_markup(f"<tt color='#ffffff'>{secrets.token_hex(24)}</tt>")
+        row2.pack_start(self.lbl_key_val, True, True, 0)
+
+        btn_gen_key = Gtk.Button(label="🎲 Generate")
+        btn_gen_key.get_style_context().add_class("btn-secondary")
+        btn_gen_key.connect("clicked", lambda b: self.lbl_key_val.set_markup(f"<tt color='#ffffff'>{secrets.token_hex(24)}</tt>"))
+        row2.pack_start(btn_gen_key, False, False, 0)
+        box.pack_start(row2, False, False, 0)
+
+        # 3. Secure Password
+        row3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row3.get_style_context().add_class("hash-row")
+        lbl_p = Gtk.Label(xalign=0)
+        lbl_p.set_markup("<span font='bold 9.5' color='#c084fc'>Password (20ch):</span>")
+        lbl_p.set_min_width(120)
+        row3.pack_start(lbl_p, False, False, 0)
+
+        self.lbl_pass_val = Gtk.Label(xalign=0)
+        self.lbl_pass_val.set_selectable(True)
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*()_+"
+        self.lbl_pass_val.set_markup(f"<tt color='#ffffff'>{''.join(secrets.choice(alphabet) for _ in range(20))}</tt>")
+        row3.pack_start(self.lbl_pass_val, True, True, 0)
+
+        btn_gen_pass = Gtk.Button(label="🎲 Generate")
+        btn_gen_pass.get_style_context().add_class("btn-secondary")
+        btn_gen_pass.connect("clicked", lambda b: self.lbl_pass_val.set_markup(f"<tt color='#ffffff'>{''.join(secrets.choice(alphabet) for _ in range(20))}</tt>"))
+        row3.pack_start(btn_gen_pass, False, False, 0)
+        box.pack_start(row3, False, False, 0)
+
+        return box
+
+
+def main():
+    win = AeroCryptoGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
