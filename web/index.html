@@ -18,7 +18,7 @@
       </div>
       <nav class="nav-links">
         <a href="#features">Features</a>
-        <a href="#apps">GUI Suite (45 Apps)</a>
+        <a href="#gui-suite">GUI Suite (45 Apps)</a>
         <a href="#benchmarks">Benchmarks</a>
         <a href="#download">Downloads</a>
         <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="github-link">GitHub</a>
@@ -242,6 +242,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
 
         <!-- 45-App Zero-Terminal Graphical Suite Grid -->
         <div id="gui-suite" style="margin-top: 40px; margin-bottom: 20px;">
+          <span id="apps"></span>
           <h3 style="font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 8px;">🎛️ Complete Zero-Terminal Graphical Suite (45 Native Apps)</h3>
           <p style="color: var(--text-muted); text-align: center; font-size: 0.95rem; margin-bottom: 24px;">45 dedicated native GTK3 applications engineered for 100% graphical control without opening a terminal.</p>
           
@@ -608,6 +609,10 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         }
       });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      selectRelease('v14');
+    });
   </script>
 </body>
 </html>
