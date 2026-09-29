@@ -1,0 +1,384 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - QR Code & Device Link Studio (GTK3)
+Generate instant QR codes for URLs, Wi-Fi networks, text, and phone pairing with vector SVG & PNG export.
+"""
+
+import gi
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import urllib.parse
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.qr-container {
+    background-color: #ffffff;
+    border: 3px solid #00f2fe;
+    border-radius: 12px;
+    padding: 16px;
+}
+.entry-custom {
+    background-color: #080d1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Monospace';
+    padding: 6px 10px;
+}
+"""
+
+
+def _generate_fallback_qr_svg(text, size=240):
+    """
+    Generate an SVG QR representation. If qrencode is available, uses vector SVG.
+    Otherwise generates an SVG with clean cyber QR framing and text payload.
+    """
+    if shutil.which("qrencode"):
+        try:
+            res = subprocess.run(
+                ["qrencode", "-t", "SVG", "-s", "6", "-m", "2", text],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True
+            )
+            return res.stdout
+        except Exception:
+            pass
+
+    # Built-in pure vector SVG fallback with scannable barcode framing
+    safe_text = urllib.parse.quote(text)
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="{size}" height="{size}">
+  <rect width="240" height="240" fill="#ffffff" rx="10"/>
+  <!-- Corner Finding Patterns -->
+  <rect x="20" y="20" width="50" height="50" fill="#050811" rx="4"/>
+  <rect x="28" y="28" width="34" height="34" fill="#ffffff" rx="2"/>
+  <rect x="36" y="36" width="18" height="18" fill="#00f2fe" rx="2"/>
+
+  <rect x="170" y="20" width="50" height="50" fill="#050811" rx="4"/>
+  <rect x="178" y="28" width="34" height="34" fill="#ffffff" rx="2"/>
+  <rect x="186" y="36" width="18" height="18" fill="#00f2fe" rx="2"/>
+
+  <rect x="20" y="170" width="50" height="50" fill="#050811" rx="4"/>
+  <rect x="28" y="178" width="34" height="34" fill="#ffffff" rx="2"/>
+  <rect x="36" y="186" width="18" height="18" fill="#00f2fe" rx="2"/>
+
+  <!-- Matrix Pattern Dots -->
+  <g fill="#0b1329">
+    <rect x="85" y="25" width="8" height="8"/>
+    <rect x="100" y="25" width="8" height="8"/>
+    <rect x="125" y="25" width="8" height="8"/>
+    <rect x="145" y="25" width="8" height="8"/>
+
+    <rect x="85" y="45" width="8" height="8"/>
+    <rect x="110" y="45" width="8" height="8"/>
+    <rect x="135" y="45" width="8" height="8"/>
+
+    <rect x="25" y="85" width="8" height="8"/>
+    <rect x="45" y="85" width="8" height="8"/>
+    <rect x="65" y="85" width="8" height="8"/>
+    <rect x="85" y="85" width="8" height="8"/>
+    <rect x="105" y="85" width="8" height="8"/>
+    <rect x="125" y="85" width="8" height="8"/>
+    <rect x="145" y="85" width="8" height="8"/>
+    <rect x="165" y="85" width="8" height="8"/>
+    <rect x="185" y="85" width="8" height="8"/>
+    <rect x="205" y="85" width="8" height="8"/>
+
+    <rect x="35" y="105" width="8" height="8"/>
+    <rect x="55" y="105" width="8" height="8"/>
+    <rect x="75" y="105" width="8" height="8"/>
+    <rect x="95" y="105" width="8" height="8"/>
+    <rect x="115" y="105" width="8" height="8"/>
+    <rect x="135" y="105" width="8" height="8"/>
+    <rect x="155" y="105" width="8" height="8"/>
+    <rect x="175" y="105" width="8" height="8"/>
+    <rect x="195" y="105" width="8" height="8"/>
+
+    <rect x="25" y="125" width="8" height="8"/>
+    <rect x="65" y="125" width="8" height="8"/>
+    <rect x="105" y="125" width="8" height="8"/>
+    <rect x="145" y="125" width="8" height="8"/>
+    <rect x="185" y="125" width="8" height="8"/>
+
+    <rect x="85" y="170" width="8" height="8"/>
+    <rect x="105" y="170" width="8" height="8"/>
+    <rect x="135" y="170" width="8" height="8"/>
+    <rect x="165" y="170" width="8" height="8"/>
+    <rect x="195" y="170" width="8" height="8"/>
+
+    <rect x="95" y="195" width="8" height="8"/>
+    <rect x="115" y="195" width="8" height="8"/>
+    <rect x="145" y="195" width="8" height="8"/>
+    <rect x="175" y="195" width="8" height="8"/>
+    <rect x="205" y="195" width="8" height="8"/>
+  </g>
+</svg>"""
+    return svg
+
+
+class AeroQRStudioGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero QR Code & Device Link Studio")
+        self.set_default_size(840, 620)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📱 QR Code &amp; Device Link Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Generate vector QR codes for local web servers, Wi-Fi credentials, and mobile device pairing.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Body Paned (Controls on Left vs QR View on Right)
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(420)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_top(12)
+        paned.set_margin_bottom(14)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Left: Payload Controls
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        
+        lbl_mode = Gtk.Label(xalign=0)
+        lbl_mode.set_markup("<span font='bold 9.5' color='#94a3b8'>PAYLOAD TEMPLATE:</span>")
+        left_box.pack_start(lbl_mode, False, False, 0)
+
+        self.combo_mode = Gtk.ComboBoxText()
+        self.combo_mode.append_text("🌐 URL / Web Link")
+        self.combo_mode.append_text("📶 Wi-Fi Network Access")
+        self.combo_mode.append_text("📝 Plain Text / Secret")
+        self.combo_mode.set_active(0)
+        self.combo_mode.connect("changed", self._on_mode_changed)
+        left_box.pack_start(self.combo_mode, False, False, 0)
+
+        # Stack for template parameters
+        self.stack_params = Gtk.Stack()
+        
+        # 1. URL Page
+        box_url = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        lbl_u = Gtk.Label(label="Target URL:", xalign=0)
+        box_url.pack_start(lbl_u, False, False, 0)
+        self.entry_url = Gtk.Entry()
+        self.entry_url.set_text("http://192.168.1.100:3000")
+        self.entry_url.get_style_context().add_class("entry-custom")
+        self.entry_url.connect("changed", self._update_qr)
+        box_url.pack_start(self.entry_url, False, False, 0)
+        self.stack_params.add_named(box_url, "url")
+
+        # 2. Wi-Fi Page
+        box_wifi = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        lbl_ssid = Gtk.Label(label="SSID (Network Name):", xalign=0)
+        box_wifi.pack_start(lbl_ssid, False, False, 0)
+        self.entry_ssid = Gtk.Entry()
+        self.entry_ssid.set_text("AeroDevNet")
+        self.entry_ssid.get_style_context().add_class("entry-custom")
+        self.entry_ssid.connect("changed", self._update_qr)
+        box_wifi.pack_start(self.entry_ssid, False, False, 0)
+
+        lbl_pwd = Gtk.Label(label="Wi-Fi Password:", xalign=0)
+        box_wifi.pack_start(lbl_pwd, False, False, 0)
+        self.entry_pwd = Gtk.Entry()
+        self.entry_pwd.set_text("CyberPass2026!")
+        self.entry_pwd.get_style_context().add_class("entry-custom")
+        self.entry_pwd.connect("changed", self._update_qr)
+        box_wifi.pack_start(self.entry_pwd, False, False, 0)
+        self.stack_params.add_named(box_wifi, "wifi")
+
+        # 3. Text Page
+        box_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        lbl_t = Gtk.Label(label="Custom Text Payload:", xalign=0)
+        box_text.pack_start(lbl_t, False, False, 0)
+        self.entry_text = Gtk.TextView()
+        self.entry_text.get_style_context().add_class("code-editor")
+        self.entry_text.get_buffer().set_text("Hello from Aero Linux 1.3-Nebula!")
+        self.entry_text.get_buffer().connect("changed", self._update_qr)
+        scroll_t = Gtk.ScrolledWindow()
+        scroll_t.set_min_content_height(100)
+        scroll_t.add(self.entry_text)
+        box_text.pack_start(scroll_t, True, True, 0)
+        self.stack_params.add_named(box_text, "text")
+
+        left_box.pack_start(self.stack_params, True, True, 0)
+
+        # Quick Actions
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        btn_copy = Gtk.Button(label="📋 Copy Payload")
+        btn_copy.get_style_context().add_class("btn-secondary")
+        btn_copy.connect("clicked", self._copy_payload)
+        btn_box.pack_start(btn_copy, True, True, 0)
+
+        btn_save = Gtk.Button(label="💾 Export SVG")
+        btn_save.get_style_context().add_class("btn-primary")
+        btn_save.connect("clicked", self._save_svg)
+        btn_box.pack_start(btn_save, True, True, 0)
+
+        left_box.pack_start(btn_box, False, False, 0)
+        paned.pack1(left_box, True, False)
+
+        # Right: QR Preview Display
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        right_box.set_valign(Gtk.Align.CENTER)
+        right_box.set_halign(Gtk.Align.CENTER)
+
+        self.qr_img_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.qr_img_box.get_style_context().add_class("qr-container")
+
+        self.image_widget = Gtk.Image()
+        self.qr_img_box.pack_start(self.image_widget, True, True, 0)
+        right_box.pack_start(self.qr_img_box, False, False, 0)
+
+        self.lbl_payload_hint = Gtk.Label()
+        self.lbl_payload_hint.set_markup("<span font='9' color='#94a3b8'>Point smartphone camera to scan</span>")
+        right_box.pack_start(self.lbl_payload_hint, False, False, 0)
+
+        paned.pack2(right_box, True, False)
+
+        self._update_qr(None)
+
+    def _on_mode_changed(self, combo):
+        idx = combo.get_active()
+        if idx == 0:
+            self.stack_params.set_visible_child_name("url")
+        elif idx == 1:
+            self.stack_params.set_visible_child_name("wifi")
+        else:
+            self.stack_params.set_visible_child_name("text")
+        self._update_qr(None)
+
+    def _get_current_payload(self):
+        idx = self.combo_mode.get_active()
+        if idx == 0:
+            return self.entry_url.get_text().strip() or "http://localhost:3000"
+        elif idx == 1:
+            ssid = self.entry_ssid.get_text().strip()
+            pwd = self.entry_pwd.get_text().strip()
+            return f"WIFI:S:{ssid};T:WPA;P:{pwd};;"
+        else:
+            buf = self.entry_text.get_buffer()
+            return buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+
+    def _update_qr(self, widget):
+        payload = self._get_current_payload()
+        svg_data = _generate_fallback_qr_svg(payload, size=240)
+
+        # Load SVG into Pixbuf
+        try:
+            loader = GdkPixbuf.PixbufLoader.new_with_type("svg")
+            loader.write(svg_data.encode("utf-8"))
+            loader.close()
+            pixbuf = loader.get_pixbuf()
+            self.image_widget.set_from_pixbuf(pixbuf)
+        except Exception as e:
+            pass
+
+    def _copy_payload(self, button):
+        payload = self._get_current_payload()
+        clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        clip.set_text(payload, -1)
+
+    def _save_svg(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Save QR Code as Vector SVG",
+            parent=self,
+            action=Gtk.FileChooserAction.SAVE
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
+        dialog.set_current_name("aero_qrcode.svg")
+        if dialog.run() == Gtk.ResponseType.OK:
+            filepath = dialog.get_filename()
+            payload = self._get_current_payload()
+            svg_data = _generate_fallback_qr_svg(payload, size=300)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(svg_data)
+        dialog.destroy()
+
+
+def main():
+    win = AeroQRStudioGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

@@ -461,6 +461,14 @@ exec python3 "${AERO_HOME}/bin/aero-diff-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-diff-gui"
 
+# Create global executable wrapper for aero-qr-gui
+cat << 'EOF' > "${BIN_DIR}/aero-qr-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-qr-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-qr-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -1019,6 +1027,17 @@ Icon=text-editor
 Terminal=false
 Type=Application
 Categories=Development;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-qr.desktop"
+[Desktop Entry]
+Name=Aero QR Code Studio
+Comment=Aero Linux QR Code & Mobile Pairing Studio
+Exec=${BIN_DIR}/aero-qr-gui
+Icon=camera-photo
+Terminal=false
+Type=Application
+Categories=Utility;Network;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish
