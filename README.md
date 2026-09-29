@@ -270,7 +270,7 @@ aero-linux/
 ## 👥 Contributors & Maintainers
 
 * **[Ronit Gupta](https://github.com/ronitgupta138)** — *Lead Architect & Creator*
-* **Hermes Agent ([Nous Research](https://nousresearch.com))** — *AI Systems Engineering Collaborator*
+* **Open Source Community Contributors**
 
 See [CONTRIBUTORS.md](CONTRIBUTORS.md) for full project acknowledgments.
 

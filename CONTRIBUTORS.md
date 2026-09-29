@@ -9,7 +9,6 @@ Thank you to everyone who has contributed code, architecture, testing, and docum
 | Contributor | Role | Core Focus Areas | Profile |
 | :--- | :--- | :--- | :--- |
 | **Ronit Gupta** | Lead Architect & Project Creator | Distribution Architecture, Systems Design, Kernel Sysctl Tuning, Dual-Boot Safety | [@ronitgupta138](https://github.com/ronitgupta138) |
-| **Hermes Agent** | AI Systems Engineering Collaborator (Nous Research) | CLI Control Suite (`aero`), Benchmark Engine, Hardware Sensor Integration, Wayland & Theme Pipelines | [Nous Research](https://nousresearch.com) |
 
 ---
 
