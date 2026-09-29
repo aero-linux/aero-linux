@@ -8,7 +8,7 @@
     "spacing": 8,
     "modules-left": ["sway/workspaces", "sway/window"],
     "modules-center": ["clock"],
-    "modules-right": ["cpu", "memory", "battery", "pulseaudio", "network", "tray"],
+    "modules-right": ["custom/ports", "custom/zram", "cpu", "memory", "battery", "pulseaudio", "network", "tray"],
 
     "sway/workspaces": {
         "disable-scroll": true,
@@ -16,20 +16,34 @@
         "format": "{name}"
     },
     "sway/window": {
-        "max-length": 40
+        "max-length": 35
     },
     "clock": {
         "format": "🕒 {:%a %b %d  %I:%M %p}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
+    "custom/ports": {
+        "exec": "~/.config/waybar/scripts/dev_ports.sh",
+        "return-type": "json",
+        "interval": 4,
+        "on-click": "aero-ports-gui"
+    },
+    "custom/zram": {
+        "exec": "~/.config/waybar/scripts/zram_status.sh",
+        "return-type": "json",
+        "interval": 4,
+        "on-click": "aero-cleaner-gui"
+    },
     "cpu": {
         "format": "⚙️ {usage}%",
-        "interval": 2
+        "interval": 2,
+        "on-click": "aero-monitor"
     },
     "memory": {
         "format": "🧠 {percentage}%",
-        "tooltip-format": "{used:0.1f}GiB / {total:0.1f}GiB (zRAM Active)",
-        "interval": 2
+        "tooltip-format": "{used:0.1f}GiB / {total:0.1f}GiB (zRAM ZSTD Active)",
+        "interval": 2,
+        "on-click": "aero-cleaner-gui"
     },
     "battery": {
         "states": {
@@ -39,17 +53,19 @@
         },
         "format": "🔋 {capacity}%",
         "format-charging": "⚡ {capacity}%",
-        "format-plugged": "🔌 {capacity}%"
+        "format-plugged": "🔌 {capacity}%",
+        "on-click": "aero-power-gui"
     },
     "pulseaudio": {
         "format": "🔊 {volume}%",
         "format-muted": "🔇 Muted",
-        "on-click": "pavucontrol"
+        "on-click": "aero-audio"
     },
     "network": {
         "format-wifi": "📶 {essid}",
         "format-ethernet": "🌐 Connected",
-        "format-disconnected": "⚠️ Disconnected"
+        "format-disconnected": "⚠️ Disconnected",
+        "on-click": "aero-wifi"
     },
     "tray": {
         "spacing": 10

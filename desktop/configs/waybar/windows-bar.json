@@ -18,6 +18,7 @@
     "sway/window"
   ],
   "modules-right": [
+    "custom/ports",
     "custom/zram",
     "custom/power",
     "pulseaudio",
@@ -52,6 +53,24 @@
     "tooltip": "Aero Control Center",
     "on-click": "aero-welcome"
   },
+  "custom/ports": {
+    "exec": "~/.config/waybar/scripts/dev_ports.sh",
+    "return-type": "json",
+    "interval": 4,
+    "on-click": "aero-ports-gui"
+  },
+  "custom/zram": {
+    "exec": "~/.config/waybar/scripts/zram_status.sh",
+    "return-type": "json",
+    "interval": 4,
+    "on-click": "aero-cleaner-gui"
+  },
+  "custom/power": {
+    "exec": "~/.config/waybar/scripts/power_profile.sh",
+    "return-type": "json",
+    "interval": 5,
+    "on-click": "aero-power-gui"
+  },
   "clock": {
     "format": "{:%I:%M %p  |  %d %b %Y}",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
@@ -59,18 +78,18 @@
   "battery": {
     "format": "🔋 {capacity}%",
     "format-charging": "⚡ {capacity}%",
-    "on-click": "aero-quick-settings || aero-welcome"
+    "on-click": "aero-power-gui"
   },
   "network": {
     "format-wifi": "📶 {essid}",
     "format-ethernet": "🌐 Wired",
     "format-disconnected": "⚠️ Offline",
-    "on-click": "aero-quick-settings"
+    "on-click": "aero-wifi"
   },
   "pulseaudio": {
     "format": "🔊 {volume}%",
     "format-muted": "🔇 Muted",
-    "on-click": "aero-quick-settings",
+    "on-click": "aero-audio",
     "scroll-step": 5
   },
   "custom/shutdown": {
