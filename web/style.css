@@ -936,13 +936,79 @@ body {
   transform: scale(1.15);
 }
 
-.slider-ticks {
+/* RAM Preset Buttons */
+.ram-preset-group {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: #64748b;
+  gap: 8px;
+  width: 100%;
+}
+
+.ram-preset-btn {
+  flex: 1;
+  background: rgba(18, 20, 26, 0.8);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 6px 4px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
   font-family: var(--font-mono);
-  margin-top: -6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ram-preset-btn:hover {
+  border-color: rgba(0, 242, 254, 0.4);
+  color: #fff;
+}
+
+.ram-preset-btn.active {
+  background: rgba(0, 242, 254, 0.15);
+  border-color: #00f2fe;
+  color: #00f2fe;
+  font-weight: 700;
+}
+
+.workspace-bar-track {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  display: flex;
+  overflow: hidden;
+  gap: 2px;
+  padding: 2px;
+}
+
+.bar-seg {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.bar-os {
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+.bar-workload {
+  background: #818cf8;
+  box-shadow: 0 0 8px rgba(129, 140, 248, 0.4);
+}
+
+.bar-free {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.headroom-badge {
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
 .calc-results-grid {

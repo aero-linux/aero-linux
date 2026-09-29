@@ -1289,50 +1289,75 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
 
           <!-- Interactive zRAM Expansion Calculator -->
           <div class="benchmark-card">
-            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-              <span>🧠</span> Interactive zRAM Workspace Calculator
-            </h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>🧠</span> Interactive zRAM Workspace Calculator
+              </h3>
+              <span class="engine-badge" style="background: rgba(0, 242, 254, 0.1); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3); font-size: 0.72rem; padding: 2px 8px;">ZSTD STREAM</span>
+            </div>
 
             <div class="calculator-box">
-              <label style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px;">
-                <span>Select Your Physical RAM:</span>
-                <span id="calc-ram-label" style="color: #00f2fe; font-family: var(--font-mono); font-weight: 700;">16 GB</span>
-              </label>
-              
-              <input type="range" id="ram-slider" min="4" max="64" step="4" value="16" oninput="updateZramCalc(this.value)" class="custom-range-slider">
-              
-              <div class="slider-ticks">
-                <span>4GB</span>
-                <span>8GB</span>
-                <span>16GB</span>
-                <span>32GB</span>
-                <span>64GB</span>
+              <div>
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; font-weight: 600; margin-bottom: 10px;">
+                  <span>Select Your Physical RAM:</span>
+                  <span id="calc-ram-label" style="color: #00f2fe; font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800;">16 GB</span>
+                </label>
+                
+                <!-- Quick Preset Buttons -->
+                <div class="ram-preset-group">
+                  <button type="button" class="ram-preset-btn" onclick="setRamPreset(4)">4 GB</button>
+                  <button type="button" class="ram-preset-btn" onclick="setRamPreset(8)">8 GB</button>
+                  <button type="button" class="ram-preset-btn active" onclick="setRamPreset(16)">16 GB</button>
+                  <button type="button" class="ram-preset-btn" onclick="setRamPreset(32)">32 GB</button>
+                  <button type="button" class="ram-preset-btn" onclick="setRamPreset(64)">64 GB</button>
+                </div>
+
+                <input type="range" id="ram-slider" min="4" max="64" step="4" value="16" oninput="updateZramCalc(this.value)" class="custom-range-slider" style="margin-top: 14px;">
               </div>
 
+              <!-- Real-Time Metrics Grid -->
               <div class="calc-results-grid">
                 <div class="calc-result-stat">
-                  <div class="calc-stat-label">Physical Hardware</div>
+                  <div class="calc-stat-label">Physical RAM</div>
                   <div class="calc-stat-val" id="res-phys-ram">16 GB</div>
+                  <div style="font-size: 0.68rem; color: #64748b; margin-top: 2px;">Hardware DIMM</div>
                 </div>
                 <div class="calc-result-stat">
                   <div class="calc-stat-label">zRAM ZSTD Pool</div>
                   <div class="calc-stat-val" style="color: #38bdf8;" id="res-zram-pool">16 GB</div>
+                  <div style="font-size: 0.68rem; color: #64748b; margin-top: 2px;">Compressed Swap</div>
                 </div>
                 <div class="calc-result-stat highlight-calc">
-                  <div class="calc-stat-label">Effective Multitasking Space</div>
+                  <div class="calc-stat-label">Effective Workspace</div>
                   <div class="calc-stat-val" id="res-effective-ram">~25.6 GB</div>
+                  <div style="font-size: 0.68rem; color: #00f2fe; margin-top: 2px;">Zero Swap Stalls</div>
                 </div>
               </div>
 
-              <!-- Workload breakdown -->
+              <!-- Visual Memory Allocation Bar -->
+              <div style="margin: 4px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; font-family: var(--font-mono);">
+                  <span>Workspace Allocation Breakdown</span>
+                  <span id="alloc-summary" style="color: #00f2fe;">312MB System • ~12.6GB Workload • ~12.7GB Free</span>
+                </div>
+                <div class="workspace-bar-track">
+                  <div id="bar-os" class="bar-seg bar-os" style="width: 2%;" title="Aero OS (312MB)"></div>
+                  <div id="bar-workload" class="bar-seg bar-workload" style="width: 49%;" title="Active Developer Workload"></div>
+                  <div id="bar-free" class="bar-seg bar-free" style="width: 49%;" title="Available Free Memory Buffer"></div>
+                </div>
+              </div>
+
+              <!-- Dynamic Workload Capacity Breakdown -->
               <div class="workload-breakdown">
-                <div style="font-size: 0.82rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px;">Simultaneous Zero-Lag Workload Capacity:</div>
-                <div class="workload-tags">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #e2e8f0;" id="workload-title">Simultaneous Zero-Lag Workload:</span>
+                  <span id="res-free-headroom" class="headroom-badge">⚡ Free Buffer: ~12.7 GB</span>
+                </div>
+                <div class="workload-tags" id="workload-tags-container">
                   <span class="workload-tag">🤖 DeepSeek-R1 (8B Q4) • 5.2GB</span>
                   <span class="workload-tag">🐳 10 Docker Pods • 2.4GB</span>
                   <span class="workload-tag">💻 VSCode + LSP • 1.8GB</span>
                   <span class="workload-tag">🌐 Chrome (30 Tabs) • 3.2GB</span>
-                  <span class="workload-tag" id="res-free-headroom" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">⚡ Free Buffer: ~12.7 GB</span>
                 </div>
               </div>
             </div>
@@ -1573,31 +1598,114 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
     }
 
     // Interactive zRAM Workspace Calculator
+    function setRamPreset(ramVal) {
+      const slider = document.getElementById('ram-slider');
+      if (slider) slider.value = ramVal;
+      updateZramCalc(ramVal);
+    }
+
     function updateZramCalc(ramVal) {
       const ram = parseInt(ramVal, 10);
       const effective = (ram * 1.6).toFixed(1);
       const zramPool = ram;
-      const usedByApps = 5.2 + 2.4 + 1.8 + 3.2 + 0.31; // 12.91 GB
-      const freeHeadroom = (effective - usedByApps).toFixed(1);
+      const osMem = 0.31; // 312 MB
+
+      // Update preset buttons active state
+      document.querySelectorAll('.ram-preset-btn').forEach(btn => {
+        const btnVal = parseInt(btn.textContent, 10);
+        btn.classList.toggle('active', btnVal === ram);
+      });
 
       document.getElementById('calc-ram-label').textContent = ram + ' GB';
       document.getElementById('res-phys-ram').textContent = ram + ' GB';
       document.getElementById('res-zram-pool').textContent = zramPool + ' GB';
       document.getElementById('res-effective-ram').textContent = '~' + effective + ' GB';
-      
+
+      // Dynamic Workload Scenarios based on RAM tier
+      let workloadTags = [];
+      let workloadTotal = 0;
+      let workloadTitle = 'Simultaneous Zero-Lag Workload:';
+
+      if (ram <= 4) {
+        workloadTitle = 'Lightweight Dev Workload (~6.4GB Capacity):';
+        workloadTags = [
+          '💻 VSCode / Neovim • 1.2GB',
+          '⚡ FastAPI / Node.js API • 0.8GB',
+          '🗄️ SQLite Studio • 0.3GB',
+          '🌐 Chrome (10 Tabs) • 1.8GB'
+        ];
+        workloadTotal = 1.2 + 0.8 + 0.3 + 1.8;
+      } else if (ram <= 8) {
+        workloadTitle = 'Full-Stack Workload (~12.8GB Capacity):';
+        workloadTags = [
+          '🐳 5 Docker Containers • 1.8GB',
+          '🗄️ PostgreSQL + Redis • 1.2GB',
+          '💻 VSCode + 6 Extensions • 1.6GB',
+          '🌐 Chrome (20 Tabs) • 2.6GB'
+        ];
+        workloadTotal = 1.8 + 1.2 + 1.6 + 2.6;
+      } else if (ram <= 16) {
+        workloadTitle = 'AI & Heavy Engineering (~25.6GB Capacity):';
+        workloadTags = [
+          '🤖 DeepSeek-R1 (8B Q4) • 5.2GB',
+          '🐳 10 Docker Pods • 2.4GB',
+          '💻 VSCode + LSP • 1.8GB',
+          '🌐 Chrome (30 Tabs) • 3.2GB'
+        ];
+        workloadTotal = 5.2 + 2.4 + 1.8 + 3.2;
+      } else if (ram <= 32) {
+        workloadTitle = 'AI Swarm & Compiles (~51.2GB Capacity):';
+        workloadTags = [
+          '🤖 DeepSeek-R1 (14B Q4) • 9.8GB',
+          '⚡ Rust/C++ Turbo RAM-Disk Build • 6.0GB',
+          '🐳 20 Docker Microservices • 5.5GB',
+          '💻 IDE Swarm + Chrome 50 Tabs • 6.0GB'
+        ];
+        workloadTotal = 9.8 + 6.0 + 5.5 + 6.0;
+      } else {
+        workloadTitle = 'Maximum Scale AI & Kernel Dev (~102.4GB Capacity):';
+        workloadTags = [
+          '🤖 DeepSeek-R1 (32B Q4) / Llama-70B • 22.0GB',
+          '⚡ Parallel Kernel Compiles (RAM-Disk) • 16.0GB',
+          '🐳 Full Kubernetes Local Cluster • 12.0GB',
+          '💻 Full Developer Workspace • 8.0GB'
+        ];
+        workloadTotal = 22.0 + 16.0 + 12.0 + 8.0;
+      }
+
+      const totalUsed = osMem + workloadTotal;
+      const freeHeadroom = Math.max(0, effective - totalUsed).toFixed(1);
+
+      // Render tags
+      const container = document.getElementById('workload-tags-container');
+      if (container) {
+        container.innerHTML = workloadTags.map(t => `<span class="workload-tag">${t}</span>`).join('');
+      }
+      const titleEl = document.getElementById('workload-title');
+      if (titleEl) titleEl.textContent = workloadTitle;
+
+      // Update Allocation Bar
+      const osPct = Math.max(2, (osMem / effective * 100)).toFixed(1);
+      const workPct = Math.min(85, (workloadTotal / effective * 100)).toFixed(1);
+      const freePct = Math.max(5, (100 - parseFloat(osPct) - parseFloat(workPct))).toFixed(1);
+
+      const barOs = document.getElementById('bar-os');
+      const barWorkload = document.getElementById('bar-workload');
+      const barFree = document.getElementById('bar-free');
+      if (barOs && barWorkload && barFree) {
+        barOs.style.width = osPct + '%';
+        barWorkload.style.width = workPct + '%';
+        barFree.style.width = freePct + '%';
+      }
+
+      const allocSummary = document.getElementById('alloc-summary');
+      if (allocSummary) {
+        allocSummary.textContent = `312MB OS • ~${workloadTotal.toFixed(1)}GB Workload • ~${freeHeadroom}GB Free`;
+      }
+
       const freeBadge = document.getElementById('res-free-headroom');
       if (freeBadge) {
-        if (parseFloat(freeHeadroom) > 0) {
-          freeBadge.textContent = '⚡ Free Buffer: ~' + freeHeadroom + ' GB';
-          freeBadge.style.background = 'rgba(16, 185, 129, 0.15)';
-          freeBadge.style.color = '#34d399';
-          freeBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-        } else {
-          freeBadge.textContent = '⚠️ High Load (Swap & zRAM Streaming Active)';
-          freeBadge.style.background = 'rgba(245, 158, 11, 0.15)';
-          freeBadge.style.color = '#fbbf24';
-          freeBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-        }
+        freeBadge.textContent = `⚡ Free Buffer: ~${freeHeadroom} GB`;
       }
     }
 
