@@ -21,6 +21,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Architecture](https://img.shields.io/badge/Architecture-x86__64-orange.svg?style=flat-square)]()
 
+<p align="center" style="margin-top: 10px;">
+  <a href="https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral" target="_blank">
+    <img src="https://alternativeto.net/static/badges/badge-compact-color.svg" alt="Aero Linux on AlternativeTo" width="190" height="60" />
+  </a>
+</p>
+
 *Engineered for systems programmers, backend engineers, and local AI builders. Sub-350MB idle footprint, dynamic in-memory zRAM ZSTD compression, 1-click local LLM inference, 49 native GTK3 applications, and zero background bloat.*
 
 </div>
