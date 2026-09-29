@@ -117,6 +117,34 @@ APP_CATALOG: Dict[str, Dict[str, Any]] = {
         "cmd_install": "sudo apt-get install -y obs-studio",
         "installed_check": "obs",
     },
+    "lazygit": {
+        "name": "LazyGit TUI",
+        "category": "Development",
+        "description": "Simple terminal UI for git commands with instant shortcuts.",
+        "cmd_install": "sudo apt-get install -y lazygit || brew install lazygit",
+        "installed_check": "lazygit",
+    },
+    "gh": {
+        "name": "GitHub CLI (gh)",
+        "category": "Development",
+        "description": "GitHub’s official command line tool for PRs, issues and repos.",
+        "cmd_install": "sudo apt-get install -y gh",
+        "installed_check": "gh",
+    },
+    "btop": {
+        "name": "btop Resource Monitor",
+        "category": "System",
+        "description": "Resource monitor that shows usage and stats for processor, memory, disks and network.",
+        "cmd_install": "sudo apt-get install -y btop",
+        "installed_check": "btop",
+    },
+    "insomnia": {
+        "name": "Insomnia REST Client",
+        "category": "API & Backend",
+        "description": "Streamlined API design and testing desktop client.",
+        "cmd_install": "flatpak install -y flathub rest.insomnia.Insomnia",
+        "installed_check": "insomnia",
+    },
 }
 
 
