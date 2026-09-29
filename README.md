@@ -259,18 +259,28 @@ sudo ./build/build.sh
 
 ```text
 aero-linux/
-├── build/                      # Live ISO builder scripts, sysctl & package manifests
-│   └── completions/            # Fish & Bash shell autocompletions
-├── desktop/                    # Sway, Waybar, Alacritty, Fish, Swaylock dotfiles
-│   ├── configs/                # Window manager & taskbar configurations
-│   └── themes/                 # Plymouth boot splash & desktop palettes
-├── docs/                       # Architecture, Commands, and Dual-Boot manuals
-├── installer/                  # Calamares dual-boot safe installer configs & hooks
-├── marketing/                  # Hacker News, Product Hunt, Reddit, and Video launch assets
-├── packages/
-│   ├── aero-cli/               # Core System, Power, Memory & AI CLI suite
-│   └── aero-welcome/           # GTK3 Graphical Control Center & Quick Setup GUI
-└── web/                        # Landing page & interactive terminal simulator
+├── build/                      # Live ISO builder, Debian packager, sysctl & completions
+│   ├── build_iso.sh            # Automated Live bootable ISO generator
+│   ├── package_deb.sh          # Debian (.deb) package compiler
+│   └── completions/            # Fish, Bash, and Zsh shell completions
+├── desktop/                    # Desktop configs, window manager & themes
+│   ├── configs/                # Sway, Waybar, Nemo Actions, Fish, Alacritty
+│   │   ├── nemo-actions/       # Zero-terminal right-click developer actions
+│   │   └── waybar/             # Taskbar JSON & live telemetry scripts (ports, zRAM)
+│   ├── icons/                  # High-contrast developer icon assets
+│   └── themes/                 # Plymouth boot splash, Tokyo Night, Cyber Cyan
+├── dist/                       # Release packages (.deb), checksums (SHA256SUMS)
+├── docs/                       # Architecture, Commands, Roadmap & manpages
+│   ├── ARCHITECTURE.md         # System design, memory hierarchy & kernel specs
+│   ├── COMMANDS.md             # Complete CLI reference manual (25+ subcommands)
+│   ├── DUAL_BOOT_GUIDE.md      # Windows 10/11 & EFI partition safety manual
+│   ├── ROADMAP.md              # Engineering timeline & specs (v1.5 to v2.0)
+│   └── man/                    # System manpage manuals (aero.1)
+├── installer/                  # Calamares dual-boot safe installer configs & branding
+├── packages/                   # Core Python & GTK3 developer applications
+│   ├── aero-cli/               # 49 native GTK3 apps, CLI subcommands & 130 unit tests
+│   └── aero-welcome/           # 6-tab GTK3 Control Center & Quick Setup GUI
+└── web/                        # Web portal, 49-app catalog, zRAM calc & hotkey guide
 ```
 
 ---
