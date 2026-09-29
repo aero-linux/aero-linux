@@ -1,0 +1,343 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Docker & Container Orchestration Studio (GTK3)
+1-Click container management, live status telemetry, and container logs viewer.
+"""
+
+import gi
+import os
+import sys
+import threading
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+# Setup PYTHONPATH for aero modules
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+CLI_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../aero-cli"))
+if CLI_DIR not in sys.path:
+    sys.path.insert(0, CLI_DIR)
+
+from aero.docker_tools import check_docker, get_containers_list, container_action, get_container_logs, prune_docker
+
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.container-card {
+    background-color: #0d1527;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 8px;
+}
+.container-card:hover {
+    border-color: rgba(0, 242, 254, 0.4);
+    background-color: #111c33;
+}
+.badge-running {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.badge-stopped {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.btn-action {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+    font-weight: 600;
+}
+.btn-action:hover {
+    background-color: #243052;
+    color: #00f2fe;
+    border-color: #00f2fe;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 700;
+}
+.btn-danger:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+.logs-view {
+    background-color: #050811;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+}
+"""
+
+
+class AeroDockerGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Docker & Container Studio")
+        self.set_default_size(880, 620)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🐳 Docker &amp; Container Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Manage local microservices, Docker Compose stacks, and container logs.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        # Actions in Header
+        btn_refresh = Gtk.Button(label="🔄 Refresh")
+        btn_refresh.get_style_context().add_class("btn-action")
+        btn_refresh.connect("clicked", self._on_refresh_clicked)
+        header_box.pack_start(btn_refresh, False, False, 0)
+
+        btn_prune = Gtk.Button(label="🧹 System Prune")
+        btn_prune.get_style_context().add_class("btn-danger")
+        btn_prune.connect("clicked", self._on_prune_clicked)
+        header_box.pack_start(btn_prune, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Main Content Paned
+        paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
+        paned.set_position(360)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Upper: Container List
+        scroll_list = Gtk.ScrolledWindow()
+        scroll_list.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.container_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.container_box.set_margin_top(14)
+        self.container_box.set_margin_bottom(14)
+        self.container_box.set_margin_start(16)
+        self.container_box.set_margin_end(16)
+        scroll_list.add(self.container_box)
+        paned.pack1(scroll_list, True, False)
+
+        # Lower: Logs Viewer
+        lower_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        lower_box.set_margin_start(16)
+        lower_box.set_margin_end(16)
+        lower_box.set_margin_bottom(12)
+        lower_box.set_margin_top(8)
+
+        logs_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.lbl_logs_title = Gtk.Label(xalign=0)
+        self.lbl_logs_title.set_markup("<span font='bold 10' color='#38bdf8'>📜 Live Container Logs</span>")
+        logs_header.pack_start(self.lbl_logs_title, True, True, 0)
+        lower_box.pack_start(logs_header, False, False, 0)
+
+        scroll_logs = Gtk.ScrolledWindow()
+        scroll_logs.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.logs_view = Gtk.TextView()
+        self.logs_view.set_editable(False)
+        self.logs_view.get_style_context().add_class("logs-view")
+        self.logs_view.set_wrap_mode(Gtk.WrapMode.CHAR)
+        scroll_logs.add(self.logs_view)
+        lower_box.pack_start(scroll_logs, True, True, 0)
+
+        paned.pack2(lower_box, True, False)
+
+        # Initial Load
+        self._load_containers()
+
+    def _load_containers(self):
+        # Clear existing
+        for child in self.container_box.get_children():
+            self.container_box.remove(child)
+
+        if not check_docker():
+            lbl_empty = Gtk.Label()
+            lbl_empty.set_markup("<span color='#94a3b8' font='11'>❌ Docker daemon is not installed or not running.\nInstall Docker via <b>aero store install docker</b></span>")
+            lbl_empty.set_margin_top(40)
+            self.container_box.pack_start(lbl_empty, True, True, 0)
+            self.show_all()
+            return
+
+        containers = get_containers_list(all_containers=True)
+        if not containers:
+            lbl_empty = Gtk.Label()
+            lbl_empty.set_markup("<span color='#94a3b8' font='11'>No active Docker containers found.\nRun containers via Docker Compose or CLI to inspect here.</span>")
+            lbl_empty.set_margin_top(40)
+            self.container_box.pack_start(lbl_empty, True, True, 0)
+            self.show_all()
+            return
+
+        for c in containers:
+            card = self._create_container_card(c)
+            self.container_box.pack_start(card, False, False, 0)
+
+        self.show_all()
+
+    def _create_container_card(self, c):
+        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        card.get_style_context().add_class("container-card")
+
+        # Info Box
+        info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        
+        top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        lbl_name = Gtk.Label(xalign=0)
+        lbl_name.set_markup(f"<span font='bold 11' color='#ffffff'>{c['name']}</span> <span font='9' color='#64748b'>({c['id'][:10]})</span>")
+        top_row.pack_start(lbl_name, False, False, 0)
+
+        is_running = "running" in c.get("state", "").lower() or "up" in c.get("status", "").lower()
+        badge = Gtk.Label()
+        badge.set_markup(f"<span class='badge-{'running' if is_running else 'stopped'}'>{'● RUNNING' if is_running else '○ STOPPED'}</span>")
+        top_row.pack_start(badge, False, False, 0)
+        info.pack_start(top_row, False, False, 0)
+
+        details = Gtk.Label(xalign=0)
+        details.set_markup(f"<span font='9' color='#94a3b8'>Image: <tt color='#38bdf8'>{c['image']}</tt> | Status: {c['status']}</span>")
+        info.pack_start(details, False, False, 0)
+
+        if c.get("ports"):
+            ports_lbl = Gtk.Label(xalign=0)
+            ports_lbl.set_markup(f"<span font='8.5' color='#a855f7'>Ports: {c['ports']}</span>")
+            info.pack_start(ports_lbl, False, False, 0)
+
+        card.pack_start(info, True, True, 0)
+
+        # Action Buttons
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+
+        if is_running:
+            btn_stop = Gtk.Button(label="⏹️ Stop")
+            btn_stop.get_style_context().add_class("btn-action")
+            btn_stop.connect("clicked", lambda b, cid=c['id']: self._on_action(cid, "stop"))
+            btn_box.pack_start(btn_stop, False, False, 0)
+
+            btn_restart = Gtk.Button(label="🔄 Restart")
+            btn_restart.get_style_context().add_class("btn-action")
+            btn_restart.connect("clicked", lambda b, cid=c['id']: self._on_action(cid, "restart"))
+            btn_box.pack_start(btn_restart, False, False, 0)
+        else:
+            btn_start = Gtk.Button(label="▶️ Start")
+            btn_start.get_style_context().add_class("btn-primary")
+            btn_start.connect("clicked", lambda b, cid=c['id']: self._on_action(cid, "start"))
+            btn_box.pack_start(btn_start, False, False, 0)
+
+        btn_logs = Gtk.Button(label="📜 Logs")
+        btn_logs.get_style_context().add_class("btn-action")
+        btn_logs.connect("clicked", lambda b, cid=c['id'], cname=c['name']: self._on_view_logs(cid, cname))
+        btn_box.pack_start(btn_logs, False, False, 0)
+
+        btn_rm = Gtk.Button(label="🗑️")
+        btn_rm.get_style_context().add_class("btn-danger")
+        btn_rm.connect("clicked", lambda b, cid=c['id']: self._on_action(cid, "rm"))
+        btn_box.pack_start(btn_rm, False, False, 0)
+
+        card.pack_start(btn_box, False, False, 0)
+        return card
+
+    def _on_action(self, cid, action):
+        def worker():
+            container_action(cid, action)
+            GLib.idle_add(self._load_containers)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_view_logs(self, cid, cname):
+        self.lbl_logs_title.set_markup(f"<span font='bold 10' color='#38bdf8'>📜 Logs for: <tt color='#ffffff'>{cname}</tt> ({cid[:10]})</span>")
+        def worker():
+            logs_text = get_container_logs(cid, tail=150)
+            def update_ui():
+                buf = self.logs_view.get_buffer()
+                buf.set_text(logs_text or "No log output recorded.")
+            GLib.idle_add(update_ui)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_refresh_clicked(self, button):
+        self._load_containers()
+
+    def _on_prune_clicked(self, button):
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.YES_NO,
+            text="Prune Unused Docker Containers & Volumes?",
+        )
+        dialog.format_secondary_text("This will remove all stopped containers, dangling images, and build cache.")
+        res = dialog.run()
+        dialog.destroy()
+        if res == Gtk.ResponseType.YES:
+            def worker():
+                prune_docker()
+                GLib.idle_add(self._load_containers)
+            threading.Thread(target=worker, daemon=True).start()
+
+
+def main():
+    win = AeroDockerGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

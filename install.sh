@@ -373,6 +373,14 @@ exec python3 "${AERO_HOME}/bin/aero-snapshots-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-snapshots-gui"
 
+# Create global executable wrapper for aero-docker-gui
+cat << 'EOF' > "${BIN_DIR}/aero-docker-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-docker-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-docker-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -810,6 +818,17 @@ Icon=document-revert
 Terminal=false
 Type=Application
 Categories=System;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-docker.desktop"
+[Desktop Entry]
+Name=Aero Docker & Containers
+Comment=Aero Linux Docker Container & Microservices Studio
+Exec=${BIN_DIR}/aero-docker-gui
+Icon=docker
+Terminal=false
+Type=Application
+Categories=Development;System;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

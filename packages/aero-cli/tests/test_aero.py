@@ -733,6 +733,15 @@ class TestAeroCLI(unittest.TestCase):
             c_path = f"/home/ronit138/aero-linux/build/completions/{sh}"
             self.assertTrue(os.path.exists(c_path))
 
+    def test_docker_gui_and_telemetry(self):
+        doc_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-docker-gui"
+        self.assertTrue(os.path.exists(doc_gui))
+        self.assertTrue(os.access(doc_gui, os.X_OK))
+        from aero.docker_tools import get_containers_list, container_action
+        containers = get_containers_list()
+        self.assertIsInstance(containers, list)
+        self.assertFalse(container_action("invalid_container_id", "invalid_action"))
+
 
 if __name__ == "__main__":
     unittest.main()
