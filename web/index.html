@@ -643,23 +643,43 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
     // Copy 1-Command Installer
     function copyInstallCmd() {
       const text = document.getElementById('install-cmd-text').textContent.trim();
-      navigator.clipboard.writeText(text).then(() => {
-        const copyBtn = document.getElementById('copy-btn');
-        const copyIcon = document.getElementById('copy-icon');
-        const copyText = document.getElementById('copy-text');
-        
+      const copyBtn = document.getElementById('copy-btn');
+      const copyIcon = document.getElementById('copy-icon');
+      const copyText = document.getElementById('copy-text');
+
+      const triggerSuccess = () => {
         copyBtn.classList.add('copied');
         copyIcon.textContent = '✅';
         copyText.textContent = 'Copied!';
-        
         setTimeout(() => {
           copyBtn.classList.remove('copied');
           copyIcon.textContent = '📋';
           copyText.textContent = 'Copy';
         }, 2200);
-      }).catch(err => {
-        console.error('Clipboard write failed:', err);
-      });
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(triggerSuccess).catch(() => fallbackCopy(text, triggerSuccess));
+      } else {
+        fallbackCopy(text, triggerSuccess);
+      }
+    }
+
+    function fallbackCopy(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        if (cb) cb();
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(ta);
     }
 
     // Terminal Tabs & Auto-cycling
