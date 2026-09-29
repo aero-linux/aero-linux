@@ -757,6 +757,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(rg_gui))
         self.assertTrue(os.access(rg_gui, os.X_OK))
 
+    def test_db_gui_script(self):
+        db_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-db-gui"
+        self.assertTrue(os.path.exists(db_gui))
+        self.assertTrue(os.access(db_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -405,6 +405,14 @@ exec python3 "${AERO_HOME}/bin/aero-regex-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-regex-gui"
 
+# Create global executable wrapper for aero-db-gui
+cat << 'EOF' > "${BIN_DIR}/aero-db-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-db-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-db-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -886,6 +894,17 @@ Icon=text-editor
 Terminal=false
 Type=Application
 Categories=Development;Utility;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-db.desktop"
+[Desktop Entry]
+Name=Aero Database Studio
+Comment=Aero Linux SQLite & Database Query Studio
+Exec=${BIN_DIR}/aero-db-gui
+Icon=server-database
+Terminal=false
+Type=Application
+Categories=Development;Database;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

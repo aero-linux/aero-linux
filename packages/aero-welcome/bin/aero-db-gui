@@ -1,0 +1,437 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Database & Query Studio (GTK3)
+Native SQLite/database explorer, interactive SQL query editor, table visualizer, and CSV/JSON exporter.
+"""
+
+import csv
+import gi
+import json
+import os
+import sqlite3
+import sys
+import time
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.sidebar-box {
+    background-color: #080d1a;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 10pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.tree-view {
+    background-color: #080d1a;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.badge-table {
+    background-color: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.badge-status {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+"""
+
+
+class AeroDbGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Database & Query Studio")
+        self.set_default_size(960, 680)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.db_conn = None
+        self.current_db_path = ":memory:"
+        self.last_results = []
+        self.last_headers = []
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🗄️ Database &amp; Query Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Native SQLite explorer, schema visualizer, and interactive SQL query studio.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        btn_open = Gtk.Button(label="📁 Open SQLite DB")
+        btn_open.get_style_context().add_class("btn-secondary")
+        btn_open.connect("clicked", self._on_open_file)
+        header_box.pack_start(btn_open, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Main Paned (Sidebar vs Content)
+        paned_main = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned_main.set_position(260)
+        main_box.pack_start(paned_main, True, True, 0)
+
+        # Left Sidebar: Tables & Schema
+        sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        sidebar.get_style_context().add_class("sidebar-box")
+
+        self.lbl_db_info = Gtk.Label(xalign=0)
+        self.lbl_db_info.set_markup("<span font='bold 9.5' color='#38bdf8'>DATABASE: InMemory DB</span>")
+        sidebar.pack_start(self.lbl_db_info, False, False, 0)
+
+        lbl_tables = Gtk.Label(xalign=0)
+        lbl_tables.set_markup("<span font='bold 9' color='#94a3b8'>TABLES &amp; VIEWS</span>")
+        sidebar.pack_start(lbl_tables, False, False, 0)
+
+        scroll_tables = Gtk.ScrolledWindow()
+        self.table_listbox = Gtk.ListBox()
+        self.table_listbox.connect("row-selected", self._on_table_selected)
+        scroll_tables.add(self.table_listbox)
+        sidebar.pack_start(scroll_tables, True, True, 0)
+
+        paned_main.pack1(sidebar, False, False)
+
+        # Right Paned: Upper Query Editor vs Lower Result Grid
+        right_paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
+        right_paned.set_position(220)
+        right_paned.set_margin_start(14)
+        right_paned.set_margin_end(14)
+        right_paned.set_margin_top(12)
+        right_paned.set_margin_bottom(12)
+        paned_main.pack2(right_paned, True, False)
+
+        # Upper: SQL Editor
+        upper_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        
+        sql_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl_sql = Gtk.Label(xalign=0)
+        lbl_sql.set_markup("<span font='bold 9.5' color='#94a3b8'>SQL QUERY EDITOR</span>")
+        sql_bar.pack_start(lbl_sql, True, True, 0)
+
+        btn_exec = Gtk.Button(label="🚀 Run Query (Ctrl+Enter)")
+        btn_exec.get_style_context().add_class("btn-primary")
+        btn_exec.connect("clicked", self._on_run_query)
+        sql_bar.pack_start(btn_exec, False, False, 0)
+
+        upper_box.pack_start(sql_bar, False, False, 0)
+
+        scroll_sql = Gtk.ScrolledWindow()
+        self.sql_view = Gtk.TextView()
+        self.sql_view.get_style_context().add_class("code-editor")
+        self.sql_view.get_buffer().set_text("SELECT * FROM users LIMIT 50;")
+        scroll_sql.add(self.sql_view)
+        upper_box.pack_start(scroll_sql, True, True, 0)
+        right_paned.pack1(upper_box, True, False)
+
+        # Lower: Tabular Results Grid
+        lower_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        
+        res_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl_res = Gtk.Label(xalign=0)
+        lbl_res.set_markup("<span font='bold 9.5' color='#94a3b8'>QUERY RESULTS</span>")
+        res_bar.pack_start(lbl_res, False, False, 0)
+
+        self.lbl_status = Gtk.Label(xalign=0)
+        self.lbl_status.set_markup("<span class='badge-status'>Ready</span>")
+        res_bar.pack_start(self.lbl_status, True, True, 0)
+
+        btn_export = Gtk.Button(label="📋 Export CSV")
+        btn_export.get_style_context().add_class("btn-secondary")
+        btn_export.connect("clicked", self._on_export_csv)
+        res_bar.pack_start(btn_export, False, False, 0)
+
+        lower_box.pack_start(res_bar, False, False, 0)
+
+        self.scroll_grid = Gtk.ScrolledWindow()
+        self.tree_results = Gtk.TreeView()
+        self.tree_results.get_style_context().add_class("tree-view")
+        self.scroll_grid.add(self.tree_results)
+        lower_box.pack_start(self.scroll_grid, True, True, 0)
+
+        right_paned.pack2(lower_box, True, False)
+
+        # Initialize with sample in-memory SQLite database
+        self._init_sample_db()
+
+    def _init_sample_db(self):
+        self.db_conn = sqlite3.connect(":memory:")
+        cur = self.db_conn.cursor()
+        cur.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, email TEXT, role TEXT, created_at TEXT)")
+        cur.execute("CREATE TABLE services (id INTEGER PRIMARY KEY, name TEXT, port INTEGER, status TEXT)")
+        
+        users_data = [
+            (1, "ronit", "ronit@aerolinux.org", "Administrator", "2026-09-29 10:00:00"),
+            (2, "developer", "dev@aerolinux.org", "Engineer", "2026-09-29 11:30:00"),
+            (3, "ai_agent", "agent@aerolinux.org", "Autonomous Daemon", "2026-09-29 12:00:00"),
+        ]
+        cur.executemany("INSERT INTO users VALUES (?, ?, ?, ?, ?)", users_data)
+
+        services_data = [
+            (1, "Ollama LLM", 11434, "ACTIVE"),
+            (2, "FastAPI Backend", 8000, "ACTIVE"),
+            (3, "PostgreSQL", 5432, "ACTIVE"),
+            (4, "Redis Cache", 6379, "ACTIVE"),
+        ]
+        cur.executemany("INSERT INTO services VALUES (?, ?, ?, ?)", services_data)
+        self.db_conn.commit()
+
+        self._refresh_tables()
+        self._on_run_query(None)
+
+    def _refresh_tables(self):
+        for child in self.table_listbox.get_children():
+            self.table_listbox.remove(child)
+
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+        tables = [row[0] for row in cur.fetchall()]
+
+        for tbl in tables:
+            row = Gtk.ListBoxRow()
+            hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            hbox.set_margin_top(4)
+            hbox.set_margin_bottom(4)
+            hbox.set_margin_start(6)
+            
+            lbl_name = Gtk.Label(label=f"📄 {tbl}", xalign=0)
+            lbl_name.set_markup(f"<span font='9.5' color='#ffffff'>📄 {tbl}</span>")
+            hbox.pack_start(lbl_name, True, True, 0)
+            row.add(hbox)
+            row.tbl_name = tbl
+            self.table_listbox.add(row)
+
+        self.table_listbox.show_all()
+
+    def _on_table_selected(self, listbox, row):
+        if row and hasattr(row, "tbl_name"):
+            self.sql_view.get_buffer().set_text(f"SELECT * FROM {row.tbl_name} LIMIT 100;")
+            self._on_run_query(None)
+
+    def _on_run_query(self, widget):
+        buf = self.sql_view.get_buffer()
+        query = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True).strip()
+        if not query:
+            return
+
+        start_t = time.perf_counter()
+        try:
+            cur = self.db_conn.cursor()
+            cur.execute(query)
+            
+            if cur.description:
+                headers = [d[0] for d in cur.description]
+                rows = cur.fetchall()
+                self.last_headers = headers
+                self.last_results = rows
+                elapsed = (time.perf_counter() - start_t) * 1000
+
+                self._render_results(headers, rows)
+                self.lbl_status.set_markup(f"<span class='badge-status'>{len(rows)} Row(s) in {elapsed:.1f}ms</span>")
+            else:
+                self.db_conn.commit()
+                elapsed = (time.perf_counter() - start_t) * 1000
+                self._refresh_tables()
+                self.lbl_status.set_markup(f"<span class='badge-status'>Query OK ({elapsed:.1f}ms)</span>")
+        except Exception as e:
+            elapsed = (time.perf_counter() - start_t) * 1000
+            self.lbl_status.set_markup(f"<span color='#f87171' font='9'>Error: {e}</span>")
+
+    def _render_results(self, headers, rows):
+        # Clear existing columns
+        for col in self.tree_results.get_columns():
+            self.tree_results.remove_column(col)
+
+        types = [str] * len(headers)
+        store = Gtk.ListStore(*types)
+
+        for row in rows:
+            str_row = [str(val) if val is not None else "NULL" for val in row]
+            store.append(str_row)
+
+        self.tree_results.set_model(store)
+
+        for idx, h in enumerate(headers):
+            renderer = Gtk.CellRendererText()
+            col = Gtk.TreeViewColumn(h, renderer, text=idx)
+            col.set_resizable(True)
+            col.set_min_width(80)
+            self.tree_results.append_column(col)
+
+    def _on_open_file(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Open SQLite Database",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN,
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        
+        filter_db = Gtk.FileFilter()
+        filter_db.set_name("SQLite Databases (*.db, *.sqlite, *.sqlite3)")
+        filter_db.add_pattern("*.db")
+        filter_db.add_pattern("*.sqlite")
+        filter_db.add_pattern("*.sqlite3")
+        dialog.add_filter(filter_db)
+
+        filter_all = Gtk.FileFilter()
+        filter_all.set_name("All Files")
+        filter_all.add_pattern("*")
+        dialog.add_filter(filter_all)
+
+        res = dialog.run()
+        if res == Gtk.ResponseType.OK:
+            selected_path = dialog.get_filename()
+            dialog.destroy()
+            try:
+                self.db_conn = sqlite3.connect(selected_path)
+                self.current_db_path = selected_path
+                self.lbl_db_info.set_markup(f"<span font='bold 9.5' color='#38bdf8'>DATABASE: {os.path.basename(selected_path)}</span>")
+                self._refresh_tables()
+                self._on_run_query(None)
+            except Exception as e:
+                err_dlg = Gtk.MessageDialog(
+                    transient_for=self,
+                    flags=0,
+                    message_type=Gtk.MessageType.ERROR,
+                    buttons=Gtk.ButtonsType.OK,
+                    text="Failed to Open Database",
+                )
+                err_dlg.format_secondary_text(str(e))
+                err_dlg.run()
+                err_dlg.destroy()
+        else:
+            dialog.destroy()
+
+    def _on_export_csv(self, button):
+        if not self.last_results or not self.last_headers:
+            return
+
+        dialog = Gtk.FileChooserDialog(
+            title="Export Results to CSV",
+            parent=self,
+            action=Gtk.FileChooserAction.SAVE,
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
+        dialog.set_current_name("query_results.csv")
+
+        res = dialog.run()
+        if res == Gtk.ResponseType.OK:
+            save_path = dialog.get_filename()
+            dialog.destroy()
+            try:
+                with open(save_path, "w", newline="", encoding="utf-8") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(self.last_headers)
+                    writer.writerows(self.last_results)
+                
+                info_dlg = Gtk.MessageDialog(
+                    transient_for=self,
+                    flags=0,
+                    message_type=Gtk.MessageType.INFO,
+                    buttons=Gtk.ButtonsType.OK,
+                    text="CSV Export Completed",
+                )
+                info_dlg.format_secondary_text(f"Exported {len(self.last_results)} rows to:\n{save_path}")
+                info_dlg.run()
+                info_dlg.destroy()
+            except Exception as e:
+                err_dlg = Gtk.MessageDialog(
+                    transient_for=self,
+                    flags=0,
+                    message_type=Gtk.MessageType.ERROR,
+                    buttons=Gtk.ButtonsType.OK,
+                    text="Export Failed",
+                )
+                err_dlg.format_secondary_text(str(e))
+                err_dlg.run()
+                err_dlg.destroy()
+        else:
+            dialog.destroy()
+
+
+def main():
+    win = AeroDbGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
