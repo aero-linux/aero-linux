@@ -18,7 +18,7 @@
       </div>
       <nav class="nav-links">
         <a href="#features">Features</a>
-        <a href="#gui-suite">GUI Suite (45 Apps)</a>
+        <a href="#gui-suite">GUI Suite (49 Apps)</a>
         <a href="#benchmarks">Benchmarks</a>
         <a href="#download">Downloads</a>
         <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="github-link">GitHub</a>
@@ -375,216 +375,834 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
           </div>
         </div>
 
-        <!-- 45-App Zero-Terminal Graphical Suite Grid -->
-        <div id="gui-suite" style="margin-top: 40px; margin-bottom: 20px;">
+                <!-- 49-App Zero-Terminal Graphical Suite Grid with Live Search & Category Filter -->
+        <div id="gui-suite" style="margin-top: 50px; margin-bottom: 20px;">
           <span id="apps"></span>
-          <h3 style="font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 8px;">🎛️ Complete Zero-Terminal Graphical Suite (45 Native Apps)</h3>
-          <p style="color: var(--text-muted); text-align: center; font-size: 0.95rem; margin-bottom: 24px;">45 dedicated native GTK3 applications engineered for 100% graphical control without opening a terminal.</p>
+          <div style="text-align: center; margin-bottom: 25px;">
+            <span class="engine-badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">🎛️ 100% GRAPHICAL WORKFLOW</span>
+            <h3 style="font-size: 1.8rem; font-weight: 800; margin-top: 8px;">Zero-Terminal Native Developer Suite</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 650px; margin: 6px auto 20px;">
+              49 instant-start native GTK3 applications engineered with sub-20ms cold start, 15MB RAM baseline, and zero Electron bloat.
+            </p>
+
+            <!-- Search Bar & Filters -->
+            <div class="suite-filter-container">
+              <div class="suite-search-box">
+                <span style="font-size: 1.1rem; color: #00f2fe;">🔍</span>
+                <input type="text" id="app-search-input" placeholder="Search 49 native tools (e.g. sql, docker, ai, jwt, wifi, regex, git)..." oninput="filterApps()" autocomplete="off">
+                <button id="search-clear-btn" onclick="clearAppSearch()" style="display:none; background:none; border:none; color:#64748b; font-size:1rem; cursor:pointer;">✕</button>
+              </div>
+              
+              <div class="suite-category-tabs">
+                <button class="cat-tab active" data-cat="all" onclick="setAppCategory('all', event)">All (49)</button>
+                <button class="cat-tab" data-cat="ai" onclick="setAppCategory('ai', event)">🤖 AI &amp; LLM (2)</button>
+                <button class="cat-tab" data-cat="dev" onclick="setAppCategory('dev', event)">🛠️ Dev Tools (19)</button>
+                <button class="cat-tab" data-cat="systems" onclick="setAppCategory('systems', event)">⚡ Systems &amp; Hardware (11)</button>
+                <button class="cat-tab" data-cat="net" onclick="setAppCategory('net', event)">🌐 Network &amp; Security (8)</button>
+                <button class="cat-tab" data-cat="media" onclick="setAppCategory('media', event)">🎨 Media &amp; Desktop (9)</button>
+              </div>
+
+              <div id="app-filter-count" class="suite-count-badge">Showing 49 of 49 apps</div>
+            </div>
+          </div>
           
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #00f2fe; margin-bottom: 4px;">🚀 1. Aero Spotlight</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Universal Raycast-style command bar, inline math evaluator &amp; instant app search (<kbd>Alt+Space</kbd>).</div>
+          <div class="suite-apps-grid" id="suite-apps-grid">
+            <div class="app-card" data-category="dev" data-keywords="spotlight search launcher math calculate raycast aero spotlight aero spotlight">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🚀</span>
+                  <div>
+                    <h4 class="app-name">1. Aero Spotlight</h4>
+                    <span class="app-cmd"><code>aero spotlight</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Alt+Space</span>
+                </div>
+              </div>
+              <p class="app-desc">Universal Raycast-style command bar, inline math evaluator & instant app search.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">🤖 2. Local AI &amp; LLM Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Offline LLM model manager, VRAM estimator &amp; interactive coding AI playground.</div>
+            <div class="app-card" data-category="ai" data-keywords="ai llm deepseek ollama llama models vram local local ai & llm studio aero ai">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🤖</span>
+                  <div>
+                    <h4 class="app-name">2. Local AI & LLM Studio</h4>
+                    <span class="app-cmd"><code>aero ai</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Win+A</span>
+                </div>
+              </div>
+              <p class="app-desc">Offline LLM model manager, VRAM estimator & interactive coding AI playground.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #00f2fe; margin-bottom: 4px;">🐳 3. Docker &amp; Containers</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Live container status cards, real-time log tailing, 1-click start/stop and prune.</div>
+            <div class="app-card" data-category="dev" data-keywords="docker containers pods images compose log tail docker & containers aero docker">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🐳</span>
+                  <div>
+                    <h4 class="app-name">3. Docker & Containers</h4>
+                    <span class="app-cmd"><code>aero docker</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Live container status cards, real-time log tailing, 1-click start/stop and prune.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">⚡ 4. Native API &amp; HTTP Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Lightweight REST client with JSON editor, custom headers &amp; instant cURL export.</div>
+            <div class="app-card" data-category="dev" data-keywords="api rest http postman curl json request endpoint native api & http studio aero api">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">⚡</span>
+                  <div>
+                    <h4 class="app-name">4. Native API & HTTP Studio</h4>
+                    <span class="app-cmd"><code>aero api</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Lightweight REST client with JSON editor, custom headers & instant cURL export.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #fbbf24; margin-bottom: 4px;">📝 5. Floating Scratchpad</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Persistent developer scratchpad &amp; Markdown notes with pin-on-top (<kbd>Win+N</kbd>).</div>
+            <div class="app-card" data-category="media" data-keywords="scratchpad markdown notes editor pin floating floating scratchpad aero notes">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📝</span>
+                  <div>
+                    <h4 class="app-name">5. Floating Scratchpad</h4>
+                    <span class="app-cmd"><code>aero notes</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Win+N</span>
+                </div>
+              </div>
+              <p class="app-desc">Persistent developer scratchpad & Markdown notes with pin-on-top.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #00f2fe; margin-bottom: 4px;">🎨 6. Color Dropper &amp; Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Pixel-accurate on-screen color dropper with instant HEX, RGB &amp; HSL converter (<kbd>Win+P</kbd>).</div>
+            <div class="app-card" data-category="media" data-keywords="color dropper palette hex rgb hsl picker color dropper & studio aero color">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🎨</span>
+                  <div>
+                    <h4 class="app-name">6. Color Dropper & Studio</h4>
+                    <span class="app-cmd"><code>aero color</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Win+P</span>
+                </div>
+              </div>
+              <p class="app-desc">Pixel-accurate on-screen color dropper with instant HEX, RGB & HSL converter.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #fbbf24; margin-bottom: 4px;">📸 7. Screenshot &amp; Snip</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Region snip, active window &amp; full screen capture with instant clipboard copy (<kbd>Win+Shift+S</kbd>).</div>
+            <div class="app-card" data-category="media" data-keywords="screenshot snip screen capture image crop screenshot & snip aero snip">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📸</span>
+                  <div>
+                    <h4 class="app-name">7. Screenshot & Snip</h4>
+                    <span class="app-cmd"><code>aero snip</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Win+Shift+S</span>
+                </div>
+              </div>
+              <p class="app-desc">Region snip, active window & full screen capture with instant clipboard copy.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #34d399; margin-bottom: 4px;">📊 8. Task Manager</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Real-time Cairo vector CPU waveform graph, memory gauges &amp; process termination (<kbd>Ctrl+Shift+Esc</kbd>).</div>
+            <div class="app-card" data-category="systems" data-keywords="task manager cpu ram memory process kill monitor htop task manager aero monitor">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📊</span>
+                  <div>
+                    <h4 class="app-name">8. Task Manager</h4>
+                    <span class="app-cmd"><code>aero monitor</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Ctrl+Shift+Esc</span>
+                </div>
+              </div>
+              <p class="app-desc">Real-time Cairo vector CPU waveform graph, memory gauges & process termination.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">🩺 9. 1-Click Self-Repair</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Autonomous diagnostic engine fixing package locks, DNS resolution &amp; PipeWire audio.</div>
+            <div class="app-card" data-category="systems" data-keywords="repair doctor fix diagnose pipewire audio dns dpkg 1-click self-repair aero repair">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🩺</span>
+                  <div>
+                    <h4 class="app-name">9. 1-Click Self-Repair</h4>
+                    <span class="app-cmd"><code>aero repair</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Autonomous diagnostic engine fixing package locks, DNS resolution & PipeWire audio.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #ec4899; margin-bottom: 4px;">📸 10. TimeMachine Snapshots</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">1-Click system restore points creator &amp; instant configuration rollback studio.</div>
+            <div class="app-card" data-category="systems" data-keywords="snapshot backup restore timemachine btrfs rollback timemachine snapshots aero snapshot">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📸</span>
+                  <div>
+                    <h4 class="app-name">10. TimeMachine Snapshots</h4>
+                    <span class="app-cmd"><code>aero snapshot</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">1-Click system restore points creator & instant configuration rollback studio.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">🔑 11. SSH Keys &amp; Servers</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Ed25519 keypair generator, <code>~/.ssh/config</code> bookmarks &amp; 1-click terminal connect.</div>
+            <div class="app-card" data-category="net" data-keywords="ssh keys servers remote connect ed25519 rsa ssh keys & servers aero ssh">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔑</span>
+                  <div>
+                    <h4 class="app-name">11. SSH Keys & Servers</h4>
+                    <span class="app-cmd"><code>aero ssh</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Ed25519 keypair generator, ~/.ssh/config bookmarks & 1-click terminal connect.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px;">🔒 12. SSL &amp; HTTPS Certs</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Local development HTTPS SSL cert generator with Node.js, FastAPI &amp; Nginx snippets.</div>
+            <div class="app-card" data-category="net" data-keywords="ssl https tls cert certificates localhost security ssl & https certs aero ssl">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔒</span>
+                  <div>
+                    <h4 class="app-name">12. SSL & HTTPS Certs</h4>
+                    <span class="app-cmd"><code>aero ssl</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Local development HTTPS SSL cert generator with Node.js, FastAPI & Nginx snippets.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">🛡️ 13. Firewall &amp; Shield</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">UFW network firewall controller, 1-click port allow rules &amp; security shield.</div>
+            <div class="app-card" data-category="net" data-keywords="firewall ufw security ports iptables block shield firewall & shield aero firewall">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🛡️</span>
+                  <div>
+                    <h4 class="app-name">13. Firewall & Shield</h4>
+                    <span class="app-cmd"><code>aero firewall</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">UFW network firewall controller, 1-click port allow rules & security shield.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #06b6d4; margin-bottom: 4px;">🗂️ 14. Virtual Workspaces</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Multi-monitor workspace switcher, window organizer &amp; focus manager (<kbd>Super+1-9</kbd>).</div>
+            <div class="app-card" data-category="media" data-keywords="workspaces monitors sway windows desktop layout virtual workspaces aero workspaces">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🗂️</span>
+                  <div>
+                    <h4 class="app-name">14. Virtual Workspaces</h4>
+                    <span class="app-cmd"><code>aero workspaces</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Super+1-9</span>
+                </div>
+              </div>
+              <p class="app-desc">Multi-monitor workspace switcher, window organizer & focus manager.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #ec4899; margin-bottom: 4px;">💾 15. Storage &amp; Disk Visualizer</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Visual partition analyzer with 1-click cleaner for <code>node_modules</code>, <code>target</code>, and <code>.venv</code>.</div>
+            <div class="app-card" data-category="systems" data-keywords="disk storage cleaner space partitions nvme ssd storage & disk visualizer aero disk">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">💾</span>
+                  <div>
+                    <h4 class="app-name">15. Storage & Disk Visualizer</h4>
+                    <span class="app-cmd"><code>aero disk</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Visual partition analyzer with 1-click cleaner for cache, logs, and temp files.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #6366f1; margin-bottom: 4px;">☁️ 16. Dotfiles &amp; Config Sync</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">1-Click backup, export, and restore for developer dotfiles, shell configs, and themes.</div>
+            <div class="app-card" data-category="dev" data-keywords="dotfiles config sync backup bashrc gitconfig themes dotfiles & config sync aero dotfiles">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">☁️</span>
+                  <div>
+                    <h4 class="app-name">16. Dotfiles & Config Sync</h4>
+                    <span class="app-cmd"><code>aero dotfiles</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">1-Click backup, export, and restore for developer dotfiles, shell configs, and themes.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #3b82f6; margin-bottom: 4px;">🚀 17. Startup Applications</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Manage login autostart programs, add custom commands &amp; optimize boot speeds.</div>
+            <div class="app-card" data-category="systems" data-keywords="startup autostart boot services login delay startup applications aero startup">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🚀</span>
+                  <div>
+                    <h4 class="app-name">17. Startup Applications</h4>
+                    <span class="app-cmd"><code>aero startup</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Manage login autostart programs, add custom commands & optimize boot speeds.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #06b6d4; margin-bottom: 4px;">⚙️ 18. Systemd Service Manager</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Start, stop, and restart Docker, SSH, PostgreSQL, Redis, and network daemons.</div>
+            <div class="app-card" data-category="systems" data-keywords="systemd services daemons status start stop postgres redis systemd service manager aero services">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">⚙️</span>
+                  <div>
+                    <h4 class="app-name">18. Systemd Service Manager</h4>
+                    <span class="app-cmd"><code>aero services</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Start, stop, and restart Docker, SSH, PostgreSQL, Redis, and network daemons.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">🔌 19. Dev Server &amp; Port Inspector</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Real-time dashboard of listening TCP/UDP ports and 1-click browser launcher.</div>
+            <div class="app-card" data-category="net" data-keywords="ports listening tcp udp server localhost network 3000 8080 dev server & port inspector aero ports">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔌</span>
+                  <div>
+                    <h4 class="app-name">19. Dev Server & Port Inspector</h4>
+                    <span class="app-cmd"><code>aero ports</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Real-time dashboard of listening TCP/UDP ports and 1-click browser launcher.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">🔤 20. Typography &amp; Font Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Interactive coding font ligatures previewer &amp; system-wide typography manager.</div>
+            <div class="app-card" data-category="media" data-keywords="fonts typography ligatures jetbrains mono fira code typography & font studio aero fonts">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔤</span>
+                  <div>
+                    <h4 class="app-name">20. Typography & Font Studio</h4>
+                    <span class="app-cmd"><code>aero fonts</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Interactive coding font ligatures previewer & system-wide typography manager.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px;">⌨️ 21. Keyboard Shortcuts Guide</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Searchable hotkey cheatsheet for tiling, snapping, zooming, and productivity.</div>
+            <div class="app-card" data-category="dev" data-keywords="shortcuts hotkeys keyboard cheatsheet keybindings keyboard shortcuts guide aero shortcuts">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">⌨️</span>
+                  <div>
+                    <h4 class="app-name">21. Keyboard Shortcuts Guide</h4>
+                    <span class="app-cmd"><code>aero shortcuts</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Win+?</span>
+                </div>
+              </div>
+              <p class="app-desc">Searchable hotkey cheatsheet for tiling, snapping, zooming, and productivity.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #f97316; margin-bottom: 4px;">🔥 22. Safe USB Flasher</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Safe live USB creator with automatic internal NVMe write protection.</div>
+            <div class="app-card" data-category="systems" data-keywords="flasher usb iso write burn bootable ventoy etcher safe usb flasher aero flasher">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔥</span>
+                  <div>
+                    <h4 class="app-name">22. Safe USB Flasher</h4>
+                    <span class="app-cmd"><code>aero flasher</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Safe live USB creator with automatic internal NVMe write protection.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #f43f5e; margin-bottom: 4px;">📜 23. System &amp; Kernel Logs</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Live systemd journald and dmesg hardware log viewer with 1-click report export.</div>
+            <div class="app-card" data-category="systems" data-keywords="logs journald dmesg kernel hardware errors dmesg system & kernel logs aero logs">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📜</span>
+                  <div>
+                    <h4 class="app-name">23. System & Kernel Logs</h4>
+                    <span class="app-cmd"><code>aero logs</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Live systemd journald and dmesg hardware log viewer with 1-click report export.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">📶 24. Wi-Fi &amp; Network Center</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Visual spectrum scanner, signal quality meters, security tags &amp; 1-click connection dialog.</div>
+            <div class="app-card" data-category="net" data-keywords="wifi wireless network ssid signal 5ghz internet wi-fi & network center aero wifi">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📶</span>
+                  <div>
+                    <h4 class="app-name">24. Wi-Fi & Network Center</h4>
+                    <span class="app-cmd"><code>aero wifi</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Visual spectrum scanner, signal quality meters, security tags & 1-click connection dialog.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #818cf8; margin-bottom: 4px;">🎧 25. Bluetooth Manager</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Fast pairing for headphones, mice, keyboards &amp; controllers with live battery telemetry.</div>
+            <div class="app-card" data-category="net" data-keywords="bluetooth headphones airpods mouse keyboard pairing battery bluetooth manager aero bt">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🎧</span>
+                  <div>
+                    <h4 class="app-name">25. Bluetooth Manager</h4>
+                    <span class="app-cmd"><code>aero bt</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Fast pairing for headphones, mice, keyboards & controllers with live battery telemetry.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #a78bfa; margin-bottom: 4px;">🔊 26. Audio Center</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">1-Click PipeWire sink switching (Speakers, Headphones, BT, HDMI) with master volume slider.</div>
+            <div class="app-card" data-category="media" data-keywords="audio pipewire volume speakers headphones sound mic audio center aero audio">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔊</span>
+                  <div>
+                    <h4 class="app-name">26. Audio Center</h4>
+                    <span class="app-cmd"><code>aero audio</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">1-Click PipeWire sink switching (Speakers, Headphones, BT, HDMI) with master volume slider.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #60a5fa; margin-bottom: 4px;">🖥️ 27. Displays &amp; Scaling</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Resolution selector, 240Hz high-refresh rate switching &amp; HiDPI fractional scaling (100%-200%).</div>
+            <div class="app-card" data-category="media" data-keywords="display screen resolution 240hz hidpi scaling monitors displays & scaling aero display">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🖥️</span>
+                  <div>
+                    <h4 class="app-name">27. Displays & Scaling</h4>
+                    <span class="app-cmd"><code>aero display</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Resolution selector, 240Hz high-refresh rate switching & HiDPI fractional scaling (100%-200%).</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px;">🎮 28. Game Hub &amp; Proton</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">1-Click GameMode CPU boost, MangoHud FPS/thermal overlay &amp; AMD FSR upscaling launcher.</div>
+            <div class="app-card" data-category="media" data-keywords="games proton wine gamemode fps mangohud steam dxvk game hub & proton aero gamehub">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🎮</span>
+                  <div>
+                    <h4 class="app-name">28. Game Hub & Proton</h4>
+                    <span class="app-cmd"><code>aero gamehub</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  <span class="app-tag hotkey-tag">Win+G</span>
+                </div>
+              </div>
+              <p class="app-desc">1-Click GameMode CPU boost, MangoHud FPS/thermal overlay & AMD FSR upscaling launcher.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #00f2fe; margin-bottom: 4px;">📱 29. Phone Link &amp; Drop</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Wireless Android/iOS sync, shared clipboard, ring my phone &amp; drag-and-drop file beaming.</div>
+            <div class="app-card" data-category="net" data-keywords="phone link android ios clipboard beam share wireless phone link & drop aero phone">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📱</span>
+                  <div>
+                    <h4 class="app-name">29. Phone Link & Drop</h4>
+                    <span class="app-cmd"><code>aero phone</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Wireless Android/iOS sync, shared clipboard, ring my phone & drag-and-drop file beaming.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #34d399; margin-bottom: 4px;">🔋 30. Battery Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">80% hardware charge limiter, live discharge wattage &amp; acoustic silent/turbo fan curves.</div>
+            <div class="app-card" data-category="systems" data-keywords="battery tlp charge threshold 80% wattage power fan battery studio aero battery">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔋</span>
+                  <div>
+                    <h4 class="app-name">30. Battery Studio</h4>
+                    <span class="app-cmd"><code>aero battery</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">80% hardware charge limiter, live discharge wattage & acoustic silent/turbo fan curves.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">🌿 31. Git Repos Dashboard</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Multi-repository scanner, uncommitted changes tracker &amp; 1-click sync.</div>
+            <div class="app-card" data-category="dev" data-keywords="git repos branch commit dirty status workspace git repos dashboard aero git">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🌿</span>
+                  <div>
+                    <h4 class="app-name">31. Git Repos Dashboard</h4>
+                    <span class="app-cmd"><code>aero git</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Multi-repository scanner, uncommitted changes tracker & 1-click sync.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">⚡ 32. Speed &amp; DNS Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">High-precision latency tester, DNS benchmark comparator &amp; CDN throughput gauge.</div>
+            <div class="app-card" data-category="net" data-keywords="speed latency ping dns cloudflare benchmark throughput speed & dns studio aero speed">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">⚡</span>
+                  <div>
+                    <h4 class="app-name">32. Speed & DNS Studio</h4>
+                    <span class="app-cmd"><code>aero speed</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">High-precision latency tester, DNS benchmark comparator & CDN throughput gauge.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #00f2fe; margin-bottom: 4px;">🔑 33. Environment &amp; .env</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Secret bullet masking, syntax validation &amp; inline key-value .env file management.</div>
+            <div class="app-card" data-category="dev" data-keywords="env environment secrets variables config dotenv environment & .env aero env">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔑</span>
+                  <div>
+                    <h4 class="app-name">33. Environment & .env</h4>
+                    <span class="app-cmd"><code>aero env</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Secret bullet masking, syntax validation & inline key-value .env file management.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px;">🔬 34. Regex &amp; Pattern Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Real-time regex evaluator, named capture group inspector &amp; pattern library.</div>
+            <div class="app-card" data-category="dev" data-keywords="regex regular expressions pattern tester match parse regex & pattern studio aero regex">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🔬</span>
+                  <div>
+                    <h4 class="app-name">34. Regex & Pattern Studio</h4>
+                    <span class="app-cmd"><code>aero regex</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Real-time regex evaluator, named capture group inspector & pattern library.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #34d399; margin-bottom: 4px;">🗄️ 35. Database &amp; SQL Query</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Native SQLite explorer, interactive SQL query editor, CSV export &amp; runtime stopwatch.</div>
+            <div class="app-card" data-category="dev" data-keywords="database sqlite sql query tables schemas records database & sql query aero db">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🗄️</span>
+                  <div>
+                    <h4 class="app-name">35. Database & SQL Query</h4>
+                    <span class="app-cmd"><code>aero db</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Native SQLite explorer, interactive SQL query editor, CSV export & runtime stopwatch.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #fbbf24; margin-bottom: 4px;">⏰ 36. Cron &amp; Scheduled Tasks</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Visual scheduled tasks manager, human-readable cron builder &amp; 1-click test runner.</div>
+            <div class="app-card" data-category="systems" data-keywords="cron scheduler recurring background jobs crontab cron & scheduled tasks aero cron">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">⏰</span>
+                  <div>
+                    <h4 class="app-name">36. Cron & Scheduled Tasks</h4>
+                    <span class="app-cmd"><code>aero cron</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Visual scheduled tasks manager, human-readable cron builder & 1-click test runner.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">🛡️ 37. Cryptography &amp; JWT</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Visual JWT token decoder, cryptographic hash calculator (SHA256/512) &amp; token generator.</div>
+            <div class="app-card" data-category="dev" data-keywords="crypto jwt token hash sha256 sha512 base64 decode cryptography & jwt aero crypto">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🛡️</span>
+                  <div>
+                    <h4 class="app-name">37. Cryptography & JWT</h4>
+                    <span class="app-cmd"><code>aero crypto</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Visual JWT token decoder, cryptographic hash calculator (SHA256/512) & token generator.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #ec4899; margin-bottom: 4px;">🧪 38. Mock Server &amp; Webhooks</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Instant local REST mock server, response simulator, latency throttling &amp; webhook inspector.</div>
+            <div class="app-card" data-category="dev" data-keywords="mock server webhooks api testing simulation json mock server & webhooks aero mock">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🧪</span>
+                  <div>
+                    <h4 class="app-name">38. Mock Server & Webhooks</h4>
+                    <span class="app-cmd"><code>aero mock</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Instant local REST mock server, response simulator, latency throttling & webhook inspector.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #06b6d4; margin-bottom: 4px;">📦 39. Package &amp; Dependency Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Visual package inspector, shared library analyzer (ldd) &amp; orphaned package cleaner.</div>
+            <div class="app-card" data-category="dev" data-keywords="packages dependencies ldd deb dpkg apt orphans package & dependency studio aero deps">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📦</span>
+                  <div>
+                    <h4 class="app-name">39. Package & Dependency Studio</h4>
+                    <span class="app-cmd"><code>aero deps</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Visual package inspector, shared library analyzer (ldd) & orphaned package cleaner.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #f43f5e; margin-bottom: 4px;">⚡ 40. Systems Benchmark</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Multi-core CPU compute, RAM memory bandwidth &amp; NVMe disk I/O performance benchmark suite.</div>
+            <div class="app-card" data-category="systems" data-keywords="benchmark cpu compute ram bandwidth disk speed test systems benchmark aero benchmark">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">⚡</span>
+                  <div>
+                    <h4 class="app-name">40. Systems Benchmark</h4>
+                    <span class="app-cmd"><code>aero benchmark</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Multi-core CPU compute, RAM memory bandwidth & NVMe disk I/O performance benchmark suite.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">📊 41. Visual Diff &amp; Comparator</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Side-by-side split code diffing, Git uncommitted tree comparison &amp; patch exporter.</div>
+            <div class="app-card" data-category="dev" data-keywords="diff compare side-by-side patch merge changes visual diff & comparator aero diff">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📊</span>
+                  <div>
+                    <h4 class="app-name">41. Visual Diff & Comparator</h4>
+                    <span class="app-cmd"><code>aero diff</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Side-by-side split code diffing, Git uncommitted tree comparison & patch exporter.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px;">📱 42. QR Code &amp; Device Link</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Vector QR code generator for URLs, staging servers, and 1-tap phone Wi-Fi pairing.</div>
+            <div class="app-card" data-category="media" data-keywords="qr code generator wifi sharing links mobile qr code & device link aero qr">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📱</span>
+                  <div>
+                    <h4 class="app-name">42. QR Code & Device Link</h4>
+                    <span class="app-cmd"><code>aero qr</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Vector QR code generator for URLs, staging servers, and 1-tap phone Wi-Fi pairing.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #ef4444; margin-bottom: 4px;">🎥 43. Screen &amp; Media Recorder</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Instant MP4/GIF desktop capture, PipeWire audio toggle &amp; recordings gallery.</div>
+            <div class="app-card" data-category="media" data-keywords="recorder screen video gif capture desktop audio screen & media recorder aero recorder">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🎥</span>
+                  <div>
+                    <h4 class="app-name">43. Screen & Media Recorder</h4>
+                    <span class="app-cmd"><code>aero recorder</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Instant MP4/GIF desktop capture, PipeWire audio toggle & recordings gallery.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #3b82f6; margin-bottom: 4px;">📦 44. Archive &amp; Compression Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Inspect archive hierarchies without extracting; create ZIP, TAR.GZ, and TAR.XZ archives.</div>
+            <div class="app-card" data-category="dev" data-keywords="archive zip tar gz tar.xz compression uncompress archive & compression studio aero archive">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📦</span>
+                  <div>
+                    <h4 class="app-name">44. Archive & Compression Studio</h4>
+                    <span class="app-cmd"><code>aero archive</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Inspect archive hierarchies without extracting; create ZIP, TAR.GZ, and TAR.XZ archives.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #00f2fe; margin-bottom: 4px;">📝 45. Markdown &amp; Tech Docs Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Live split Markdown editor, real-time syntax parser, word count profiler &amp; HTML exporter.</div>
+            <div class="app-card" data-category="dev" data-keywords="markdown editor live split preview docs exporter html markdown & tech docs studio aero markdown">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">📝</span>
+                  <div>
+                    <h4 class="app-name">45. Markdown & Tech Docs Studio</h4>
+                    <span class="app-cmd"><code>aero markdown</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Live split Markdown editor, real-time syntax parser, word count profiler & HTML exporter.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #4ade80; margin-bottom: 4px;">🌐 46. Network HTTPS Tunnel</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Expose localhost dev servers to instant public HTTPS URLs for mobile testing and webhooks.</div>
+            <div class="app-card" data-category="net" data-keywords="tunnel cloudflare ngrok localhost https public webhooks network https tunnel aero tunnel">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🌐</span>
+                  <div>
+                    <h4 class="app-name">46. Network HTTPS Tunnel</h4>
+                    <span class="app-cmd"><code>aero tunnel</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Expose localhost dev servers to instant public HTTPS URLs for mobile testing and webhooks.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #f59e0b; margin-bottom: 4px;">💻 47. Live Code Sandbox REPL</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Isolated code scratchpad for Python 3, Node.js, Bash, and C with runtime latency stopwatch.</div>
+            <div class="app-card" data-category="dev" data-keywords="sandbox repl runner python node bash c code scratchpad live code sandbox repl aero sandbox">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">💻</span>
+                  <div>
+                    <h4 class="app-name">47. Live Code Sandbox REPL</h4>
+                    <span class="app-cmd"><code>aero sandbox</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Isolated code scratchpad for Python 3, Node.js, Bash, and C with runtime latency stopwatch.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #ec4899; margin-bottom: 4px;">🎮 48. GPU &amp; 3D Acceleration Studio</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Real-time GPU load, VRAM allocation, temperature sensors &amp; 1-click hybrid graphics switching.</div>
+            <div class="app-card" data-category="systems" data-keywords="gpu graphics vram cuda rocm nvidia amd hybrid switch gpu & 3d acceleration studio aero gpu">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🎮</span>
+                  <div>
+                    <h4 class="app-name">48. GPU & 3D Acceleration Studio</h4>
+                    <span class="app-cmd"><code>aero gpu</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Real-time GPU load, VRAM allocation, temperature sensors & 1-click hybrid graphics switching.</p>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
-              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">🌿 49. Visual Git Commit Graph</div>
-              <div style="color: var(--text-muted); font-size: 0.85rem;">Visual Git commit graph tree, stage/unstage file selector &amp; conventional commit assistant.</div>
+            <div class="app-card" data-category="dev" data-keywords="gitgraph git commit graph visual branch merge log visual git commit graph aero gitgraph">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">🌿</span>
+                  <div>
+                    <h4 class="app-name">49. Visual Git Commit Graph</h4>
+                    <span class="app-cmd"><code>aero gitgraph</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">15MB RAM</span>
+                  
+                </div>
+              </div>
+              <p class="app-desc">Visual Git commit graph tree, stage/unstage file selector & conventional commit assistant.</p>
             </div>
+          </div>
+          <div id="no-apps-state" class="no-apps-found" style="display: none;">
+            <div style="font-size: 2.5rem; margin-bottom: 10px;">🔍</div>
+            <h4>No developer applications found</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Try searching for "ai", "docker", "sql", "wifi", or "vault"</p>
+            <button onclick="clearAppSearch()" class="btn btn-secondary" style="margin-top: 12px; font-size: 0.85rem; padding: 6px 14px;">Reset Filters</button>
           </div>
         </div>
 
       </div>
     </section>
 
-    <!-- Comparison Table -->
     <section id="benchmarks" class="comparison">
       <div class="container">
         <div class="section-header">
