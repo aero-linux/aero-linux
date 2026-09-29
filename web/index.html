@@ -18,8 +18,9 @@
       </div>
       <nav class="nav-links">
         <a href="#features">Features</a>
+        <a href="#apps">GUI Suite (45 Apps)</a>
         <a href="#benchmarks">Benchmarks</a>
-        <a href="#ai-stack">AI Stack</a>
+        <a href="#download">Downloads</a>
         <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="github-link">GitHub</a>
       </nav>
       <a href="#download" class="btn btn-primary nav-btn">Download ISO</a>
@@ -51,14 +52,14 @@
             <span class="code-title">aero-terminal — interactive</span>
           </div>
           <div class="terminal-tabs">
-            <button class="tab-btn active" onclick="showTab('doctor')">aero doctor</button>
-            <button class="tab-btn" onclick="showTab('ai')">aero ai</button>
-            <button class="tab-btn" onclick="showTab('vault')">aero vault</button>
-            <button class="tab-btn" onclick="showTab('dev')">aero dev</button>
-            <button class="tab-btn" onclick="showTab('net')">aero net</button>
+            <button class="tab-btn active" onclick="showTab('doctor', event)">aero doctor</button>
+            <button class="tab-btn" onclick="showTab('ai', event)">aero ai</button>
+            <button class="tab-btn" onclick="showTab('vault', event)">aero vault</button>
+            <button class="tab-btn" onclick="showTab('dev', event)">aero dev</button>
+            <button class="tab-btn" onclick="showTab('net', event)">aero net</button>
           </div>
           <pre id="tab-doctor"><code><span class="prompt">$</span> aero doctor
-<span class="text-cyan">OS:</span> Aero Linux 1.3-Nebula [Kernel: 7.0-generic]
+<span class="text-cyan">OS:</span> Aero Linux 1.4-Supernova [Kernel: 7.0-generic]
 <span class="text-cyan">Memory:</span> 312MB used / 15.2GB total [zRAM ZSTD Active]
 <span class="text-cyan">Governor:</span> powersave (Quiet Fan Profile)
 <span class="text-cyan">Battery:</span> 79% (Hardware Charge Threshold: 80% Active)
@@ -160,18 +161,21 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0;">
-              <a id="rel-download-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz" class="btn btn-primary" style="padding: 14px; font-weight: 700; gap: 8px;">
-                ⚡ Direct Download
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 25px 0;">
+              <a id="rel-download-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem;">
+                ⚡ Source (.tar.gz)
               </a>
-              <a id="rel-github-btn" href="https://github.com/ronitgupta138/aero-linux/releases/tag/v1.4.0-supernova" target="_blank" class="btn btn-secondary" style="padding: 14px; gap: 8px;">
-                🌐 GitHub Release &amp; Assets
+              <a id="rel-deb-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_amd64.deb" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                📦 Debian (.deb)
+              </a>
+              <a id="rel-github-btn" href="https://github.com/ronitgupta138/aero-linux/releases/tag/v1.4.0-supernova" target="_blank" class="btn btn-secondary" style="padding: 12px; gap: 6px; font-size: 0.9rem;">
+                🌐 GitHub Assets
               </a>
             </div>
 
             <div style="background: rgba(10, 11, 14, 0.7); border: 1px solid #1e293b; border-radius: 8px; padding: 15px; font-family: var(--font-mono); font-size: 0.85rem;">
               <div style="color: var(--text-muted); margin-bottom: 6px;">SHA256 Checksum:</div>
-              <div id="rel-sha" style="color: #00f2fe; word-break: break-all; font-weight: 600;">b72c91834e0a7df85496f8c7b8417c8052ebf3a46d1e405e3ec1694f482d8c36</div>
+              <div id="rel-sha" style="color: #00f2fe; word-break: break-all; font-weight: 600;">ad8a236db540f8e5a4c3ba78b1694d51b838a2523d4707080b5a2f305b9fa7a4</div>
               <div style="margin-top: 10px; color: #64748b; font-size: 0.8rem;">
                 Verify integrity: <code>sha256sum -c &lt;archive.tar.gz&gt;</code>
               </div>
@@ -233,10 +237,10 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
           </div>
         </div>
 
-        <!-- 40-App Zero-Terminal Graphical Suite Grid -->
-        <div style="margin-top: 40px; margin-bottom: 20px;">
-          <h3 style="font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 8px;">🎛️ Complete Zero-Terminal Graphical Suite (40 Native Apps)</h3>
-          <p style="color: var(--text-muted); text-align: center; font-size: 0.95rem; margin-bottom: 24px;">40 dedicated native GTK3 applications engineered for 100% graphical control without opening a terminal.</p>
+        <!-- 45-App Zero-Terminal Graphical Suite Grid -->
+        <div id="apps" style="margin-top: 40px; margin-bottom: 20px;">
+          <h3 style="font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 8px;">🎛️ Complete Zero-Terminal Graphical Suite (45 Native Apps)</h3>
+          <p style="color: var(--text-muted); text-align: center; font-size: 0.95rem; margin-bottom: 24px;">45 dedicated native GTK3 applications engineered for 100% graphical control without opening a terminal.</p>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
@@ -497,12 +501,17 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
   </footer>
 
   <script>
-    function showTab(tabId) {
+    function showTab(tabId, ev) {
       document.querySelectorAll('.code-preview pre').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       const activePre = document.getElementById('tab-' + tabId);
       if (activePre) activePre.style.display = 'block';
-      event.target.classList.add('active');
+      if (ev && ev.currentTarget) {
+        ev.currentTarget.classList.add('active');
+      } else {
+        const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
+        if (btn) btn.classList.add('active');
+      }
     }
 
     const RELEASES_DATA = {
@@ -512,6 +521,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         desc: '64-bit (x86_64) • Complete 45-App GUI Suite • Markdown, Tunnels, Sandbox & GPU Studios • 128 Tests Passing',
         size: '2.4 GB',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz',
+        debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_amd64.deb',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.4.0-supernova',
         sha: 'ad8a236db540f8e5a4c3ba78b1694d51b838a2523d4707080b5a2f305b9fa7a4'
       },
@@ -521,6 +531,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         desc: '64-bit (x86_64) • Wayland / Sway • Complete 30-App GUI Suite • 107+ Tests Passing',
         size: '2.2 GB',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.3.0-nebula/aero-linux-1.3-nebula-src.tar.gz',
+        debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.3.0-nebula/aero-linux_1.3.0_amd64.deb',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.3.0-nebula',
         sha: '89140abd231118f616c5d337ec74802007f58f64cc5085869b3a333ead2f887d'
       },
@@ -530,6 +541,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         desc: '64-bit (x86_64) • Autonomous Power Engine • Visual Wi-Fi & Network Center • 73+ Tests',
         size: '2.1 GB',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.2.0-titan/aero-linux-1.2-titan-src.tar.gz',
+        debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.2.0-titan',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.2.0-titan',
         sha: '7605043354b271c0ed05e219126a03336879796e6ee9833dbb2848c25853ac74'
       },
@@ -539,6 +551,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         desc: '64-bit (x86_64) • 56+ Systems Power Modules • 1-Click App Store • 56 Tests Passing',
         size: '2.0 GB',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.1.0-edge',
+        debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.1.0-edge',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.1.0-edge',
         sha: 'f7257b559459d3eb7372a867a5354d0e895e1e30617c2b63ddb2e8e7c86484d8'
       },
@@ -548,6 +561,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
         desc: '64-bit (x86_64) • Sub-350MB Idle RAM Baseline • Dynamic in-memory zRAM ZSTD',
         size: '1.8 GB',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.0.0-edge',
+        debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.0.0-edge',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.0.0-edge',
         sha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
       }
@@ -562,6 +576,9 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
       document.getElementById('rel-desc').textContent = data.desc;
       document.getElementById('rel-size').textContent = data.size;
       document.getElementById('rel-download-btn').setAttribute('href', data.downloadUrl);
+      if (document.getElementById('rel-deb-btn')) {
+        document.getElementById('rel-deb-btn').setAttribute('href', data.debUrl || data.downloadUrl);
+      }
       document.getElementById('rel-github-btn').setAttribute('href', data.githubUrl);
       document.getElementById('rel-sha').textContent = data.sha;
 
