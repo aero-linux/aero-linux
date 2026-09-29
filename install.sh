@@ -389,6 +389,14 @@ exec python3 "${AERO_HOME}/bin/aero-api-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-api-gui"
 
+# Create global executable wrapper for aero-env-gui
+cat << 'EOF' > "${BIN_DIR}/aero-env-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-env-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-env-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -848,6 +856,17 @@ Icon=network-server
 Terminal=false
 Type=Application
 Categories=Development;Network;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-env.desktop"
+[Desktop Entry]
+Name=Aero Environment Studio
+Comment=Aero Linux Project .env & Secrets Studio
+Exec=${BIN_DIR}/aero-env-gui
+Icon=security-high
+Terminal=false
+Type=Application
+Categories=Development;Settings;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

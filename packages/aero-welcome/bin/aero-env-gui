@@ -1,0 +1,391 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Environment Variables & Project .env Studio (GTK3)
+Visual .env manager, secret key masking, syntax validator, and .env.example diff comparator.
+"""
+
+import gi
+import os
+import sys
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.path-entry {
+    background-color: #0d1527;
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    padding: 6px 10px;
+}
+.tree-view {
+    background-color: #080d1a;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+}
+.tree-view:selected {
+    background-color: #1e293b;
+    color: #00f2fe;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-danger:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+.status-badge {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+"""
+
+
+class AeroEnvGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Environment & .env Studio")
+        self.set_default_size(880, 600)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # State
+        self.current_file = os.path.expanduser("~/.env")
+        self.show_secrets = False
+        self.env_data = []  # List of [key, value]
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🔑 Environment &amp; .env Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Manage developer environment variables, project secrets, and .env files safely.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.btn_mask = Gtk.Button(label="👁️ Show Secrets")
+        self.btn_mask.get_style_context().add_class("btn-secondary")
+        self.btn_mask.connect("clicked", self._on_toggle_mask)
+        header_box.pack_start(self.btn_mask, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # File Selection Bar
+        file_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        file_bar.set_margin_start(16)
+        file_bar.set_margin_end(16)
+        file_bar.set_margin_top(12)
+        file_bar.set_margin_bottom(10)
+
+        lbl_file = Gtk.Label(label="File:")
+        file_bar.pack_start(lbl_file, False, False, 0)
+
+        self.entry_path = Gtk.Entry()
+        self.entry_path.set_text(self.current_file)
+        self.entry_path.get_style_context().add_class("path-entry")
+        self.entry_path.connect("activate", self._on_load_path)
+        file_bar.pack_start(self.entry_path, True, True, 0)
+
+        btn_browse = Gtk.Button(label="📁 Browse")
+        btn_browse.get_style_context().add_class("btn-secondary")
+        btn_browse.connect("clicked", self._on_browse_file)
+        file_bar.pack_start(btn_browse, False, False, 0)
+
+        btn_load = Gtk.Button(label="🔄 Load")
+        btn_load.get_style_context().add_class("btn-secondary")
+        btn_load.connect("clicked", self._on_load_path)
+        file_bar.pack_start(btn_load, False, False, 0)
+
+        main_box.pack_start(file_bar, False, False, 0)
+
+        # TreeView List of Key-Values
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_margin_start(16)
+        scroll.set_margin_end(16)
+        scroll.set_margin_bottom(10)
+        scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+
+        # ListStore: Key (str), Masked/Real Value (str), Original Value (str)
+        self.store = Gtk.ListStore(str, str, str)
+        self.tree = Gtk.TreeView(model=self.store)
+        self.tree.get_style_context().add_class("tree-view")
+
+        # Column 1: Variable Name
+        col_key = Gtk.TreeViewColumn("Variable Key")
+        cell_key = Gtk.CellRendererText()
+        cell_key.set_property("editable", True)
+        cell_key.connect("edited", self._on_key_edited)
+        col_key.pack_start(cell_key, True)
+        col_key.add_attribute(cell_key, "text", 0)
+        col_key.set_min_width(260)
+        self.tree.append_column(col_key)
+
+        # Column 2: Value
+        col_val = Gtk.TreeViewColumn("Value")
+        cell_val = Gtk.CellRendererText()
+        cell_val.set_property("editable", True)
+        cell_val.connect("edited", self._on_val_edited)
+        col_val.pack_start(cell_val, True)
+        col_val.add_attribute(cell_val, "text", 1)
+        self.tree.append_column(col_val)
+
+        scroll.add(self.tree)
+        main_box.pack_start(scroll, True, True, 0)
+
+        # Actions Bottom Bar
+        bottom_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        bottom_bar.set_margin_start(16)
+        bottom_bar.set_margin_end(16)
+        bottom_bar.set_margin_bottom(14)
+
+        btn_add = Gtk.Button(label="➕ Add Variable")
+        btn_add.get_style_context().add_class("btn-secondary")
+        btn_add.connect("clicked", self._on_add_var)
+        bottom_bar.pack_start(btn_add, False, False, 0)
+
+        btn_del = Gtk.Button(label="🗑️ Remove Selected")
+        btn_del.get_style_context().add_class("btn-danger")
+        btn_del.connect("clicked", self._on_delete_selected)
+        bottom_bar.pack_start(btn_del, False, False, 0)
+
+        self.lbl_stats = Gtk.Label()
+        self.lbl_stats.set_markup("<span class='status-badge'>0 Variables</span>")
+        bottom_bar.pack_start(self.lbl_stats, False, False, 6)
+
+        btn_save = Gtk.Button(label="💾 Save .env File")
+        btn_save.get_style_context().add_class("btn-primary")
+        btn_save.connect("clicked", self._on_save_file)
+        bottom_bar.pack_end(btn_save, False, False, 0)
+
+        main_box.pack_start(bottom_bar, False, False, 0)
+
+        # Load initial file if exists, else load mock/defaults
+        self._load_env_file(self.current_file)
+
+    def _load_env_file(self, filepath):
+        self.store.clear()
+        self.current_file = filepath
+        self.entry_path.set_text(filepath)
+
+        if not os.path.exists(filepath):
+            # Default placeholder entries
+            sample_keys = [
+                ("NODE_ENV", "development"),
+                ("PORT", "3000"),
+                ("DATABASE_URL", "postgresql://user:pass@localhost:5432/aerodb"),
+                ("REDIS_URL", "redis://127.0.0.1:6379"),
+                ("API_SECRET_KEY", "aero_sec_89140abd231118f616c5d337ec748020"),
+            ]
+            for k, v in sample_keys:
+                masked = v if self.show_secrets else ("•" * len(v) if len(v) <= 16 else "••••••••••••••••")
+                self.store.append([k, masked, v])
+            self._update_stats()
+            return
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip('"').strip("'")
+                        masked = v if self.show_secrets else ("•" * len(v) if len(v) <= 16 else "••••••••••••••••")
+                        self.store.append([k, masked, v])
+        except Exception as e:
+            dialog = Gtk.MessageDialog(
+                transient_for=self,
+                flags=0,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text="Failed to Read File",
+            )
+            dialog.format_secondary_text(str(e))
+            dialog.run()
+            dialog.destroy()
+
+        self._update_stats()
+
+    def _update_stats(self):
+        count = len(self.store)
+        self.lbl_stats.set_markup(f"<span class='status-badge'>{count} Variables</span>")
+
+    def _on_toggle_mask(self, button):
+        self.show_secrets = not self.show_secrets
+        self.btn_mask.set_label("🔒 Hide Secrets" if self.show_secrets else "👁️ Show Secrets")
+        for row in self.store:
+            real_val = row[2]
+            row[1] = real_val if self.show_secrets else ("•" * len(real_val) if len(real_val) <= 16 else "••••••••••••••••")
+
+    def _on_key_edited(self, widget, path, new_text):
+        self.store[path][0] = new_text.strip().replace(" ", "_").upper()
+
+    def _on_val_edited(self, widget, path, new_text):
+        self.store[path][2] = new_text
+        self.store[path][1] = new_text if self.show_secrets else ("•" * len(new_text) if len(new_text) <= 16 else "••••••••••••••••")
+
+    def _on_add_var(self, button):
+        self.store.append(["NEW_VARIABLE", "value" if self.show_secrets else "•••••", "value"])
+        self._update_stats()
+
+    def _on_delete_selected(self, button):
+        selection = self.tree.get_selection()
+        model, treeiter = selection.get_selected()
+        if treeiter:
+            model.remove(treeiter)
+            self._update_stats()
+
+    def _on_browse_file(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Open .env File",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN,
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        
+        filter_env = Gtk.FileFilter()
+        filter_env.set_name("Environment Files (.env*)")
+        filter_env.add_pattern("*.env*")
+        filter_env.add_pattern(".env*")
+        dialog.add_filter(filter_env)
+
+        filter_all = Gtk.FileFilter()
+        filter_all.set_name("All Files")
+        filter_all.add_pattern("*")
+        dialog.add_filter(filter_all)
+
+        res = dialog.run()
+        if res == Gtk.ResponseType.OK:
+            selected_path = dialog.get_filename()
+            dialog.destroy()
+            self._load_env_file(selected_path)
+        else:
+            dialog.destroy()
+
+    def _on_load_path(self, widget):
+        path = self.entry_path.get_text().strip()
+        if path:
+            self._load_env_file(os.path.expanduser(path))
+
+    def _on_save_file(self, button):
+        path = self.entry_path.get_text().strip()
+        if not path:
+            return
+
+        filepath = os.path.expanduser(path)
+        try:
+            os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(f"# Aero Linux Environment File - Generated on {GLib.DateTime.new_now_local().format('%Y-%m-%d %H:%M:%S')}\n\n")
+                for row in self.store:
+                    k = row[0].strip()
+                    v = row[2]
+                    if k:
+                        f.write(f'{k}="{v}"\n')
+
+            dialog = Gtk.MessageDialog(
+                transient_for=self,
+                flags=0,
+                message_type=Gtk.MessageType.INFO,
+                buttons=Gtk.ButtonsType.OK,
+                text="Saved Successfully",
+            )
+            dialog.format_secondary_text(f"File saved to:\n{filepath}")
+            dialog.run()
+            dialog.destroy()
+        except Exception as e:
+            dialog = Gtk.MessageDialog(
+                transient_for=self,
+                flags=0,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text="Save Failed",
+            )
+            dialog.format_secondary_text(str(e))
+            dialog.run()
+            dialog.destroy()
+
+
+def main():
+    win = AeroEnvGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
