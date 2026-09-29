@@ -36,7 +36,7 @@
           Engineered for engineers. Sub-350MB idle RAM, low-latency kernel scheduler, dynamic zRAM ZSTD compression, and 1-click local LLM serving out of the box.
         </p>
         <div class="hero-actions">
-          <a href="#download" class="btn btn-primary btn-lg">Download Aero 1.3-Nebula (amd64)</a>
+          <a href="#download" class="btn btn-primary btn-lg">Download Aero 1.4-Supernova (amd64)</a>
           <a href="https://github.com/ronitgupta138/aero-linux" target="_blank" class="btn btn-secondary btn-lg">View Source Code</a>
         </div>
         <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; padding: 12px 20px; font-family: monospace; font-size: 14px; color: #34d399; margin-bottom: 25px; display: inline-block;">
@@ -127,8 +127,11 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
 
         <!-- Release Version Selector Tabs -->
         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
-          <button id="rel-btn-v13" onclick="selectRelease('v13')" class="btn btn-secondary" style="background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #fff; font-weight: 700; padding: 10px 18px;">
-            🌌 v1.3.0-Nebula <span style="background: #00f2fe; color: #000; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; margin-left: 6px; font-weight: 800;">LATEST</span>
+          <button id="rel-btn-v14" onclick="selectRelease('v14')" class="btn btn-secondary" style="background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #fff; font-weight: 700; padding: 10px 18px;">
+            🌟 v1.4.0-Supernova <span style="background: #00f2fe; color: #000; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; margin-left: 6px; font-weight: 800;">LATEST</span>
+          </button>
+          <button id="rel-btn-v13" onclick="selectRelease('v13')" class="btn btn-secondary" style="padding: 10px 18px; font-weight: 600;">
+            🌌 v1.3.0-Nebula
           </button>
           <button id="rel-btn-v12" onclick="selectRelease('v12')" class="btn btn-secondary" style="padding: 10px 18px; font-weight: 600;">
             ⚡ v1.2.0-Titan
@@ -147,28 +150,28 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
           <div style="background: var(--bg-card); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 35px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
               <div>
-                <span id="rel-badge" style="background: rgba(0, 242, 254, 0.1); color: #00f2fe; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(0, 242, 254, 0.3);">OFFICIAL PRODUCTION RELEASE</span>
-                <h3 id="rel-title" style="font-size: 1.7rem; font-weight: 800; margin-top: 10px;">Aero Linux 1.3-Nebula</h3>
-                <p id="rel-desc" style="color: var(--text-muted); font-size: 0.95rem;">64-bit (x86_64) • Wayland / Sway • Complete 30-App GUI Suite • 107+ Tests Passing</p>
+                <span id="rel-badge" style="background: rgba(0, 242, 254, 0.1); color: #00f2fe; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(0, 242, 254, 0.3);">LATEST PRODUCTION RELEASE</span>
+                <h3 id="rel-title" style="font-size: 1.7rem; font-weight: 800; margin-top: 10px;">Aero Linux 1.4-Supernova</h3>
+                <p id="rel-desc" style="color: var(--text-muted); font-size: 0.95rem;">64-bit (x86_64) • Complete 45-App GUI Suite • Markdown, Tunnels, Sandbox &amp; GPU Studios • 128 Tests Passing</p>
               </div>
               <div style="text-align: right;">
-                <div id="rel-size" style="font-size: 1.4rem; font-weight: 800; color: #34d399;">2.2 GB</div>
+                <div id="rel-size" style="font-size: 1.4rem; font-weight: 800; color: #34d399;">2.4 GB</div>
                 <span style="color: var(--text-muted); font-size: 0.8rem;">ISO Image / Bundle</span>
               </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0;">
-              <a id="rel-download-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.3.0-nebula/aero-linux-1.3-nebula-src.tar.gz" class="btn btn-primary" style="padding: 14px; font-weight: 700; gap: 8px;">
+              <a id="rel-download-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz" class="btn btn-primary" style="padding: 14px; font-weight: 700; gap: 8px;">
                 ⚡ Direct Download
               </a>
-              <a id="rel-github-btn" href="https://github.com/ronitgupta138/aero-linux/releases/tag/v1.3.0-nebula" target="_blank" class="btn btn-secondary" style="padding: 14px; gap: 8px;">
+              <a id="rel-github-btn" href="https://github.com/ronitgupta138/aero-linux/releases/tag/v1.4.0-supernova" target="_blank" class="btn btn-secondary" style="padding: 14px; gap: 8px;">
                 🌐 GitHub Release &amp; Assets
               </a>
             </div>
 
             <div style="background: rgba(10, 11, 14, 0.7); border: 1px solid #1e293b; border-radius: 8px; padding: 15px; font-family: var(--font-mono); font-size: 0.85rem;">
               <div style="color: var(--text-muted); margin-bottom: 6px;">SHA256 Checksum:</div>
-              <div id="rel-sha" style="color: #00f2fe; word-break: break-all; font-weight: 600;">89140abd231118f616c5d337ec74802007f58f64cc5085869b3a333ead2f887d</div>
+              <div id="rel-sha" style="color: #00f2fe; word-break: break-all; font-weight: 600;">b72c91834e0a7df85496f8c7b8417c8052ebf3a46d1e405e3ec1694f482d8c36</div>
               <div style="margin-top: 10px; color: #64748b; font-size: 0.8rem;">
                 Verify integrity: <code>sha256sum -c &lt;archive.tar.gz&gt;</code>
               </div>
@@ -396,6 +399,42 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
               <div style="font-weight: 700; color: #f43f5e; margin-bottom: 4px;">⚡ 40. Systems Benchmark</div>
               <div style="color: var(--text-muted); font-size: 0.85rem;">Multi-core CPU compute, RAM memory bandwidth &amp; NVMe disk I/O performance benchmark suite.</div>
             </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">📊 41. Visual Diff &amp; Comparator</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Side-by-side split code diffing, Git uncommitted tree comparison &amp; patch exporter.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px;">📱 42. QR Code &amp; Device Link</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Vector QR code generator for URLs, staging servers, and 1-tap phone Wi-Fi pairing.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #ef4444; margin-bottom: 4px;">🎥 43. Screen &amp; Media Recorder</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Instant MP4/GIF desktop capture, PipeWire audio toggle &amp; recordings gallery.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #3b82f6; margin-bottom: 4px;">📦 44. Archive &amp; Compression Studio</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Inspect archive hierarchies without extracting; create ZIP, TAR.GZ, and TAR.XZ archives.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #00f2fe; margin-bottom: 4px;">📝 45. Markdown &amp; Tech Docs Studio</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Live split Markdown editor, real-time syntax parser, word count profiler &amp; HTML exporter.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #4ade80; margin-bottom: 4px;">🌐 46. Network HTTPS Tunnel</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Expose localhost dev servers to instant public HTTPS URLs for mobile testing and webhooks.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #f59e0b; margin-bottom: 4px;">💻 47. Live Code Sandbox REPL</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Isolated code scratchpad for Python 3, Node.js, Bash, and C with runtime latency stopwatch.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #ec4899; margin-bottom: 4px;">🎮 48. GPU &amp; 3D Acceleration Studio</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Real-time GPU load, VRAM allocation, temperature sensors &amp; 1-click hybrid graphics switching.</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px;">
+              <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">🌿 49. Visual Git Commit Graph</div>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">Visual Git commit graph tree, stage/unstage file selector &amp; conventional commit assistant.</div>
+            </div>
           </div>
         </div>
 
@@ -467,9 +506,18 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
     }
 
     const RELEASES_DATA = {
+      'v14': {
+        title: 'Aero Linux 1.4-Supernova',
+        badge: 'LATEST PRODUCTION RELEASE',
+        desc: '64-bit (x86_64) • Complete 45-App GUI Suite • Markdown, Tunnels, Sandbox & GPU Studios • 128 Tests Passing',
+        size: '2.4 GB',
+        downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux-1.4-supernova-src.tar.gz',
+        githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.4.0-supernova',
+        sha: 'ad8a236db540f8e5a4c3ba78b1694d51b838a2523d4707080b5a2f305b9fa7a4'
+      },
       'v13': {
         title: 'Aero Linux 1.3-Nebula',
-        badge: 'OFFICIAL PRODUCTION RELEASE',
+        badge: 'STABLE RELEASE (NEBULA)',
         desc: '64-bit (x86_64) • Wayland / Sway • Complete 30-App GUI Suite • 107+ Tests Passing',
         size: '2.2 GB',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.3.0-nebula/aero-linux-1.3-nebula-src.tar.gz',
@@ -517,7 +565,7 @@ Disk swap writes uncompressed pages to slow SSD storage, causing latency spikes.
       document.getElementById('rel-github-btn').setAttribute('href', data.githubUrl);
       document.getElementById('rel-sha').textContent = data.sha;
 
-      ['v13', 'v12', 'v11', 'v10'].forEach(k => {
+      ['v14', 'v13', 'v12', 'v11', 'v10'].forEach(k => {
         const btn = document.getElementById('rel-btn-' + k);
         if (btn) {
           if (k === relKey) {

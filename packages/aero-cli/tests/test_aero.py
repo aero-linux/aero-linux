@@ -812,6 +812,31 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(arch_gui))
         self.assertTrue(os.access(arch_gui, os.X_OK))
 
+    def test_markdown_gui_script(self):
+        md_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-markdown-gui"
+        self.assertTrue(os.path.exists(md_gui))
+        self.assertTrue(os.access(md_gui, os.X_OK))
+
+    def test_tunnel_gui_script(self):
+        tun_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-tunnel-gui"
+        self.assertTrue(os.path.exists(tun_gui))
+        self.assertTrue(os.access(tun_gui, os.X_OK))
+
+    def test_sandbox_gui_script(self):
+        box_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-sandbox-gui"
+        self.assertTrue(os.path.exists(box_gui))
+        self.assertTrue(os.access(box_gui, os.X_OK))
+
+    def test_gpu_gui_script(self):
+        gpu_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-gpu-gui"
+        self.assertTrue(os.path.exists(gpu_gui))
+        self.assertTrue(os.access(gpu_gui, os.X_OK))
+
+    def test_gitgraph_gui_script(self):
+        gitgraph_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-gitgraph-gui"
+        self.assertTrue(os.path.exists(gitgraph_gui))
+        self.assertTrue(os.access(gitgraph_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -145,7 +145,12 @@ class AeroWelcomeApp(Gtk.Window):
             ("📊 Visual Diff & Comparator", "aero-diff-gui", 0, 10),
             ("📱 QR Code & Device Link", "aero-qr-gui", 1, 10),
             ("🎥 Screen & Media Recorder", "aero-recorder-gui", 0, 11),
-            ("🔒 Developer Secrets Vault", "aero-vault-gui", 1, 11),
+            ("📝 Markdown & Tech Docs", "aero-markdown-gui", 1, 11),
+            ("🌐 HTTPS Network Tunnel", "aero-tunnel-gui", 0, 12),
+            ("💻 Live Code Sandbox", "aero-sandbox-gui", 1, 12),
+            ("🎮 GPU & 3D Acceleration", "aero-gpu-gui", 0, 13),
+            ("🌿 Git Commit Graph Tree", "aero-gitgraph-gui", 1, 13),
+            ("🔒 Developer Secrets Vault", "aero-vault-gui", 0, 14),
         ]
 
         for text, cmd, col, row in dev_tools:

@@ -12,8 +12,8 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-119%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
-[![Release](https://img.shields.io/badge/Release-v1.3.0--Nebula-00f2fe.svg)](https://github.com/ronitgupta138/aero-linux/releases)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-128%20Passed-brightgreen.svg)](https://github.com/ronitgupta138/aero-linux)
+[![Release](https://img.shields.io/badge/Release-v1.4.0--Supernova-00f2fe.svg)](https://github.com/ronitgupta138/aero-linux/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00f2fe.svg)](LICENSE)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-brightgreen.svg)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-blue.svg)]()

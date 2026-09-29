@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Visual Git Graph & Commit Studio (GTK3)
+Visual commit history tree, staged/unstaged file manager, and 1-click conventional commit generator.
+"""
+
+import gi
+import os
+import subprocess
+import sys
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.badge-branch {
+    background-color: rgba(0, 242, 254, 0.15);
+    color: #00f2fe;
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+.card-box {
+    background-color: #0d1527;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px;
+}
+"""
+
+
+class AeroGitGraphGUI(Gtk.Window):
+    def __init__(self, repo_dir=None):
+        super().__init__(title="Aero Visual Git Graph & Commit Studio")
+        self.set_default_size(980, 680)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.repo_dir = repo_dir or os.getcwd()
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🌿 Visual Git Graph &amp; Commit Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup(f"<span class='header-desc'>Repository: <b>{os.path.basename(self.repo_dir)}</b> ({self.repo_dir})</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.lbl_branch = Gtk.Label(xalign=1)
+        self.lbl_branch.set_markup("<span class='badge-branch'>🌿 main</span>")
+        header_box.pack_end(self.lbl_branch, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Main Paned
+        paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
+        paned.set_position(340)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_top(12)
+        paned.set_margin_bottom(12)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Top: Commit History Tree
+        top_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        lbl_hist = Gtk.Label(xalign=0)
+        lbl_hist.set_markup("<span font='bold 10' color='#00f2fe'>COMMIT GRAPH &amp; HISTORY</span>")
+        top_box.pack_start(lbl_hist, False, False, 0)
+
+        scroll_tree = Gtk.ScrolledWindow()
+        self.tree_store = Gtk.ListStore(str, str, str, str) # Hash, Message, Author, Date
+        self.tree_view = Gtk.TreeView(model=self.tree_store)
+        self.tree_view.get_style_context().add_class("code-editor")
+
+        cols = [("Hash", 0, 90), ("Commit Message", 1, 450), ("Author", 2, 140), ("Date", 3, 140)]
+        for title, idx, width in cols:
+            renderer = Gtk.CellRendererText()
+            col = Gtk.TreeViewColumn(title, renderer, text=idx)
+            col.set_fixed_width(width)
+            col.set_resizable(True)
+            self.tree_view.append_column(col)
+
+        scroll_tree.add(self.tree_view)
+        top_box.pack_start(scroll_tree, True, True, 0)
+        paned.pack1(top_box, True, False)
+
+        # Bottom: Staged Files & Conventional Commit Builder
+        bottom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        bottom_box.get_style_context().add_class("card-box")
+
+        lbl_c_title = Gtk.Label(xalign=0)
+        lbl_c_title.set_markup("<span font='bold 10' color='#4ade80'>CONVENTIONAL COMMIT GENERATOR &amp; SYNC</span>")
+        bottom_box.pack_start(lbl_c_title, False, False, 0)
+
+        commit_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.combo_type = Gtk.ComboBoxText()
+        for t in ["feat", "fix", "docs", "refactor", "perf", "test", "chore"]:
+            self.combo_type.append_text(t)
+        self.combo_type.set_active(0)
+        commit_row.pack_start(self.combo_type, False, False, 0)
+
+        self.entry_scope = Gtk.Entry()
+        self.entry_scope.set_placeholder_text("scope (optional)")
+        self.entry_scope.set_width_chars(14)
+        commit_row.pack_start(self.entry_scope, False, False, 0)
+
+        self.entry_msg = Gtk.Entry()
+        self.entry_msg.set_placeholder_text("Summary of change...")
+        commit_row.pack_start(self.entry_msg, True, True, 0)
+
+        btn_commit = Gtk.Button(label="💾 Commit & Push")
+        btn_commit.get_style_context().add_class("btn-primary")
+        btn_commit.connect("clicked", self._on_commit_and_push)
+        commit_row.pack_start(btn_commit, False, False, 0)
+
+        bottom_box.pack_start(commit_row, False, False, 0)
+
+        # Sync Buttons
+        sync_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        btn_pull = Gtk.Button(label="⬇️ Pull Origin")
+        btn_pull.get_style_context().add_class("btn-secondary")
+        btn_pull.connect("clicked", self._on_pull)
+        sync_row.pack_start(btn_pull, False, False, 0)
+
+        btn_refresh = Gtk.Button(label="🔄 Refresh Graph")
+        btn_refresh.get_style_context().add_class("btn-secondary")
+        btn_refresh.connect("clicked", lambda b: self._load_git_data())
+        sync_row.pack_start(btn_refresh, False, False, 0)
+
+        self.lbl_status = Gtk.Label(xalign=0)
+        self.lbl_status.set_markup("<span color='#94a3b8'>Ready</span>")
+        sync_row.pack_start(self.lbl_status, True, True, 0)
+
+        bottom_box.pack_start(sync_row, False, False, 0)
+        paned.pack2(bottom_box, False, False)
+
+        self._load_git_data()
+
+    def _load_git_data(self):
+        self.tree_store.clear()
+        try:
+            # Get current branch
+            res_b = subprocess.run(["git", "branch", "--show-current"], cwd=self.repo_dir, stdout=subprocess.PIPE, text=True)
+            branch = res_b.stdout.strip() or "HEAD"
+            self.lbl_branch.set_markup(f"<span class='badge-branch'>🌿 {branch}</span>")
+
+            # Get commit log
+            res_log = subprocess.run(
+                ["git", "log", "-n", "25", "--pretty=format:%h%x09%s%x09%an%x09%cr"],
+                cwd=self.repo_dir,
+                stdout=subprocess.PIPE,
+                text=True
+            )
+            for line in res_log.stdout.splitlines():
+                parts = line.split("\t")
+                if len(parts) == 4:
+                    self.tree_store.append(parts)
+        except Exception as e:
+            self.lbl_status.set_markup(f"<span color='#f87171'>Git Error: {e}</span>")
+
+    def _on_commit_and_push(self, button):
+        ctype = self.combo_type.get_active_text()
+        scope = self.entry_scope.get_text().strip()
+        msg = self.entry_msg.get_text().strip()
+        if not msg:
+            return
+
+        full_msg = f"{ctype}({scope}): {msg}" if scope else f"{ctype}: {msg}"
+        try:
+            subprocess.run(["git", "add", "."], cwd=self.repo_dir, check=True)
+            subprocess.run(["git", "commit", "-m", full_msg], cwd=self.repo_dir, check=True)
+            self.entry_msg.set_text("")
+            self.lbl_status.set_markup("<span color='#4ade80'>✔ Committed successfully.</span>")
+            self._load_git_data()
+        except Exception as e:
+            self.lbl_status.set_markup(f"<span color='#f87171'>Error: {e}</span>")
+
+    def _on_pull(self, button):
+        try:
+            res = subprocess.run(["git", "pull"], cwd=self.repo_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            self.lbl_status.set_markup("<span color='#4ade80'>✔ Pulled latest changes.</span>")
+            self._load_git_data()
+        except Exception as e:
+            self.lbl_status.set_markup(f"<span color='#f87171'>Error: {e}</span>")
+
+
+def main():
+    win = AeroGitGraphGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

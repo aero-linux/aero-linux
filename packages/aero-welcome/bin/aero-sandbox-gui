@@ -1,0 +1,294 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Live Code Scratchpad & Multi-Language Sandbox Studio (GTK3)
+Instant interactive REPL & code runner for Python 3, Node.js, Bash, Rust, and C with runtime profiler.
+"""
+
+import gi
+import os
+import subprocess
+import sys
+import tempfile
+import time
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.output-pane {
+    background-color: #040711;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 16px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.badge-runtime {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+"""
+
+SNIPPETS = {
+    "Python 3": """# Aero Linux Python Sandbox
+import sys
+import platform
+
+print(f"🐍 Python Version: {sys.version.split()[0]}")
+print(f"⚡ Host Platform:  {platform.platform()}")
+
+squares = [x**2 for x in range(1, 11)]
+print(f"📊 Computed Squares: {squares}")
+""",
+    "Node.js": """// Aero Linux JavaScript Sandbox
+console.log("⚡ Node.js Runtime: " + process.version);
+const data = [10, 20, 30, 40, 50];
+const sum = data.reduce((acc, n) => acc + n, 0);
+console.log("📊 Sum of Array: " + sum);
+""",
+    "Bash": """#!/usr/bin/env bash
+echo "⚡ Aero Linux Shell Diagnostic"
+echo "────────────────────────────────────"
+echo "Hostname: $(hostname)"
+echo "Kernel:   $(uname -r)"
+echo "Uptime:   $(uptime -p)"
+""",
+    "C": """#include <stdio.h>
+
+int main() {
+    printf("⚡ Aero Linux High-Performance C Engine\\n");
+    int sum = 0;
+    for (int i = 1; i <= 100; i++) sum += i;
+    printf("📊 Sum of 1 to 100: %d\\n", sum);
+    return 0;
+}
+""",
+}
+
+
+class AeroSandboxGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Live Code Sandbox & Multi-Language Studio")
+        self.set_default_size(1020, 680)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>💻 Code Sandbox &amp; Multi-Language Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Execute isolated code snippets in Python, Node.js, Bash, and C with microsecond runtime profiling.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.lbl_stopwatch = Gtk.Label(xalign=1)
+        self.lbl_stopwatch.set_markup("<span class='badge-runtime'>Ready</span>")
+        header_box.pack_end(self.lbl_stopwatch, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Controls Bar
+        ctrl_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        ctrl_bar.set_margin_start(16)
+        ctrl_bar.set_margin_end(16)
+        ctrl_bar.set_margin_top(10)
+        ctrl_bar.set_margin_bottom(8)
+
+        lbl_lang = Gtk.Label(label="Language:", xalign=0)
+        ctrl_bar.pack_start(lbl_lang, False, False, 0)
+
+        self.combo_lang = Gtk.ComboBoxText()
+        for lang in ["Python 3", "Node.js", "Bash", "C"]:
+            self.combo_lang.append_text(lang)
+        self.combo_lang.set_active(0)
+        self.combo_lang.connect("changed", self._on_lang_changed)
+        ctrl_bar.pack_start(self.combo_lang, False, False, 0)
+
+        self.btn_run = Gtk.Button(label="▶️ Run Code (Ctrl+Enter)")
+        self.btn_run.get_style_context().add_class("btn-primary")
+        self.btn_run.connect("clicked", self._on_run_code)
+        ctrl_bar.pack_start(self.btn_run, False, False, 0)
+
+        btn_clear = Gtk.Button(label="🧹 Clear Output")
+        btn_clear.get_style_context().add_class("btn-secondary")
+        btn_clear.connect("clicked", lambda b: self.out_view.get_buffer().set_text(""))
+        ctrl_bar.pack_start(btn_clear, False, False, 0)
+
+        main_box.pack_start(ctrl_bar, False, False, 0)
+
+        # Main Paned
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(520)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_bottom(12)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Left: Editor
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_ed = Gtk.Label(xalign=0)
+        lbl_ed.set_markup("<span font='bold 9.5' color='#00f2fe'>CODE EDITOR</span>")
+        left_box.pack_start(lbl_ed, False, False, 0)
+
+        scroll_ed = Gtk.ScrolledWindow()
+        self.editor = Gtk.TextView()
+        self.editor.get_style_context().add_class("code-editor")
+        self.editor.get_buffer().set_text(SNIPPETS["Python 3"])
+        scroll_ed.add(self.editor)
+        left_box.pack_start(scroll_ed, True, True, 0)
+        paned.pack1(left_box, True, False)
+
+        # Right: Output Console
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_out = Gtk.Label(xalign=0)
+        lbl_out.set_markup("<span font='bold 9.5' color='#4ade80'>EXECUTION OUTPUT &amp; CONSOLE</span>")
+        right_box.pack_start(lbl_out, False, False, 0)
+
+        scroll_out = Gtk.ScrolledWindow()
+        self.out_view = Gtk.TextView()
+        self.out_view.set_editable(False)
+        self.out_view.get_style_context().add_class("output-pane")
+        scroll_out.add(self.out_view)
+        right_box.pack_start(scroll_out, True, True, 0)
+        paned.pack2(right_box, True, False)
+
+    def _on_lang_changed(self, combo):
+        lang = combo.get_active_text()
+        if lang in SNIPPETS:
+            self.editor.get_buffer().set_text(SNIPPETS[lang])
+
+    def _on_run_code(self, button):
+        lang = self.combo_lang.get_active_text()
+        buf = self.editor.get_buffer()
+        code = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+
+        self.btn_run.set_sensitive(False)
+        self.lbl_stopwatch.set_markup("<span class='badge-runtime'>Executing...</span>")
+
+        def run_worker():
+            start_t = time.time()
+            output = ""
+            try:
+                if lang == "Python 3":
+                    res = subprocess.run(["python3", "-c", code], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=10)
+                    output = res.stdout
+                elif lang == "Node.js":
+                    res = subprocess.run(["node", "-e", code], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=10)
+                    output = res.stdout
+                elif lang == "Bash":
+                    res = subprocess.run(["bash", "-c", code], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=10)
+                    output = res.stdout
+                elif lang == "C":
+                    with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as c_file:
+                        c_file.write(code)
+                        c_path = c_file.name
+                    bin_path = c_path.replace(".c", ".out")
+                    compile_res = subprocess.run(["gcc", c_path, "-o", bin_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    if compile_res.returncode != 0:
+                        output = f"Compilation Error:\n{compile_res.stdout}"
+                    else:
+                        run_res = subprocess.run([bin_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=10)
+                        output = run_res.stdout
+                    for p in [c_path, bin_path]:
+                        if os.path.exists(p):
+                            os.remove(p)
+            except subprocess.TimeoutExpired:
+                output = "❌ Execution Timed Out (Max 10s Limit Reached)"
+            except Exception as e:
+                output = f"Execution Error: {e}"
+
+            elapsed_ms = (time.time() - start_t) * 1000
+
+            def update_ui():
+                self.out_view.get_buffer().set_text(output)
+                self.lbl_stopwatch.set_markup(f"<span class='badge-runtime'>⏱️ {elapsed_ms:.1f} ms</span>")
+                self.btn_run.set_sensitive(True)
+
+            GLib.idle_add(update_ui)
+
+        import threading
+        threading.Thread(target=run_worker, daemon=True).start()
+
+
+def main():
+    win = AeroSandboxGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

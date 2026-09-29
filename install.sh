@@ -485,6 +485,46 @@ exec python3 "${AERO_HOME}/bin/aero-archive-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-archive-gui"
 
+# Create global executable wrapper for aero-markdown-gui
+cat << 'EOF' > "${BIN_DIR}/aero-markdown-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-markdown-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-markdown-gui"
+
+# Create global executable wrapper for aero-tunnel-gui
+cat << 'EOF' > "${BIN_DIR}/aero-tunnel-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-tunnel-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-tunnel-gui"
+
+# Create global executable wrapper for aero-sandbox-gui
+cat << 'EOF' > "${BIN_DIR}/aero-sandbox-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-sandbox-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-sandbox-gui"
+
+# Create global executable wrapper for aero-gpu-gui
+cat << 'EOF' > "${BIN_DIR}/aero-gpu-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-gpu-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-gpu-gui"
+
+# Create global executable wrapper for aero-gitgraph-gui
+cat << 'EOF' > "${BIN_DIR}/aero-gitgraph-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-gitgraph-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-gitgraph-gui"
+
 # Install Desktop Icon & Man Pages & Nemo File Manager Actions
 mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
 mkdir -p "${HOME}/.local/share/man/man1"
@@ -1076,6 +1116,61 @@ Icon=package-x-generic
 Terminal=false
 Type=Application
 Categories=Utility;Archiving;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-markdown.desktop"
+[Desktop Entry]
+Name=Aero Markdown Studio
+Comment=Aero Linux Markdown & Technical Docs Studio
+Exec=${BIN_DIR}/aero-markdown-gui
+Icon=accessories-text-editor
+Terminal=false
+Type=Application
+Categories=Development;Documentation;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-tunnel.desktop"
+[Desktop Entry]
+Name=Aero Network Tunnel Studio
+Comment=Aero Linux Network Tunnel & Port Forwarding Studio
+Exec=${BIN_DIR}/aero-tunnel-gui
+Icon=network-transmit-receive
+Terminal=false
+Type=Application
+Categories=Development;Network;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-sandbox.desktop"
+[Desktop Entry]
+Name=Aero Code Sandbox
+Comment=Aero Linux Live Code Scratchpad & Sandbox REPL
+Exec=${BIN_DIR}/aero-sandbox-gui
+Icon=system-run
+Terminal=false
+Type=Application
+Categories=Development;IDE;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-gpu.desktop"
+[Desktop Entry]
+Name=Aero GPU Studio
+Comment=Aero Linux GPU & Graphics Acceleration Studio
+Exec=${BIN_DIR}/aero-gpu-gui
+Icon=video-display
+Terminal=false
+Type=Application
+Categories=System;HardwareSettings;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-gitgraph.desktop"
+[Desktop Entry]
+Name=Aero Git Graph Studio
+Comment=Aero Linux Visual Git Commit Graph & History Studio
+Exec=${BIN_DIR}/aero-gitgraph-gui
+Icon=git
+Terminal=false
+Type=Application
+Categories=Development;RevisionControl;GTK;
 EOF
 
 # Ensure ~/.local/bin is in PATH for bash, zsh, fish

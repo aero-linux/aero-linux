@@ -1,0 +1,381 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Markdown & Technical Documentation Studio (GTK3)
+Real-time split-pane Markdown editor, GitHub-flavored syntax parser, HTML exporter, and word count statistics.
+"""
+
+import gi
+import html
+import os
+import re
+import subprocess
+import sys
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.preview-pane {
+    background-color: #0d1527;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 12px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 6px 14px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.badge-stats {
+    background-color: rgba(0, 242, 254, 0.15);
+    color: #00f2fe;
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8.5pt;
+    font-weight: 700;
+}
+"""
+
+SAMPLE_MARKDOWN = """# 🚀 Welcome to Aero Linux 1.4-Supernova
+
+Aero Linux is an ultra-lean, high-performance developer distribution built with **zero background bloat**.
+
+## ⚡ Core Features
+- **45+ Native GTK3 Developer Applications**
+- **Sub-350MB Idle RAM Footprint** with dynamic zRAM (ZSTD)
+- **1-Click Local LLM Studio** (Ollama with CUDA/ROCm auto-tuning)
+- **Zero-Terminal Parity** for every daily dev workflow
+
+### 🛠️ Example Code
+```python
+import os
+print("Hello from Aero Linux Supernova!")
+```
+
+### 📊 Performance Table
+| Metric | Aero Linux | Standard Distros |
+| :--- | :--- | :--- |
+| **Idle RAM** | 312 MB | 1.8 GB |
+| **Cold Boot** | 4.2s | 18.5s |
+| **ZRAM Compression** | 3.2x ZSTD | None |
+
+> *"Built by developers, for systems engineers."*
+"""
+
+
+def markdown_to_simple_html(md_text):
+    """Zero-dependency Markdown to HTML parser."""
+    lines = md_text.splitlines()
+    html_out = []
+    in_code_block = False
+    in_list = False
+    
+    html_out.append("<!DOCTYPE html><html><head><meta charset='utf-8'>")
+    html_out.append("<style>")
+    html_out.append("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #050811; color: #e2e8f0; padding: 24px; line-height: 1.6; max-width: 800px; margin: auto; }")
+    html_out.append("h1, h2, h3 { color: #00f2fe; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; }")
+    html_out.append("code { font-family: 'JetBrains Mono', monospace; background: #080d1a; color: #38bdf8; padding: 2px 6px; border-radius: 4px; }")
+    html_out.append("pre { background: #080d1a; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; }")
+    html_out.append("pre code { background: none; padding: 0; }")
+    html_out.append("table { border-collapse: collapse; width: 100%; margin: 16px 0; }")
+    html_out.append("th, td { border: 1px solid rgba(255,255,255,0.15); padding: 8px 12px; text-align: left; }")
+    html_out.append("th { background: #0d1527; color: #00f2fe; }")
+    html_out.append("blockquote { border-left: 4px solid #00f2fe; margin: 0; padding-left: 14px; color: #94a3b8; font-style: italic; }")
+    html_out.append("</style></head><body>")
+
+    for line in lines:
+        if line.startswith("```"):
+            if in_code_block:
+                html_out.append("</code></pre>")
+                in_code_block = False
+            else:
+                html_out.append("<pre><code>")
+                in_code_block = True
+            continue
+
+        if in_code_block:
+            html_out.append(html.escape(line) + "\n")
+            continue
+
+        # Headers
+        if line.startswith("# "):
+            html_out.append(f"<h1>{html.escape(line[2:])}</h1>")
+        elif line.startswith("## "):
+            html_out.append(f"<h2>{html.escape(line[3:])}</h2>")
+        elif line.startswith("### "):
+            html_out.append(f"<h3>{html.escape(line[4:])}</h3>")
+        elif line.startswith("> "):
+            html_out.append(f"<blockquote>{html.escape(line[2:])}</blockquote>")
+        elif line.startswith("- "):
+            if not in_list:
+                html_out.append("<ul>")
+                in_list = True
+            item_text = html.escape(line[2:])
+            # Bold & italic
+            item_text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', item_text)
+            item_text = re.sub(r'\*(.+?)\*', r'<i>\1</i>', item_text)
+            html_out.append(f"<li>{item_text}</li>")
+        else:
+            if in_list:
+                html_out.append("</ul>")
+                in_list = False
+            if line.strip():
+                p_text = html.escape(line)
+                p_text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', p_text)
+                p_text = re.sub(r'\*(.+?)\*', r'<i>\1</i>', p_text)
+                p_text = re.sub(r'`(.+?)`', r'<code>\1</code>', p_text)
+                html_out.append(f"<p>{p_text}</p>")
+
+    if in_list:
+        html_out.append("</ul>")
+    if in_code_block:
+        html_out.append("</code></pre>")
+
+    html_out.append("</body></html>")
+    return "\n".join(html_out)
+
+
+class AeroMarkdownGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Markdown & Technical Docs Studio")
+        self.set_default_size(1040, 720)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>📝 Markdown &amp; Technical Docs Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Real-time Markdown editor, live formatting parser, and HTML documentation exporter.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.lbl_stats = Gtk.Label(xalign=1)
+        self.lbl_stats.set_markup("<span class='badge-stats'>0 Words | 0 Chars</span>")
+        header_box.pack_end(self.lbl_stats, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Controls Bar
+        ctrl_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        ctrl_bar.set_margin_start(16)
+        ctrl_bar.set_margin_end(16)
+        ctrl_bar.set_margin_top(10)
+        ctrl_bar.set_margin_bottom(8)
+
+        btn_open = Gtk.Button(label="📂 Open File...")
+        btn_open.get_style_context().add_class("btn-secondary")
+        btn_open.connect("clicked", self._on_open_file)
+        ctrl_bar.pack_start(btn_open, False, False, 0)
+
+        btn_save = Gtk.Button(label="💾 Save .md")
+        btn_save.get_style_context().add_class("btn-secondary")
+        btn_save.connect("clicked", self._on_save_md)
+        ctrl_bar.pack_start(btn_save, False, False, 0)
+
+        btn_export = Gtk.Button(label="🌐 Export HTML")
+        btn_export.get_style_context().add_class("btn-primary")
+        btn_export.connect("clicked", self._on_export_html)
+        ctrl_bar.pack_start(btn_export, False, False, 0)
+
+        main_box.pack_start(ctrl_bar, False, False, 0)
+
+        # Split Paned (Editor on Left vs Formatted Preview on Right)
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(520)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_bottom(12)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Left: Editor
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_ed = Gtk.Label(xalign=0)
+        lbl_ed.set_markup("<span font='bold 9.5' color='#00f2fe'>MARKDOWN SOURCE</span>")
+        left_box.pack_start(lbl_ed, False, False, 0)
+
+        scroll_ed = Gtk.ScrolledWindow()
+        self.editor = Gtk.TextView()
+        self.editor.get_style_context().add_class("code-editor")
+        self.editor.get_buffer().set_text(SAMPLE_MARKDOWN)
+        self.editor.get_buffer().connect("changed", self._on_content_changed)
+        scroll_ed.add(self.editor)
+        left_box.pack_start(scroll_ed, True, True, 0)
+        paned.pack1(left_box, True, False)
+
+        # Right: Rendered Preview
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_pr = Gtk.Label(xalign=0)
+        lbl_pr.set_markup("<span font='bold 9.5' color='#4ade80'>PARSED PREVIEW &amp; STRUCTURE</span>")
+        right_box.pack_start(lbl_pr, False, False, 0)
+
+        scroll_pr = Gtk.ScrolledWindow()
+        self.preview_view = Gtk.TextView()
+        self.preview_view.set_editable(False)
+        self.preview_view.get_style_context().add_class("preview-pane")
+        scroll_pr.add(self.preview_view)
+        right_box.pack_start(scroll_pr, True, True, 0)
+        paned.pack2(right_box, True, False)
+
+        # Setup preview text tags
+        self._setup_preview_tags()
+        self._on_content_changed(None)
+
+    def _setup_preview_tags(self):
+        buf = self.preview_view.get_buffer()
+        buf.create_tag("h1", font="bold 16", foreground="#00f2fe")
+        buf.create_tag("h2", font="bold 13", foreground="#38bdf8")
+        buf.create_tag("h3", font="bold 11", foreground="#818cf8")
+        buf.create_tag("bold", weight=Pango.Weight.BOLD, foreground="#ffffff")
+        buf.create_tag("code", font="JetBrains Mono 9", background="#080d1a", foreground="#4ade80")
+        buf.create_tag("quote", foreground="#94a3b8", style=Pango.Style.ITALIC)
+
+    def _on_content_changed(self, widget):
+        buf = self.editor.get_buffer()
+        text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+        
+        # Word & Char counts
+        words = len(text.split())
+        chars = len(text)
+        self.lbl_stats.set_markup(f"<span class='badge-stats'>{words:,} Words | {chars:,} Chars</span>")
+
+        # Render to preview TextView
+        p_buf = self.preview_view.get_buffer()
+        p_buf.set_text("")
+        
+        for line in text.splitlines():
+            iter_end = p_buf.get_end_iter()
+            if line.startswith("# "):
+                p_buf.insert_with_tags_by_name(iter_end, line[2:] + "\n", "h1")
+            elif line.startswith("## "):
+                p_buf.insert_with_tags_by_name(iter_end, line[3:] + "\n", "h2")
+            elif line.startswith("### "):
+                p_buf.insert_with_tags_by_name(iter_end, line[4:] + "\n", "h3")
+            elif line.startswith("> "):
+                p_buf.insert_with_tags_by_name(iter_end, "│ " + line[2:] + "\n", "quote")
+            elif line.startswith("```"):
+                p_buf.insert_with_tags_by_name(iter_end, "────────── Code Block ──────────\n", "quote")
+            else:
+                p_buf.insert(iter_end, line + "\n")
+
+    def _on_open_file(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Open Markdown File",
+            parent=self,
+            action=Gtk.FileChooserAction.OPEN
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        if dialog.run() == Gtk.ResponseType.OK:
+            path = dialog.get_filename()
+            with open(path, "r", errors="ignore") as f:
+                self.editor.get_buffer().set_text(f.read())
+        dialog.destroy()
+
+    def _on_save_md(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Save Markdown File",
+            parent=self,
+            action=Gtk.FileChooserAction.SAVE
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
+        dialog.set_current_name("document.md")
+        if dialog.run() == Gtk.ResponseType.OK:
+            path = dialog.get_filename()
+            buf = self.editor.get_buffer()
+            text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+        dialog.destroy()
+
+    def _on_export_html(self, button):
+        dialog = Gtk.FileChooserDialog(
+            title="Export HTML Document",
+            parent=self,
+            action=Gtk.FileChooserAction.SAVE
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
+        dialog.set_current_name("document.html")
+        if dialog.run() == Gtk.ResponseType.OK:
+            path = dialog.get_filename()
+            buf = self.editor.get_buffer()
+            text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+            html_content = markdown_to_simple_html(text)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            subprocess.Popen(["xdg-open", path])
+        dialog.destroy()
+
+
+def main():
+    win = AeroMarkdownGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

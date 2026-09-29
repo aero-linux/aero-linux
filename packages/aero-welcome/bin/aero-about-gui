@@ -73,7 +73,7 @@ class AboutWindow(Gtk.Window):
         specs = [
             ("Processor (CPU)", f"{cpu.get('model', 'AMD Ryzen / Intel Core')} ({cpu.get('cores', 'N/A')} Cores)"),
             ("System Memory (RAM)", f"{mem.get('total_gb', '16.0')} GB Total • Dynamic zRAM ZSTD Active"),
-            ("Operating System", "Aero Linux 1.3.0-Nebula (64-bit x86_64)"),
+            ("Operating System", "Aero Linux 1.4.0-Supernova (64-bit x86_64)"),
             ("Linux Kernel", f"{kern} ({arch})"),
             ("Display Server", "Wayland (Sway Compositor & Acrylic Waybar)"),
             ("Power Governor", "Autonomous Battery Guard (80% Cap Active)"),

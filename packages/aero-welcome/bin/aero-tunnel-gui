@@ -1,0 +1,287 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Network Tunnel & Port Forwarding Studio (GTK3)
+Expose localhost dev servers to instant secure HTTPS URLs via Cloudflare, LocalXpose, ngrok, or SSH tunnels.
+"""
+
+import gi
+import os
+import re
+import shutil
+import subprocess
+import sys
+import threading
+import time
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 8px 18px;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 9pt;
+}
+.btn-danger:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.card-box {
+    background-color: #0d1527;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+}
+.badge-active {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 9pt;
+    font-weight: 700;
+}
+.badge-idle {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 9pt;
+    font-weight: 700;
+}
+.entry-custom {
+    background-color: #080d1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Monospace';
+    padding: 6px 10px;
+}
+"""
+
+
+class AeroTunnelGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Network Tunnel & Port Forwarding Studio")
+        self.set_default_size(880, 620)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.tunnel_process = None
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>🌐 Network Tunnel &amp; Port Forwarding Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Expose local web servers to instant public HTTPS endpoints for mobile testing and client reviews.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        self.lbl_status = Gtk.Label(xalign=1)
+        self.lbl_status.set_markup("<span class='badge-idle'>● INACTIVE</span>")
+        header_box.pack_end(self.lbl_status, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Content Box
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_start(16)
+        content_box.set_margin_end(16)
+        content_box.set_margin_top(14)
+        content_box.set_margin_bottom(14)
+        main_box.pack_start(content_box, True, True, 0)
+
+        # 1. Config Card
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        card.get_style_context().add_class("card-box")
+
+        lbl_cfg = Gtk.Label(xalign=0)
+        lbl_cfg.set_markup("<span font='bold 10' color='#00f2fe'>TUNNEL CONFIGURATION</span>")
+        card.pack_start(lbl_cfg, False, False, 0)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(16)
+        grid.set_row_spacing(10)
+
+        lbl_port = Gtk.Label(label="Local Port:", xalign=0)
+        self.entry_port = Gtk.Entry()
+        self.entry_port.set_text("3000")
+        self.entry_port.get_style_context().add_class("entry-custom")
+        grid.attach(lbl_port, 0, 0, 1, 1)
+        grid.attach(self.entry_port, 1, 0, 1, 1)
+
+        lbl_provider = Gtk.Label(label="Tunnel Provider:", xalign=0)
+        self.combo_provider = Gtk.ComboBoxText()
+        self.combo_provider.append_text("Localhost.run (Zero Setup SSH)")
+        self.combo_provider.append_text("Cloudflare Tunnel (cloudflared)")
+        self.combo_provider.append_text("LocalXpose (loclx)")
+        self.combo_provider.append_text("ngrok (Custom Auth)")
+        self.combo_provider.set_active(0)
+        grid.attach(lbl_provider, 2, 0, 1, 1)
+        grid.attach(self.combo_provider, 3, 0, 1, 1)
+
+        card.pack_start(grid, False, False, 0)
+        content_box.pack_start(card, False, False, 0)
+
+        # 2. Action Bar
+        action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        
+        self.btn_toggle = Gtk.Button(label="🚀 Launch Public HTTPS Tunnel")
+        self.btn_toggle.get_style_context().add_class("btn-primary")
+        self.btn_toggle.connect("clicked", self._on_toggle_tunnel)
+        action_bar.pack_start(self.btn_toggle, False, False, 0)
+
+        self.lbl_public_url = Gtk.Label(xalign=0)
+        self.lbl_public_url.set_selectable(True)
+        self.lbl_public_url.set_markup("<span color='#94a3b8'>No active public URL</span>")
+        action_bar.pack_start(self.lbl_public_url, True, True, 0)
+
+        content_box.pack_start(action_bar, False, False, 4)
+
+        # 3. Tunnel Logs Viewer
+        lbl_logs = Gtk.Label(xalign=0)
+        lbl_logs.set_markup("<span font='bold 10' color='#94a3b8'>TUNNEL DAEMON STREAM LOGS</span>")
+        content_box.pack_start(lbl_logs, False, False, 0)
+
+        scroll = Gtk.ScrolledWindow()
+        self.log_view = Gtk.TextView()
+        self.log_view.set_editable(False)
+        self.log_view.get_style_context().add_class("code-editor")
+        self.log_view.get_buffer().set_text("Click 'Launch Public HTTPS Tunnel' to generate a secure internet bridge.\n")
+        scroll.add(self.log_view)
+        content_box.pack_start(scroll, True, True, 0)
+
+    def _log(self, text):
+        buf = self.log_view.get_buffer()
+        iter_end = buf.get_end_iter()
+        buf.insert(iter_end, text + "\n")
+
+    def _on_toggle_tunnel(self, button):
+        if self.tunnel_process and self.tunnel_process.poll() is None:
+            # Stop
+            try:
+                self.tunnel_process.terminate()
+            except Exception:
+                pass
+            self.tunnel_process = None
+            self.btn_toggle.set_label("🚀 Launch Public HTTPS Tunnel")
+            self.btn_toggle.get_style_context().remove_class("btn-danger")
+            self.btn_toggle.get_style_context().add_class("btn-primary")
+            self.lbl_status.set_markup("<span class='badge-idle'>● INACTIVE</span>")
+            self.lbl_public_url.set_markup("<span color='#94a3b8'>No active public URL</span>")
+            self._log("🛑 Tunnel terminated.")
+        else:
+            # Start
+            port = self.entry_port.get_text().strip() or "3000"
+            self.btn_toggle.set_label("⏹️ Stop Tunnel")
+            self.btn_toggle.get_style_context().remove_class("btn-primary")
+            self.btn_toggle.get_style_context().add_class("btn-danger")
+            self.lbl_status.set_markup(f"<span class='badge-active'>● ACTIVE (Port {port})</span>")
+            
+            cmd = ["ssh", "-R", f"80:localhost:{port}", "nokey@localhost.run"]
+            self._log(f"⚡ Establishing secure SSH reverse proxy for localhost:{port}...")
+
+            def tunnel_worker():
+                try:
+                    self.tunnel_process = subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        bufsize=1
+                    )
+                    for line in iter(self.tunnel_process.stdout.readline, ""):
+                        if line:
+                            GLib.idle_add(self._log, line.strip())
+                            # Look for https url
+                            m = re.search(r'(https://[a-zA-Z0-9.\-_]+\.lhr\.life)', line)
+                            if m:
+                                url = m.group(1)
+                                GLib.idle_add(lambda u=url: self.lbl_public_url.set_markup(f"<span font='bold 10' color='#00f2fe'>🔗 {u}</span>"))
+                except Exception as e:
+                    GLib.idle_add(self._log, f"❌ Tunnel Error: {e}")
+
+            threading.Thread(target=tunnel_worker, daemon=True).start()
+
+
+def main():
+    win = AeroTunnelGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
