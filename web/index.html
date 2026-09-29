@@ -1886,41 +1886,42 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
         }
       });
     }
+  </script>
 
-    <!-- Floating Hotkeys Trigger -->
-    <div class="floating-hotkeys-btn" onclick="openHotkeysModal()" title="View Keyboard Shortcuts (or press ?)">
-      <span>⌨️ Hotkeys</span>
-      <kbd>Win+?</kbd>
-    </div>
+  <!-- Floating Hotkeys Trigger -->
+  <div class="floating-hotkeys-btn" onclick="openHotkeysModal()" title="View Keyboard Shortcuts (or press ?)">
+    <span>⌨️ Hotkeys</span>
+    <kbd>Win+?</kbd>
+  </div>
 
-    <!-- Interactive Hotkeys Cheatsheet Modal -->
-    <div class="modal-backdrop" id="hotkeys-modal-backdrop" onclick="handleBackdropClick(event)">
-      <div class="hotkeys-modal" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title">
-            <span>⚡</span>
-            <span>Aero Linux Keyboard Shortcuts</span>
-          </div>
-          <button class="modal-close-btn" onclick="closeHotkeysModal()" title="Close (Esc)">✕</button>
+  <!-- Interactive Hotkeys Cheatsheet Modal -->
+  <div class="modal-backdrop" id="hotkeys-modal-backdrop" onclick="handleBackdropClick(event)">
+    <div class="hotkeys-modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>⚡</span>
+          <span>Aero Linux Keyboard Shortcuts</span>
         </div>
-        <div class="modal-search-bar">
-          <input type="text" class="modal-search-input" id="hotkey-search-input" placeholder="Search shortcuts (e.g. terminal, split, lock, kill, port, notes)..." oninput="filterHotkeys()" />
-          <div class="modal-category-pills">
-            <button class="modal-cat-btn active" id="hk-cat-all" onclick="setHotkeyCategory('all')">All (<span id="hk-count">20</span>)</button>
-            <button class="modal-cat-btn" id="hk-cat-tiling" onclick="setHotkeyCategory('tiling')">⚡ Sway / Tiling</button>
-            <button class="modal-cat-btn" id="hk-cat-dev" onclick="setHotkeyCategory('dev')">🛠️ Dev Tools</button>
-            <button class="modal-cat-btn" id="hk-cat-windows" onclick="setHotkeyCategory('windows')">🪟 Windows Mode</button>
-            <button class="modal-cat-btn" id="hk-cat-system" onclick="setHotkeyCategory('system')">⚙️ System &amp; OSD</button>
-          </div>
-        </div>
-        <div class="modal-body" id="hotkeys-container">
-          <!-- Populated by JS -->
+        <button class="modal-close-btn" onclick="closeHotkeysModal()" title="Close (Esc)">✕</button>
+      </div>
+      <div class="modal-search-bar">
+        <input type="text" class="modal-search-input" id="hotkey-search-input" placeholder="Search shortcuts (e.g. terminal, split, lock, kill, port, notes)..." oninput="filterHotkeys()" />
+        <div class="modal-category-pills">
+          <button class="modal-cat-btn active" id="hk-cat-all" onclick="setHotkeyCategory('all')">All (<span id="hk-count">20</span>)</button>
+          <button class="modal-cat-btn" id="hk-cat-tiling" onclick="setHotkeyCategory('tiling')">⚡ Sway / Tiling</button>
+          <button class="modal-cat-btn" id="hk-cat-dev" onclick="setHotkeyCategory('dev')">🛠️ Dev Tools</button>
+          <button class="modal-cat-btn" id="hk-cat-windows" onclick="setHotkeyCategory('windows')">🪟 Windows Mode</button>
+          <button class="modal-cat-btn" id="hk-cat-system" onclick="setHotkeyCategory('system')">⚙️ System &amp; OSD</button>
         </div>
       </div>
+      <div class="modal-body" id="hotkeys-container">
+        <!-- Populated by JS -->
+      </div>
     </div>
+  </div>
 
-    <script>
-      const HOTKEYS_DATA = [
+  <script>
+    const HOTKEYS_DATA = [
         { desc: "Open Terminal (Alacritty)", keys: ["Win", "Enter"], cat: "tiling", tag: "Sway / Tiling" },
         { desc: "Universal Spotlight Launcher", keys: ["Alt", "Space"], cat: "tiling", tag: "Spotlight" },
         { desc: "Keyboard Shortcuts Guide", keys: ["Win", "?"], cat: "dev", tag: "Documentation" },
