@@ -742,6 +742,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIsInstance(containers, list)
         self.assertFalse(container_action("invalid_container_id", "invalid_action"))
 
+    def test_api_gui_script(self):
+        api_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-api-gui"
+        self.assertTrue(os.path.exists(api_gui))
+        self.assertTrue(os.access(api_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

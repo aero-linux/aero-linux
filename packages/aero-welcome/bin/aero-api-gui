@@ -1,0 +1,363 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Native API & HTTP Studio (GTK3)
+Ultra-fast, zero-overhead REST/HTTP client for testing endpoints, microservices, and webhooks.
+"""
+
+import gi
+import json
+import os
+import sys
+import threading
+import time
+import urllib.parse
+import urllib.request
+import urllib.error
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.url-entry {
+    background-color: #0d1527;
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 10pt;
+    padding: 8px 12px;
+}
+.url-entry:focus {
+    border-color: #00f2fe;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+.btn-send {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 8px 20px;
+    border: none;
+    font-size: 10pt;
+}
+.btn-send:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9.5pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+.status-pill-ok {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-weight: 800;
+    font-size: 9pt;
+}
+.status-pill-err {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-weight: 800;
+    font-size: 9pt;
+}
+"""
+
+
+class AeroApiGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero API & HTTP Studio")
+        self.set_default_size(960, 680)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>⚡ API &amp; HTTP Studio</span>")
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup("<span class='header-desc'>Ultra-fast native HTTP client for testing REST, GraphQL, and microservices.</span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        # Code snippet generator button
+        btn_snippet = Gtk.Button(label="📋 Export Code")
+        btn_snippet.get_style_context().add_class("btn-secondary")
+        btn_snippet.connect("clicked", self._on_export_snippet)
+        header_box.pack_start(btn_snippet, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Request Bar Box
+        req_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        req_bar.set_margin_start(16)
+        req_bar.set_margin_end(16)
+        req_bar.set_margin_top(14)
+        req_bar.set_margin_bottom(10)
+
+        self.method_combo = Gtk.ComboBoxText()
+        for m in ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]:
+            self.method_combo.append_text(m)
+        self.method_combo.set_active(0)
+        req_bar.pack_start(self.method_combo, False, False, 0)
+
+        self.url_entry = Gtk.Entry()
+        self.url_entry.set_text("https://httpbin.org/get")
+        self.url_entry.get_style_context().add_class("url-entry")
+        self.url_entry.connect("activate", self._on_send_clicked)
+        req_bar.pack_start(self.url_entry, True, True, 0)
+
+        btn_send = Gtk.Button(label="🚀 Send")
+        btn_send.get_style_context().add_class("btn-send")
+        btn_send.connect("clicked", self._on_send_clicked)
+        req_bar.pack_start(btn_send, False, False, 0)
+
+        main_box.pack_start(req_bar, False, False, 0)
+
+        # Main Paned (Request vs Response)
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(440)
+        paned.set_margin_start(16)
+        paned.set_margin_end(16)
+        paned.set_margin_bottom(14)
+        main_box.pack_start(paned, True, True, 0)
+
+        # Left: Request Configuration Notebook
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        lbl_req_header = Gtk.Label(xalign=0)
+        lbl_req_header.set_markup("<span font='bold 10' color='#94a3b8'>REQUEST CONFIGURATION</span>")
+        left_box.pack_start(lbl_req_header, False, False, 0)
+
+        req_notebook = Gtk.Notebook()
+        
+        # 1. Request Body
+        scroll_body = Gtk.ScrolledWindow()
+        self.body_view = Gtk.TextView()
+        self.body_view.get_style_context().add_class("code-editor")
+        self.body_view.set_wrap_mode(Gtk.WrapMode.CHAR)
+        self.body_view.get_buffer().set_text('{\n  "title": "Aero Linux",\n  "status": "active"\n}')
+        scroll_body.add(self.body_view)
+        req_notebook.append_page(scroll_body, Gtk.Label(label="JSON Body"))
+
+        # 2. Headers
+        scroll_headers = Gtk.ScrolledWindow()
+        self.headers_view = Gtk.TextView()
+        self.headers_view.get_style_context().add_class("code-editor")
+        self.headers_view.get_buffer().set_text("Content-Type: application/json\nUser-Agent: Aero-HTTP-Client/1.3")
+        scroll_headers.add(self.headers_view)
+        req_notebook.append_page(scroll_headers, Gtk.Label(label="Headers"))
+
+        left_box.pack_start(req_notebook, True, True, 0)
+        paned.pack1(left_box, True, False)
+
+        # Right: Response Viewer
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        
+        resp_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl_resp_header = Gtk.Label(xalign=0)
+        lbl_resp_header.set_markup("<span font='bold 10' color='#94a3b8'>RESPONSE</span>")
+        resp_top.pack_start(lbl_resp_header, True, True, 0)
+
+        self.status_pill = Gtk.Label()
+        self.status_pill.set_markup("<span class='status-pill-ok'>Ready</span>")
+        resp_top.pack_start(self.status_pill, False, False, 0)
+
+        btn_copy = Gtk.Button(label="📋 Copy")
+        btn_copy.get_style_context().add_class("btn-secondary")
+        btn_copy.connect("clicked", self._on_copy_response)
+        resp_top.pack_start(btn_copy, False, False, 0)
+
+        right_box.pack_start(resp_top, False, False, 0)
+
+        resp_notebook = Gtk.Notebook()
+        
+        # 1. Response Body
+        scroll_resp = Gtk.ScrolledWindow()
+        self.resp_view = Gtk.TextView()
+        self.resp_view.set_editable(False)
+        self.resp_view.get_style_context().add_class("code-editor")
+        self.resp_view.set_wrap_mode(Gtk.WrapMode.CHAR)
+        scroll_resp.add(self.resp_view)
+        resp_notebook.append_page(scroll_resp, Gtk.Label(label="Response Body"))
+
+        # 2. Response Headers
+        scroll_resp_headers = Gtk.ScrolledWindow()
+        self.resp_headers_view = Gtk.TextView()
+        self.resp_headers_view.set_editable(False)
+        self.resp_headers_view.get_style_context().add_class("code-editor")
+        scroll_resp_headers.add(self.resp_headers_view)
+        resp_notebook.append_page(scroll_resp_headers, Gtk.Label(label="Headers"))
+
+        right_box.pack_start(resp_notebook, True, True, 0)
+        paned.pack2(right_box, True, False)
+
+    def _on_send_clicked(self, widget):
+        url = self.url_entry.get_text().strip()
+        if not url:
+            return
+        if not url.startswith("http://") and not url.startswith("https://"):
+            url = "http://" + url
+            self.url_entry.set_text(url)
+
+        method = self.method_combo.get_active_text()
+        
+        # Extract headers
+        h_buf = self.headers_view.get_buffer()
+        h_text = h_buf.get_text(h_buf.get_start_iter(), h_buf.get_end_iter(), True)
+        headers = {}
+        for line in h_text.strip().split("\n"):
+            if ":" in line:
+                k, v = line.split(":", 1)
+                headers[k.strip()] = v.strip()
+
+        # Extract body
+        b_buf = self.body_view.get_buffer()
+        body_text = b_buf.get_text(b_buf.get_start_iter(), b_buf.get_end_iter(), True).strip()
+        data = body_text.encode("utf-8") if method in ["POST", "PUT", "PATCH"] and body_text else None
+
+        self.status_pill.set_markup("<span class='status-pill-ok' color='#38bdf8'>⏳ Sending...</span>")
+
+        def worker():
+            start_t = time.perf_counter()
+            req = urllib.request.Request(url, data=data, headers=headers, method=method)
+            
+            try:
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    elapsed = (time.perf_counter() - start_t) * 1000
+                    code = resp.status
+                    raw_body = resp.read().decode("utf-8", errors="replace")
+                    headers_dict = dict(resp.getheaders())
+                    size_kb = len(raw_body.encode("utf-8")) / 1024
+
+                    # Try formatting JSON
+                    try:
+                        parsed = json.loads(raw_body)
+                        formatted_body = json.dumps(parsed, indent=2)
+                    except Exception:
+                        formatted_body = raw_body
+
+                    GLib.idle_add(self._update_response, code, elapsed, size_kb, formatted_body, headers_dict)
+            except urllib.error.HTTPError as e:
+                elapsed = (time.perf_counter() - start_t) * 1000
+                raw_body = e.read().decode("utf-8", errors="replace") if e.fp else ""
+                size_kb = len(raw_body.encode("utf-8")) / 1024
+                GLib.idle_add(self._update_response, e.code, elapsed, size_kb, raw_body, dict(e.headers))
+            except Exception as e:
+                elapsed = (time.perf_counter() - start_t) * 1000
+                GLib.idle_add(self._update_error, str(e), elapsed)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _update_response(self, code, elapsed_ms, size_kb, body, headers):
+        is_ok = 200 <= code < 400
+        pill_class = "status-pill-ok" if is_ok else "status-pill-err"
+        self.status_pill.set_markup(f"<span class='{pill_class}'>{code} - {elapsed_ms:.1f}ms ({size_kb:.2f} KB)</span>")
+
+        buf_body = self.resp_view.get_buffer()
+        buf_body.set_text(body)
+
+        h_str = "\n".join([f"{k}: {v}" for k, v in headers.items()])
+        buf_h = self.resp_headers_view.get_buffer()
+        buf_h.set_text(h_str)
+
+    def _update_error(self, err_msg, elapsed_ms):
+        self.status_pill.set_markup(f"<span class='status-pill-err'>ERROR ({elapsed_ms:.1f}ms)</span>")
+        buf_body = self.resp_view.get_buffer()
+        buf_body.set_text(f"Connection Failed:\n{err_msg}")
+        self.resp_headers_view.get_buffer().set_text("")
+
+    def _on_copy_response(self, button):
+        buf = self.resp_view.get_buffer()
+        txt = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+        if txt:
+            clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            clip.set_text(txt, -1)
+
+    def _on_export_snippet(self, button):
+        url = self.url_entry.get_text().strip()
+        method = self.method_combo.get_active_text()
+        b_buf = self.body_view.get_buffer()
+        body = b_buf.get_text(b_buf.get_start_iter(), b_buf.get_end_iter(), True).strip()
+
+        curl_cmd = f"curl -X {method} '{url}' \\\n  -H 'Content-Type: application/json'"
+        if body and method in ["POST", "PUT", "PATCH"]:
+            curl_cmd += f" \\\n  -d '{body}'"
+
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text="cURL Code Snippet",
+        )
+        dialog.format_secondary_text(curl_cmd)
+        clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        clip.set_text(curl_cmd, -1)
+        dialog.run()
+        dialog.destroy()
+
+
+def main():
+    win = AeroApiGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
