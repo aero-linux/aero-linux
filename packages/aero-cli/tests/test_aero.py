@@ -787,6 +787,11 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(deps_gui))
         self.assertTrue(os.access(deps_gui, os.X_OK))
 
+    def test_benchmark_gui_script(self):
+        bench_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-benchmark-gui"
+        self.assertTrue(os.path.exists(bench_gui))
+        self.assertTrue(os.access(bench_gui, os.X_OK))
+
 
 if __name__ == "__main__":
     unittest.main()

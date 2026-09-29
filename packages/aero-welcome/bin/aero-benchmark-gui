@@ -1,0 +1,320 @@
+#!/usr/bin/env python3
+"""
+Aero Linux - Hardware & Systems Benchmark Studio (GTK3)
+Multi-core CPU compute, RAM memory bandwidth, and NVMe disk I/O performance benchmark suite.
+"""
+
+import gi
+import hashlib
+import json
+import multiprocessing
+import os
+import platform
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gtk, Gdk, GLib, Pango
+
+CSS_STYLING = b"""
+* {
+    font-family: 'Inter', 'Ubuntu', 'Segoe UI', sans-serif;
+}
+window {
+    background-color: #050811;
+    color: #e2e8f0;
+}
+.header-box {
+    background: linear-gradient(135deg, #0b1329 0%, #050811 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    padding: 16px 20px;
+}
+.header-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+}
+.header-desc {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.bench-card {
+    background-color: #0d1527;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+}
+.card-title {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #00f2fe;
+}
+.card-score {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Monospace';
+}
+.card-sub {
+    font-size: 9pt;
+    color: #94a3b8;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #050811;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 10pt;
+    border: none;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-secondary {
+    background-color: #1a233a;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+}
+.btn-secondary:hover {
+    background-color: #243052;
+    color: #00f2fe;
+}
+.code-editor {
+    background-color: #080d1a;
+    color: #38bdf8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monospace';
+    font-size: 9pt;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+}
+"""
+
+
+def _cpu_worker(iterations):
+    count = 0
+    for i in range(1, iterations):
+        count += i * i
+    return count
+
+
+class AeroBenchmarkGUI(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Aero Hardware Benchmark Studio")
+        self.set_default_size(880, 640)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Apply CSS
+        screen = Gdk.Screen.get_default()
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS_STYLING)
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header Box
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_box.get_style_context().add_class("header-box")
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        lbl_title = Gtk.Label(xalign=0)
+        lbl_title.set_markup("<span class='header-title'>⚡ Hardware &amp; Systems Benchmark Studio</span>")
+        
+        # System Spec subtitle
+        cpu_name = platform.processor() or "AMD / Intel CPU"
+        cores = multiprocessing.cpu_count()
+        lbl_desc = Gtk.Label(xalign=0)
+        lbl_desc.set_markup(f"<span class='header-desc'>System: <b>{cores} CPU Cores</b> | Linux Kernel <b>{platform.release()}</b> | Architecture: <b>{platform.machine()}</b></span>")
+        info_box.pack_start(lbl_title, False, False, 0)
+        info_box.pack_start(lbl_desc, False, False, 0)
+        header_box.pack_start(info_box, True, True, 0)
+
+        # Action Buttons
+        self.btn_run = Gtk.Button(label="🚀 Run Full Benchmark")
+        self.btn_run.get_style_context().add_class("btn-primary")
+        self.btn_run.connect("clicked", self._start_benchmark)
+        header_box.pack_end(self.btn_run, False, False, 0)
+
+        main_box.pack_start(header_box, False, False, 0)
+
+        # Content Box
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        content_box.set_margin_start(16)
+        content_box.set_margin_end(16)
+        content_box.set_margin_top(14)
+        content_box.set_margin_bottom(14)
+        main_box.pack_start(content_box, True, True, 0)
+
+        # 1. CPU Card
+        self.card_cpu, self.lbl_cpu_score, self.lbl_cpu_sub, self.pbar_cpu = self._create_card(
+            "⚙️ CPU Multi-Core Compute",
+            "Ready to benchmark",
+            "Measures parallel mathematical calculation throughput across all hardware threads."
+        )
+        content_box.pack_start(self.card_cpu, False, False, 0)
+
+        # 2. Memory Card
+        self.card_mem, self.lbl_mem_score, self.lbl_mem_sub, self.pbar_mem = self._create_card(
+            "🧠 RAM & Memory Bandwidth",
+            "Ready to benchmark",
+            "Measures sequential memory allocation, buffer caching, and RAM throughput."
+        )
+        content_box.pack_start(self.card_mem, False, False, 0)
+
+        # 3. Disk I/O Card
+        self.card_disk, self.lbl_disk_score, self.lbl_disk_sub, self.pbar_disk = self._create_card(
+            "💾 Storage & NVMe Write Speed",
+            "Ready to benchmark",
+            "Measures sequential disk write speeds with direct fsync flushes."
+        )
+        content_box.pack_start(self.card_disk, False, False, 0)
+
+        # Bottom Log / Results Terminal
+        lbl_log_hdr = Gtk.Label(xalign=0)
+        lbl_log_hdr.set_markup("<span font='bold 9.5' color='#94a3b8'>BENCHMARK TELEMETRY LOGS</span>")
+        content_box.pack_start(lbl_log_hdr, False, False, 0)
+
+        scroll = Gtk.ScrolledWindow()
+        self.log_view = Gtk.TextView()
+        self.log_view.set_editable(False)
+        self.log_view.get_style_context().add_class("code-editor")
+        self.log_view.get_buffer().set_text("Click '🚀 Run Full Benchmark' to profile hardware performance.")
+        scroll.add(self.log_view)
+        content_box.pack_start(scroll, True, True, 0)
+
+    def _create_card(self, title, initial_score, subtitle):
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        card.get_style_context().add_class("bench-card")
+
+        top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        lbl_t = Gtk.Label(xalign=0)
+        lbl_t.set_markup(f"<span class='card-title'>{title}</span>")
+        top_row.pack_start(lbl_t, True, True, 0)
+
+        lbl_score = Gtk.Label(xalign=1)
+        lbl_score.set_markup(f"<span class='card-score'>{initial_score}</span>")
+        top_row.pack_end(lbl_score, False, False, 0)
+        card.pack_start(top_row, False, False, 0)
+
+        pbar = Gtk.ProgressBar()
+        pbar.set_fraction(0.0)
+        card.pack_start(pbar, False, False, 0)
+
+        lbl_sub = Gtk.Label(xalign=0)
+        lbl_sub.set_markup(f"<span class='card-sub'>{subtitle}</span>")
+        card.pack_start(lbl_sub, False, False, 0)
+
+        return card, lbl_score, lbl_sub, pbar
+
+    def _log(self, text):
+        buf = self.log_view.get_buffer()
+        iter_end = buf.get_end_iter()
+        buf.insert(iter_end, text + "\n")
+
+    def _start_benchmark(self, button):
+        self.btn_run.set_sensitive(False)
+        self.log_view.get_buffer().set_text("")
+        self._log("⚡ Starting Aero Hardware Benchmark Suite...")
+        
+        threading.Thread(target=self._run_benchmarks_thread, daemon=True).start()
+
+    def _run_benchmarks_thread(self):
+        # 1. CPU Multi-core
+        GLib.idle_add(lambda: self.lbl_cpu_score.set_markup("<span class='card-score' color='#00f2fe'>Testing...</span>"))
+        GLib.idle_add(lambda: self.pbar_cpu.pulse())
+        GLib.idle_add(self._log, "• Running CPU multi-core mathematical compute stress test...")
+        
+        cores = multiprocessing.cpu_count()
+        iterations = 3_000_000
+        start_time = time.time()
+        with multiprocessing.Pool(processes=cores) as pool:
+            pool.map(_cpu_worker, [iterations] * cores)
+        cpu_duration = time.time() - start_time
+        cpu_score = int(10_000 / cpu_duration) if cpu_duration > 0 else 0
+
+        def update_cpu():
+            self.lbl_cpu_score.set_markup(f"<span class='card-score' color='#4ade80'>{cpu_score:,} pts</span>")
+            self.lbl_cpu_sub.set_markup(f"<span class='card-sub'>Completed across {cores} cores in <b>{cpu_duration:.3f}s</b></span>")
+            self.pbar_cpu.set_fraction(1.0)
+            self._log(f"✔ CPU Multi-Core Score: {cpu_score:,} (Duration: {cpu_duration:.3f}s)")
+        GLib.idle_add(update_cpu)
+
+        time.sleep(0.3)
+
+        # 2. RAM Bandwidth
+        GLib.idle_add(lambda: self.lbl_mem_score.set_markup("<span class='card-score' color='#00f2fe'>Testing...</span>"))
+        GLib.idle_add(lambda: self.pbar_mem.pulse())
+        GLib.idle_add(self._log, "• Running RAM memory bandwidth copy & allocation test...")
+
+        block_size = 50 * 1024 * 1024
+        start_mem = time.time()
+        data = bytearray(block_size)
+        for _ in range(10):
+            data[:] = b"0" * block_size
+        mem_duration = time.time() - start_mem
+        mb_processed = (block_size * 10) / (1024 * 1024)
+        mem_speed = mb_processed / mem_duration if mem_duration > 0 else 0
+
+        def update_mem():
+            if mem_speed > 1024:
+                speed_str = f"{mem_speed / 1024:.2f} GB/s"
+            else:
+                speed_str = f"{mem_speed:.1f} MB/s"
+            self.lbl_mem_score.set_markup(f"<span class='card-score' color='#4ade80'>{speed_str}</span>")
+            self.lbl_mem_sub.set_markup(f"<span class='card-sub'>Processed 500MB buffer in <b>{mem_duration:.3f}s</b></span>")
+            self.pbar_mem.set_fraction(1.0)
+            self._log(f"✔ RAM Memory Bandwidth: {speed_str} (Duration: {mem_duration:.3f}s)")
+        GLib.idle_add(update_mem)
+
+        time.sleep(0.3)
+
+        # 3. Disk I/O
+        GLib.idle_add(lambda: self.lbl_disk_score.set_markup("<span class='card-score' color='#00f2fe'>Testing...</span>"))
+        GLib.idle_add(lambda: self.pbar_disk.pulse())
+        GLib.idle_add(self._log, "• Running Disk sequential write & fsync stress test...")
+
+        disk_speed = 0
+        disk_duration = 0
+        try:
+            with tempfile.NamedTemporaryFile(delete=True) as tmp:
+                disk_block = b"1" * (1024 * 1024)
+                start_disk = time.time()
+                for _ in range(100):
+                    tmp.write(disk_block)
+                tmp.flush()
+                os.fsync(tmp.fileno())
+                disk_duration = time.time() - start_disk
+                disk_speed = 100 / disk_duration if disk_duration > 0 else 0
+        except Exception as e:
+            GLib.idle_add(self._log, f"❌ Disk test warning: {e}")
+
+        def update_disk():
+            self.lbl_disk_score.set_markup(f"<span class='card-score' color='#4ade80'>{disk_speed:.1f} MB/s</span>")
+            self.lbl_disk_sub.set_markup(f"<span class='card-sub'>Wrote 100MB to disk in <b>{disk_duration:.3f}s</b></span>")
+            self.pbar_disk.set_fraction(1.0)
+            self._log(f"✔ Sequential Disk Write: {disk_speed:.1f} MB/s (Duration: {disk_duration:.3f}s)")
+            self._log("════════════════════════════════════════════════════════")
+            self._log("🎉 Hardware Benchmark Run Completed Successfully!")
+            self.btn_run.set_sensitive(True)
+        GLib.idle_add(update_disk)
+
+
+def main():
+    win = AeroBenchmarkGUI()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

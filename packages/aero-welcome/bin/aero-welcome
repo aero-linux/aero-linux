@@ -172,14 +172,15 @@ class AeroWelcomeApp(Gtk.Window):
         maint_tools = [
             ("⚙️ Systemd Service Manager", "aero-services-gui", 0, 0),
             ("🚀 Startup Applications", "aero-startup-gui", 1, 0),
-            ("⏰ Cron & Scheduled Tasks", "aero-cron-gui", 0, 1),
-            ("💾 Storage & Dev Disk Cleaner", "aero-disk-gui", 1, 1),
-            ("📦 Package & Dependencies", "aero-deps-gui", 0, 2),
-            ("☁️ Dotfiles & Config Sync", "aero-sync-gui", 1, 2),
-            ("🔥 Safe ISO USB Flasher", "aero-flasher-gui", 0, 3),
-            ("📜 System & Kernel Logs", "aero-logs-gui", 1, 3),
-            ("📸 TimeMachine Snapshots", "aero-snapshots-gui", 0, 4),
-            ("🧹 Cache & Log Cleaner", "aero-cleaner-gui", 1, 4),
+            ("⚡ Hardware Benchmark", "aero-benchmark-gui", 0, 1),
+            ("⏰ Cron & Scheduled Tasks", "aero-cron-gui", 1, 1),
+            ("💾 Storage & Dev Disk Cleaner", "aero-disk-gui", 0, 2),
+            ("📦 Package & Dependencies", "aero-deps-gui", 1, 2),
+            ("☁️ Dotfiles & Config Sync", "aero-sync-gui", 0, 3),
+            ("🔥 Safe ISO USB Flasher", "aero-flasher-gui", 1, 3),
+            ("📜 System & Kernel Logs", "aero-logs-gui", 0, 4),
+            ("📸 TimeMachine Snapshots", "aero-snapshots-gui", 1, 4),
+            ("🧹 Cache & Log Cleaner", "aero-cleaner-gui", 0, 5),
         ]
 
         for text, cmd, col, row in maint_tools:
