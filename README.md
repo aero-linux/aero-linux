@@ -12,15 +12,15 @@
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
-[![Web Portal](https://img.shields.io/badge/Web_Portal-Live_Portal-00f2fe.svg?style=flat-square)](https://ronitgupta138.github.io/aero-linux/)
-[![Release](https://img.shields.io/badge/Release-v1.4.0--Supernova-00f2fe.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux/releases)
-[![AlternativeTo](https://img.shields.io/badge/AlternativeTo-Listed-blue.svg?style=flat-square&logo=linux)](https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral)
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-130%20Passed-10b981.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux)
-[![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-10b981.svg?style=flat-square)]()
-[![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-38bdf8.svg?style=flat-square)]()
+[![Web Portal](https://img.shields.io/badge/Web_Portal-Live_Portal-0891b2.svg?style=flat-square)](https://ronitgupta138.github.io/aero-linux/)
+[![Release](https://img.shields.io/badge/Release-v1.4.0--Supernova-0284c7.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux/releases)
+[![AlternativeTo](https://img.shields.io/badge/AlternativeTo-Listed-2563eb.svg?style=flat-square&logo=linux)](https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-130%20Passed-059669.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux)
+[![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-059669.svg?style=flat-square)]()
+[![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-7c3aed.svg?style=flat-square)]()
 [![Works with GitHub](https://img.shields.io/badge/Works_with-GitHub-238636.svg?style=flat-square&logo=github)](https://github.com/developer-program)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![Architecture](https://img.shields.io/badge/Architecture-x86__64-orange.svg?style=flat-square)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-4f46e5.svg?style=flat-square)](LICENSE)
+[![Architecture](https://img.shields.io/badge/Architecture-x86__64-d97706.svg?style=flat-square)]()
 
 <p align="center" style="margin-top: 10px;">
   <a href="https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral" target="_blank">
