@@ -18,6 +18,7 @@
 [![CI / Test Suite](https://img.shields.io/badge/Test_Suite-130%20Passed-10b981.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-10b981.svg?style=flat-square)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-38bdf8.svg?style=flat-square)]()
+[![Works with GitHub](https://img.shields.io/badge/Works_with-GitHub-238636.svg?style=flat-square&logo=github)](https://github.com/developer-program)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Architecture](https://img.shields.io/badge/Architecture-x86__64-orange.svg?style=flat-square)]()
 
