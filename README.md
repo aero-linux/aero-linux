@@ -1,19 +1,22 @@
-# ⚡ Aero Linux
-
 <div align="center">
 
+<img src="desktop/icons/aero-logo.svg" alt="Aero Linux Logo" width="96" height="96" />
+
+# ⚡ Aero Linux
+
 ```text
-    ___    ______ ____  ____     __    _____   __  ___  __  __
-   /   |  / ____// __ \/ __ \   / /   /  _/ | / / / / / / |/ /
-  / /| | / __/  / /_/ / / / /  / /    / / |  |/ / / / / /|   / 
- / ___ |/ /___ / _, _/ /_/ /  / /____/ /  |    / / /_/ //   |  
-/_/  |_/_____//_/ |_|\____/  /_____/___/  |_/_/  \____//_/|_|  
+    ___    ______ ____  ____     __    _____ _   __ __  __ _  __
+   /   |  / ____// __ \/ __ \   / /   /  _/ // | / // / / /| |/ /
+  / /| | / __/  / /_/ / / / /  / /    / /  /  |/ // / / / |   / 
+ / ___ |/ /___ / _, _/ /_/ /  / /____/ /  / /|  // /_/ / /   |  
+/_/  |_/_____//_/ |_|\____/  /_____/___/ /_/ |_/ \____/ /_/|_|  
 ```
 
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
 [![Web Portal](https://img.shields.io/badge/Web_Portal-Live_Portal-0891b2.svg?style=flat-square)](https://ronitgupta138.github.io/aero-linux/)
 [![Release](https://img.shields.io/badge/Release-v1.4.0--Supernova-0284c7.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux/releases)
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub_Sponsors-ea4aaa.svg?style=flat-square&logo=githubsponsors)](https://github.com/sponsors/ronitgupta138)
 [![AlternativeTo](https://img.shields.io/badge/AlternativeTo-Listed-2563eb.svg?style=flat-square&logo=linux)](https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral)
 [![CI / Test Suite](https://img.shields.io/badge/Test_Suite-130%20Passed-059669.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-059669.svg?style=flat-square)]()
@@ -22,9 +25,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-4f46e5.svg?style=flat-square)](LICENSE)
 [![Architecture](https://img.shields.io/badge/Architecture-x86__64-d97706.svg?style=flat-square)]()
 
-<p align="center" style="margin-top: 10px;">
+<p align="center" style="margin-top: 12px; margin-bottom: 12px;">
   <a href="https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral" target="_blank">
-    <img src="https://alternativeto.net/static/badges/badge-wide-dark.svg" alt="Aero Linux | AlternativeTo" width="320" height="60" style="max-width: 100%; height: auto;" />
+    <img src="https://alternativeto.net/static/badges/badge-wide-dark.svg" alt="Aero Linux | AlternativeTo" width="300" height="56" style="max-width: 100%; height: auto;" />
   </a>
 </p>
 
