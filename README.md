@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="desktop/icons/aero-logo.svg" alt="Aero Linux Logo" width="96" height="96" />
-
 # ⚡ Aero Linux
 
 ```text
