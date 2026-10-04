@@ -37,6 +37,7 @@ def apply_accent_color(accent_name: str) -> Dict[str, Any]:
         )
 
     # Trigger desktop notification
-    subprocess.run(["notify-send", "🎨 Accent Color Applied", f"Desktop theme updated to {name}"])
+    if shutil.which("notify-send"):
+        subprocess.run(["notify-send", "🎨 Accent Color Applied", f"Desktop theme updated to {name}"], capture_output=True)
     print(f"✅ Desktop accent color applied successfully.\n")
     return {"status": "applied", "accent": hex_code, "name": name}

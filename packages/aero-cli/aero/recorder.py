@@ -56,7 +56,8 @@ def start_recording(is_gif: bool = False, region: bool = False) -> Dict[str, Any
         p = subprocess.Popen(cmd)
         with open(PID_FILE, "w") as f:
             f.write(str(p.pid))
-        subprocess.run(["notify-send", "🎥 Recording Started", f"Saving to {out_path} (Press Ctrl+Shift+R or aero rec stop)"])
+        if shutil.which("notify-send"):
+            subprocess.run(["notify-send", "🎥 Recording Started", f"Saving to {out_path} (Press Ctrl+Shift+R or aero rec stop)"], capture_output=True)
         return {"status": "started", "pid": p.pid, "path": out_path}
     else:
         print("ℹ️ wf-recorder is not installed. To record screen, run: sudo apt install wf-recorder")
@@ -77,7 +78,8 @@ def stop_recording() -> Dict[str, Any]:
         time.sleep(0.5)
         os.remove(PID_FILE)
         print("✅ Screen recording stopped and saved to ~/Videos/Recordings/")
-        subprocess.run(["notify-send", "🎥 Recording Saved", "Saved to ~/Videos/Recordings/"])
+        if shutil.which("notify-send"):
+            subprocess.run(["notify-send", "🎥 Recording Saved", "Saved to ~/Videos/Recordings/"], capture_output=True)
         return {"status": "stopped", "pid": pid}
     except Exception as e:
         print(f"❌ Error stopping recording: {e}")

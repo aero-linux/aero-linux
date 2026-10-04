@@ -48,13 +48,14 @@ def apply_power_state(is_ac: bool) -> Dict[str, Any]:
     # 3. Notification
     msg = "Full Turbo Performance Unlocked" if is_ac else "Power Saver & Whisper-Quiet Cooling Active"
     icon = "battery-charging" if is_ac else "battery-good"
-    subprocess.run([
-        "notify-send",
-        "-i", icon,
-        "-h", "string:x-canonical-private-synchronous:osd_power",
-        "⚡ Power Source Changed",
-        f"Switching to {state} — {msg}"
-    ], capture_output=True)
+    if shutil.which("notify-send"):
+        subprocess.run([
+            "notify-send",
+            "-i", icon,
+            "-h", "string:x-canonical-private-synchronous:osd_power",
+            "⚡ Power Source Changed",
+            f"Switching to {state} — {msg}"
+        ], capture_output=True)
 
     return {"is_ac": is_ac, "state": state, "status": "applied"}
 

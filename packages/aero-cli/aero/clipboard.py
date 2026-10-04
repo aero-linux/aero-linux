@@ -59,7 +59,8 @@ def clear_clipboard() -> bool:
 def show_clipboard_menu():
     history = load_history()
     if not history:
-        subprocess.run(["notify-send", "Clipboard", "Clipboard history is empty"])
+        if shutil.which("notify-send"):
+            subprocess.run(["notify-send", "Clipboard", "Clipboard history is empty"], capture_output=True)
         return
 
     # If wofi is available, use it as GUI selector
@@ -73,7 +74,8 @@ def show_clipboard_menu():
             if shutil.which("wl-copy"):
                 p_copy = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE, text=True)
                 p_copy.communicate(input=chosen_text)
-            subprocess.run(["notify-send", "Clipboard", f"Copied to clipboard: {chosen_text[:30]}..."])
+            if shutil.which("notify-send"):
+                subprocess.run(["notify-send", "Clipboard", f"Copied to clipboard: {chosen_text[:30]}..."], capture_output=True)
     else:
         print("\n📋 \033[1;36mAERO CLIPBOARD HISTORY\033[0m")
         for i, item in enumerate(history[:10]):

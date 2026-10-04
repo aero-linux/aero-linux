@@ -40,13 +40,14 @@ def set_zoom(scale: float) -> Dict[str, Any]:
     print(f"🔍 \033[1;36mAERO DESKTOP MAGNIFIER\033[0m: \033[1;32m{pct}%\033[0m (Scale: {scale}x)")
 
     # Send synchronous desktop OSD overlay
-    subprocess.run([
-        "notify-send",
-        "-t", "1200",
-        "-h", "string:x-canonical-private-synchronous:osd_zoom",
-        "🔍 Desktop Magnifier",
-        f"Zoom Level: {pct}%"
-    ], capture_output=True)
+    if shutil.which("notify-send"):
+        subprocess.run([
+            "notify-send",
+            "-t", "1200",
+            "-h", "string:x-canonical-private-synchronous:osd_zoom",
+            "🔍 Desktop Magnifier",
+            f"Zoom Level: {pct}%"
+        ], capture_output=True)
 
     return {"status": "ok", "scale": scale, "percent": pct}
 
