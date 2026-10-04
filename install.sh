@@ -40,6 +40,7 @@ else
     echo -e "${GREEN}• Downloading latest Aero Linux core packages from GitHub...${NC}"
     if command -v git >/dev/null 2>&1; then
         rm -rf "${INSTALL_DIR}/repo"
+        git clone --depth 1 https://github.com/aero-linux/aero-linux.git "${INSTALL_DIR}/repo" 2>/dev/null || \
         git clone --depth 1 https://github.com/ronitgupta138/aero-linux.git "${INSTALL_DIR}/repo"
         cp -r "${INSTALL_DIR}/repo/packages" "${INSTALL_DIR}/"
         cp -r "${INSTALL_DIR}/repo/desktop" "${INSTALL_DIR}/" 2>/dev/null || true
