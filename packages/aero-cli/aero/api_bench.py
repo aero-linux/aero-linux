@@ -44,5 +44,6 @@ def bench_url(url: str, requests_count: int = 100, concurrency: int = 10):
     print(f" • Avg Latency:     {avg_lat:.2f} ms")
     print(f" • P95 Latency:     {p95:.2f} ms")
     print(f" • P99 Latency:     {p99:.2f} ms")
-    print(f" • Failed Requests: {'0' if errors == 0 else f'\033[31m{errors}\033[0m'}")
+    failed_str = "0" if errors == 0 else f"\033[31m{errors}\033[0m"
+    print(f" • Failed Requests: {failed_str}")
     print()

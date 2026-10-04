@@ -13,7 +13,8 @@ def check_bt_status():
     try:
         res = subprocess.run(["bluetoothctl", "show"], capture_output=True, text=True)
         powered = "Powered: yes" in res.stdout
-        print(f" • Controller State: {'\033[1;32mPOWERED ON\033[0m' if powered else '\033[90mPOWERED OFF (Battery Saving)\033[0m'}")
+        state_str = "\033[1;32mPOWERED ON\033[0m" if powered else "\033[90mPOWERED OFF (Battery Saving)\033[0m"
+        print(f" • Controller State: {state_str}")
         
         dev_res = subprocess.run(["bluetoothctl", "devices", "Connected"], capture_output=True, text=True)
         conns = dev_res.stdout.strip().split("\n")

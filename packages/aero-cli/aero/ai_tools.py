@@ -23,7 +23,8 @@ def audit_ai_memory_footprint() -> Dict[str, Any]:
     except Exception:
         pass
 
-    print(f" • Ollama Daemon:    {'\033[1;32mActive (Listening on :11434)\033[0m' if ollama_active else '\033[1;30mIdle / Stopped\033[0m'}")
+    daemon_status = "\033[1;32mActive (Listening on :11434)\033[0m" if ollama_active else "\033[1;30mIdle / Stopped\033[0m"
+    print(f" • Ollama Daemon:    {daemon_status}")
     print(" • Unified Memory:   \033[1;32m7.5GB zRAM ZSTD Active\033[0m (Dynamic host RAM buffer)")
     print("═" * 58 + "\n")
     return {"ollama_active": ollama_active}

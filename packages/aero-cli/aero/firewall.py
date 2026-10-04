@@ -23,7 +23,8 @@ def show_firewall_status():
     print("\n🛡️  \033[1;36mAERO DEVELOPER FIREWALL & SECURITY RULES\033[0m")
     print("═" * 56)
     st = get_firewall_status()
-    print(f" • Firewall Status: {'\033[1;32m✅ Active\033[0m' if st['active'] else '\033[1;33m⚠️  Disabled\033[0m'}")
+    fw_status = "\033[1;32m✅ Active\033[0m" if st['active'] else "\033[1;33m⚠️  Disabled\033[0m"
+    print(f" • Firewall Status: {fw_status}")
     if st["rules"]:
         print(" • Active Port Whitelist Rules:")
         for r in st["rules"]:
