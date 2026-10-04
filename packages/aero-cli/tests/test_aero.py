@@ -74,6 +74,9 @@ from aero.repair import run_system_repair
 from aero.git_tools import scan_local_git_workspaces, print_git_workspaces
 
 
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
+
 class TestAeroCLI(unittest.TestCase):
     def test_cpu_info(self):
         cpu = get_cpu_info()
@@ -437,9 +440,9 @@ class TestAeroCLI(unittest.TestCase):
             os.remove("/tmp/aero_test_bundle.zip")
 
     def test_file_and_content_search(self):
-        files = search_files_by_name("*.py", root_dir="/home/ronit138/aero-linux/packages/aero-cli/aero")
+        files = search_files_by_name("*.py", root_dir=f"{REPO_ROOT}/packages/aero-cli/aero")
         self.assertTrue(len(files) > 0)
-        matches = search_text_content("class", root_dir="/home/ronit138/aero-linux/packages/aero-cli/tests")
+        matches = search_text_content("class", root_dir=f"{REPO_ROOT}/packages/aero-cli/tests")
         self.assertTrue(len(matches) > 0)
 
     def test_nvme_wear_stats(self):
@@ -468,8 +471,8 @@ class TestAeroCLI(unittest.TestCase):
 
     def test_monitor_and_updater_gui_helpers(self):
         # Verify monitor and updater scripts exist and are executable
-        mon_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-monitor"
-        upd_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-updater"
+        mon_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-monitor"
+        upd_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-updater"
         self.assertTrue(os.path.exists(mon_path))
         self.assertTrue(os.access(mon_path, os.X_OK))
         self.assertTrue(os.path.exists(upd_path))
@@ -511,17 +514,17 @@ class TestAeroCLI(unittest.TestCase):
         self.assertEqual(res["status"], "applied")
 
     def test_wifi_and_snapshot_gui_scripts(self):
-        wifi_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-wifi"
-        snap_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-snapshot-gui"
+        wifi_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-wifi"
+        snap_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-snapshot-gui"
         self.assertTrue(os.path.exists(wifi_path))
         self.assertTrue(os.access(wifi_path, os.X_OK))
         self.assertTrue(os.path.exists(snap_path))
         self.assertTrue(os.access(snap_path, os.X_OK))
 
     def test_hardware_gui_centers(self):
-        bt_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-bluetooth"
-        aud_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-audio"
-        disp_path = "/home/ronit138/aero-linux/packages/aero-displays" if os.path.exists("/home/ronit138/aero-linux/packages/aero-displays") else "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-displays"
+        bt_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-bluetooth"
+        aud_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-audio"
+        disp_path = f"{REPO_ROOT}/packages/aero-displays" if os.path.exists(f"{REPO_ROOT}/packages/aero-displays") else f"{REPO_ROOT}/packages/aero-welcome/bin/aero-displays"
         self.assertTrue(os.path.exists(bt_path))
         self.assertTrue(os.access(bt_path, os.X_OK))
         self.assertTrue(os.path.exists(aud_path))
@@ -530,54 +533,54 @@ class TestAeroCLI(unittest.TestCase):
         self.assertTrue(os.access(disp_path, os.X_OK))
 
     def test_spotlight_gui_helper(self):
-        spot_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-spotlight"
+        spot_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-spotlight"
         self.assertTrue(os.path.exists(spot_path))
         self.assertTrue(os.access(spot_path, os.X_OK))
 
     def test_gamehub_and_connect_gui_scripts(self):
-        gh_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-gamehub"
-        cn_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-connect-gui"
+        gh_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-gamehub"
+        cn_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-connect-gui"
         self.assertTrue(os.path.exists(gh_path))
         self.assertTrue(os.access(gh_path, os.X_OK))
         self.assertTrue(os.path.exists(cn_path))
         self.assertTrue(os.access(cn_path, os.X_OK))
 
     def test_power_and_nightlight_gui_scripts(self):
-        pwr_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-power-gui"
-        nl_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-nightlight-gui"
+        pwr_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-power-gui"
+        nl_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-nightlight-gui"
         self.assertTrue(os.path.exists(pwr_path))
         self.assertTrue(os.access(pwr_path, os.X_OK))
         self.assertTrue(os.path.exists(nl_path))
         self.assertTrue(os.access(nl_path, os.X_OK))
 
     def test_theme_and_cleaner_gui_scripts(self):
-        th_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-theme-gui"
-        cl_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-cleaner-gui"
+        th_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-theme-gui"
+        cl_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-cleaner-gui"
         self.assertTrue(os.path.exists(th_path))
         self.assertTrue(os.access(th_path, os.X_OK))
         self.assertTrue(os.path.exists(cl_path))
         self.assertTrue(os.access(cl_path, os.X_OK))
 
     def test_vault_gui_script(self):
-        vault_gui_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-vault-gui"
+        vault_gui_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-vault-gui"
         self.assertTrue(os.path.exists(vault_gui_path))
         self.assertTrue(os.access(vault_gui_path, os.X_OK))
 
     def test_welcome_control_center_completeness(self):
-        welcome_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-welcome"
+        welcome_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-welcome"
         self.assertTrue(os.path.exists(welcome_path))
         self.assertTrue(os.access(welcome_path, os.X_OK))
 
     def test_about_and_screenshot_gui_scripts(self):
-        abt_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-about-gui"
-        scr_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-screenshot-gui"
+        abt_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-about-gui"
+        scr_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-screenshot-gui"
         self.assertTrue(os.path.exists(abt_path))
         self.assertTrue(os.access(abt_path, os.X_OK))
         self.assertTrue(os.path.exists(scr_path))
         self.assertTrue(os.access(scr_path, os.X_OK))
 
     def test_iso_builder_script(self):
-        bld_path = "/home/ronit138/aero-linux/build/build.sh"
+        bld_path = f"{REPO_ROOT}/build/build.sh"
         self.assertTrue(os.path.exists(bld_path))
         self.assertTrue(os.access(bld_path, os.X_OK))
         res = subprocess.run(["bash", "-n", bld_path], capture_output=True)
@@ -593,130 +596,130 @@ class TestAeroCLI(unittest.TestCase):
             self.assertIn("message", r)
 
     def test_repair_gui_script(self):
-        rep_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-repair-gui"
+        rep_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-repair-gui"
         self.assertTrue(os.path.exists(rep_path))
         self.assertTrue(os.access(rep_path, os.X_OK))
 
     def test_notes_gui_script(self):
-        notes_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-notes-gui"
+        notes_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-notes-gui"
         self.assertTrue(os.path.exists(notes_path))
         self.assertTrue(os.access(notes_path, os.X_OK))
 
     def test_color_gui_script(self):
-        col_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-color-gui"
+        col_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-color-gui"
         self.assertTrue(os.path.exists(col_path))
         self.assertTrue(os.access(col_path, os.X_OK))
 
     def test_font_gui_script(self):
-        f_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-font-gui"
+        f_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-font-gui"
         self.assertTrue(os.path.exists(f_path))
         self.assertTrue(os.access(f_path, os.X_OK))
 
     def test_ports_gui_script(self):
-        p_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-ports-gui"
+        p_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-ports-gui"
         self.assertTrue(os.path.exists(p_path))
         self.assertTrue(os.access(p_path, os.X_OK))
 
     def test_shortcuts_gui_script(self):
-        s_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-shortcuts-gui"
+        s_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-shortcuts-gui"
         self.assertTrue(os.path.exists(s_path))
         self.assertTrue(os.access(s_path, os.X_OK))
 
     def test_flasher_gui_script(self):
-        flash_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-flasher-gui"
+        flash_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-flasher-gui"
         self.assertTrue(os.path.exists(flash_path))
         self.assertTrue(os.access(flash_path, os.X_OK))
 
     def test_logs_gui_script(self):
-        logs_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-logs-gui"
+        logs_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-logs-gui"
         self.assertTrue(os.path.exists(logs_path))
         self.assertTrue(os.access(logs_path, os.X_OK))
 
     def test_services_gui_script(self):
-        srv_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-services-gui"
+        srv_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-services-gui"
         self.assertTrue(os.path.exists(srv_path))
         self.assertTrue(os.access(srv_path, os.X_OK))
 
     def test_startup_gui_script(self):
-        st_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-startup-gui"
+        st_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-startup-gui"
         self.assertTrue(os.path.exists(st_path))
         self.assertTrue(os.access(st_path, os.X_OK))
 
     def test_sync_gui_script(self):
-        sync_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-sync-gui"
+        sync_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-sync-gui"
         self.assertTrue(os.path.exists(sync_path))
         self.assertTrue(os.access(sync_path, os.X_OK))
 
     def test_disk_gui_script(self):
-        disk_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-disk-gui"
+        disk_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-disk-gui"
         self.assertTrue(os.path.exists(disk_path))
         self.assertTrue(os.access(disk_path, os.X_OK))
 
     def test_speed_gui_script(self):
-        speed_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-speed-gui"
+        speed_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-speed-gui"
         self.assertTrue(os.path.exists(speed_path))
         self.assertTrue(os.access(speed_path, os.X_OK))
 
     def test_git_gui_script(self):
-        git_gui_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-git-gui"
+        git_gui_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-git-gui"
         self.assertTrue(os.path.exists(git_gui_path))
         self.assertTrue(os.access(git_gui_path, os.X_OK))
 
     def test_git_workspace_scanner(self):
-        repos = scan_local_git_workspaces(scan_roots=["/home/ronit138/aero-linux"])
+        repos = scan_local_git_workspaces(scan_roots=[REPO_ROOT])
         self.assertIsInstance(repos, list)
         self.assertGreaterEqual(len(repos), 1)
         aero_repo = next((r for r in repos if r["name"] == "aero-linux"), None)
         self.assertIsNotNone(aero_repo)
         if aero_repo is not None:
             self.assertEqual(aero_repo["branch"], "main")
-        printed = print_git_workspaces(scan_roots=["/home/ronit138/aero-linux"])
+        printed = print_git_workspaces(scan_roots=[REPO_ROOT])
         self.assertIsInstance(printed, list)
 
     def test_quick_settings_gui_script(self):
-        qs_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-quick-settings"
+        qs_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-quick-settings"
         self.assertTrue(os.path.exists(qs_path))
         self.assertTrue(os.access(qs_path, os.X_OK))
 
     def test_audio_bt_wifi_displays_gui_scripts(self):
         for script in ["aero-audio", "aero-bluetooth", "aero-wifi", "aero-displays"]:
-            path = f"/home/ronit138/aero-linux/packages/aero-welcome/bin/{script}"
+            path = f"{REPO_ROOT}/packages/aero-welcome/bin/{script}"
             self.assertTrue(os.path.exists(path), f"Missing {script}")
             self.assertTrue(os.access(path, os.X_OK), f"Not executable: {script}")
 
     def test_gamehub_connect_monitor_updater_gui_scripts(self):
         for script in ["aero-gamehub", "aero-connect-gui", "aero-monitor", "aero-updater"]:
-            path = f"/home/ronit138/aero-linux/packages/aero-welcome/bin/{script}"
+            path = f"{REPO_ROOT}/packages/aero-welcome/bin/{script}"
             self.assertTrue(os.path.exists(path), f"Missing {script}")
             self.assertTrue(os.access(path, os.X_OK), f"Not executable: {script}")
 
     def test_firewall_gui_script(self):
-        fw_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-firewall-gui"
+        fw_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-firewall-gui"
         self.assertTrue(os.path.exists(fw_path))
         self.assertTrue(os.access(fw_path, os.X_OK))
 
     def test_ssh_gui_script(self):
-        ssh_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-ssh-gui"
+        ssh_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-ssh-gui"
         self.assertTrue(os.path.exists(ssh_path))
         self.assertTrue(os.access(ssh_path, os.X_OK))
 
     def test_ssl_gui_script(self):
-        ssl_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-ssl-gui"
+        ssl_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-ssl-gui"
         self.assertTrue(os.path.exists(ssl_path))
         self.assertTrue(os.access(ssl_path, os.X_OK))
 
     def test_ai_gui_script(self):
-        ai_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-ai-gui"
+        ai_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-ai-gui"
         self.assertTrue(os.path.exists(ai_path))
         self.assertTrue(os.access(ai_path, os.X_OK))
 
     def test_workspaces_gui_script(self):
-        ws_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-workspaces-gui"
+        ws_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-workspaces-gui"
         self.assertTrue(os.path.exists(ws_path))
         self.assertTrue(os.access(ws_path, os.X_OK))
 
     def test_snapshots_gui_script(self):
-        snap_path = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-snapshots-gui"
+        snap_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-snapshots-gui"
         self.assertTrue(os.path.exists(snap_path))
         self.assertTrue(os.access(snap_path, os.X_OK))
 
@@ -726,15 +729,15 @@ class TestAeroCLI(unittest.TestCase):
         _print_help()
 
     def test_deb_and_completions_scripts(self):
-        deb_script = "/home/ronit138/aero-linux/build/package_deb.sh"
+        deb_script = f"{REPO_ROOT}/build/package_deb.sh"
         self.assertTrue(os.path.exists(deb_script))
         self.assertTrue(os.access(deb_script, os.X_OK))
         for sh in ["aero.bash", "aero.fish", "aero.zsh"]:
-            c_path = f"/home/ronit138/aero-linux/build/completions/{sh}"
+            c_path = f"{REPO_ROOT}/build/completions/{sh}"
             self.assertTrue(os.path.exists(c_path))
 
     def test_docker_gui_and_telemetry(self):
-        doc_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-docker-gui"
+        doc_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-docker-gui"
         self.assertTrue(os.path.exists(doc_gui))
         self.assertTrue(os.access(doc_gui, os.X_OK))
         from aero.docker_tools import get_containers_list, container_action
@@ -743,27 +746,27 @@ class TestAeroCLI(unittest.TestCase):
         self.assertFalse(container_action("invalid_container_id", "invalid_action"))
 
     def test_api_gui_script(self):
-        api_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-api-gui"
+        api_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-api-gui"
         self.assertTrue(os.path.exists(api_gui))
         self.assertTrue(os.access(api_gui, os.X_OK))
 
     def test_env_gui_script(self):
-        env_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-env-gui"
+        env_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-env-gui"
         self.assertTrue(os.path.exists(env_gui))
         self.assertTrue(os.access(env_gui, os.X_OK))
 
     def test_regex_gui_script(self):
-        rg_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-regex-gui"
+        rg_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-regex-gui"
         self.assertTrue(os.path.exists(rg_gui))
         self.assertTrue(os.access(rg_gui, os.X_OK))
 
     def test_db_gui_script(self):
-        db_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-db-gui"
+        db_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-db-gui"
         self.assertTrue(os.path.exists(db_gui))
         self.assertTrue(os.access(db_gui, os.X_OK))
 
     def test_cron_gui_and_mgr(self):
-        cron_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-cron-gui"
+        cron_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-cron-gui"
         self.assertTrue(os.path.exists(cron_gui))
         self.assertTrue(os.access(cron_gui, os.X_OK))
         from aero.cron_mgr import humanize_cron, get_cron_jobs
@@ -773,81 +776,81 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIsInstance(jobs, list)
 
     def test_crypto_gui_script(self):
-        crypto_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-crypto-gui"
+        crypto_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-crypto-gui"
         self.assertTrue(os.path.exists(crypto_gui))
         self.assertTrue(os.access(crypto_gui, os.X_OK))
 
     def test_mock_gui_script(self):
-        mock_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-mock-gui"
+        mock_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-mock-gui"
         self.assertTrue(os.path.exists(mock_gui))
         self.assertTrue(os.access(mock_gui, os.X_OK))
 
     def test_deps_gui_script(self):
-        deps_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-deps-gui"
+        deps_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-deps-gui"
         self.assertTrue(os.path.exists(deps_gui))
         self.assertTrue(os.access(deps_gui, os.X_OK))
 
     def test_benchmark_gui_script(self):
-        bench_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-benchmark-gui"
+        bench_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-benchmark-gui"
         self.assertTrue(os.path.exists(bench_gui))
         self.assertTrue(os.access(bench_gui, os.X_OK))
 
     def test_diff_gui_script(self):
-        diff_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-diff-gui"
+        diff_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-diff-gui"
         self.assertTrue(os.path.exists(diff_gui))
         self.assertTrue(os.access(diff_gui, os.X_OK))
 
     def test_qr_gui_script(self):
-        qr_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-qr-gui"
+        qr_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-qr-gui"
         self.assertTrue(os.path.exists(qr_gui))
         self.assertTrue(os.access(qr_gui, os.X_OK))
 
     def test_recorder_gui_script(self):
-        rec_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-recorder-gui"
+        rec_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-recorder-gui"
         self.assertTrue(os.path.exists(rec_gui))
         self.assertTrue(os.access(rec_gui, os.X_OK))
 
     def test_archive_gui_script(self):
-        arch_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-archive-gui"
+        arch_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-archive-gui"
         self.assertTrue(os.path.exists(arch_gui))
         self.assertTrue(os.access(arch_gui, os.X_OK))
 
     def test_markdown_gui_script(self):
-        md_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-markdown-gui"
+        md_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-markdown-gui"
         self.assertTrue(os.path.exists(md_gui))
         self.assertTrue(os.access(md_gui, os.X_OK))
 
     def test_tunnel_gui_script(self):
-        tun_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-tunnel-gui"
+        tun_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-tunnel-gui"
         self.assertTrue(os.path.exists(tun_gui))
         self.assertTrue(os.access(tun_gui, os.X_OK))
 
     def test_sandbox_gui_script(self):
-        box_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-sandbox-gui"
+        box_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-sandbox-gui"
         self.assertTrue(os.path.exists(box_gui))
         self.assertTrue(os.access(box_gui, os.X_OK))
 
     def test_gpu_gui_script(self):
-        gpu_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-gpu-gui"
+        gpu_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-gpu-gui"
         self.assertTrue(os.path.exists(gpu_gui))
         self.assertTrue(os.access(gpu_gui, os.X_OK))
 
     def test_gitgraph_gui_script(self):
-        gitgraph_gui = "/home/ronit138/aero-linux/packages/aero-welcome/bin/aero-gitgraph-gui"
+        gitgraph_gui = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-gitgraph-gui"
         self.assertTrue(os.path.exists(gitgraph_gui))
         self.assertTrue(os.access(gitgraph_gui, os.X_OK))
 
     def test_completions_sync_and_completeness(self):
         for shell, filename in [("bash", "aero.bash"), ("fish", "aero.fish"), ("zsh", "aero.zsh")]:
-            path = f"/home/ronit138/aero-linux/build/completions/{filename}"
+            path = f"{REPO_ROOT}/build/completions/{filename}"
             self.assertTrue(os.path.exists(path))
             with open(path, "r") as f:
                 content = f.read()
-            for cmd in ["doctor", "memory", "power", "ai", "vault", "dev", "net", "diff", "qr", "archive", "sandbox", "tunnel", "markdown", "gpu"]:
+            for cmd in ["doctor", "memory", "power", "ai", "vault", "dev", "net", "dif", "qr", "archive", "sandbox", "tunnel", "markdown", "gpu"]:
                 self.assertIn(cmd, content)
 
     def test_desktop_applications_directory_integrity(self):
-        bin_dir = "/home/ronit138/aero-linux/packages/aero-welcome/bin"
+        bin_dir = f"{REPO_ROOT}/packages/aero-welcome/bin"
         for fname in os.listdir(bin_dir):
             full_path = os.path.join(bin_dir, fname)
             if os.path.isfile(full_path):
