@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   test-suite:
-    name: Test Suite (Unit Tests)
+    name: Unit Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -35,8 +35,39 @@ jobs:
         run: |
           make test
 
+  multi-distro-matrix:
+    name: Multi-Distro Verification (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - 'debian:bookworm-slim'
+          - 'debian:sid-slim'
+          - 'ubuntu:24.04'
+          - 'ubuntu:22.04'
+    container:
+      image: ${{ matrix.distro }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Runtime Build Dependencies
+        run: |
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3 make binutils tar gzip
+
+      - name: Execute Test Suite
+        run: |
+          make test
+
+      - name: Verify Package Build
+        run: |
+          make deb
+          test -f dist/aero-linux_*.deb || (echo "Debian package not found" && exit 1)
+
   package-build:
-    name: Debian Package Build Verification
+    name: Debian Package Build & Artifact Check
     runs-on: ubuntu-latest
     needs: test-suite
     steps:
