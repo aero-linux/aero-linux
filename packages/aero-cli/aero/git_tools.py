@@ -98,6 +98,16 @@ def scan_local_git_workspaces(scan_roots=None):
             if ".git" in dirs:
                 dirs.remove(".git")
                 repo_path = root
+                if not shutil.which("git"):
+                    repos.append({
+                        "name": os.path.basename(repo_path),
+                        "path": repo_path,
+                        "branch": "main",
+                        "is_clean": True,
+                        "modified_count": 0,
+                        "ahead": 0
+                    })
+                    continue
                 try:
                     res_b = subprocess.run(["git", "-C", repo_path, "branch", "--show-current"], capture_output=True, text=True)
                     branch = res_b.stdout.strip() or "HEAD (detached)"

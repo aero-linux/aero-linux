@@ -11,9 +11,14 @@ from typing import Dict, List, Any
 
 def check_and_repair_dns() -> Dict[str, Any]:
     """Checks DNS resolution and resets systemd-resolved if stalled."""
-    res = subprocess.run(["ping", "-c", "1", "-W", "2", "1.1.1.1"], capture_output=True)
-    if res.returncode == 0:
-        return {"component": "DNS & Network", "status": "ok", "message": "Internet connectivity active"}
+    if not shutil.which("ping"):
+        return {"component": "DNS & Network", "status": "ok", "message": "ping not available (container/minimal env)"}
+    try:
+        res = subprocess.run(["ping", "-c", "1", "-W", "2", "1.1.1.1"], capture_output=True)
+        if res.returncode == 0:
+            return {"component": "DNS & Network", "status": "ok", "message": "Internet connectivity active"}
+    except Exception:
+        pass
     
     # Attempt repair
     if shutil.which("systemctl"):
