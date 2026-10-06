@@ -1,0 +1,98 @@
+# ==============================================================================
+# Aero Linux — Sway Window Manager Configuration
+# ==============================================================================
+
+# Modifier key (Super / Windows key)
+set $mod Mod4
+
+# Navigation keys
+set $left h
+set $down j
+set $up k
+set $right l
+
+# Preferred Applications
+set $term alacritty
+set $menu wofi --show drun --allow-images --prompt "Launch App..."
+set $lock swaylock -c 0a0b0e
+
+# Font configuration
+font pango:JetBrains Mono 10
+
+# Gaps & Borders
+gaps inner 8
+gaps outer 10
+default_border pixel 2
+default_floating_border pixel 2
+smart_gaps on
+smart_borders on
+
+# Color Theme (Aero Cyber Dark & Cyan)
+# class                 border  bground text    indicator child_border
+client.focused          #00f2fe #0a0b0e #f8fafc #4facfe   #00f2fe
+client.focused_inactive #1e293b #0a0b0e #94a3b8 #1e293b   #1e293b
+client.unfocused        #0f172a #0a0b0e #64748b #0f172a   #0f172a
+client.urgent           #ff5f56 #0a0b0e #f8fafc #ff5f56   #ff5f56
+
+# Autostart Core Daemons
+exec waybar
+exec mako
+exec /usr/local/bin/aero-welcome
+
+# Keybindings: System & Launchers
+bindsym $mod+Return exec $term
+bindsym $mod+d exec $menu
+bindsym $mod+Shift+q kill
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Aero Sway?' -B 'Yes, exit' 'swaymsg exit'
+bindsym $mod+l exec $lock
+
+# Windows-Friendly Familiar Shortcuts
+bindsym $mod+e exec nemo ~ || thunar ~ || pcmanfm ~
+bindsym Control+Shift+Escape exec $term -e aero monitor
+bindsym Mod1+Tab focus next
+bindsym $mod+r exec wofi --show run
+
+# Keybindings: Quick Aero Optimizations
+bindsym $mod+Shift+a exec $term -e aero doctor
+bindsym $mod+Shift+m exec $term -e aero memory --optimize
+bindsym $mod+Shift+p exec $term -e aero power
+
+# Keybindings: Window Management
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+
+# Workspaces
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+
+# Layout toggles
+bindsym $mod+f fullscreen toggle
+bindsym $mod+Shift+space floating toggle
+
+# Audio & Brightness Controls
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+
+# Bar integration
+bar {
+    swaybar_command waybar
+}

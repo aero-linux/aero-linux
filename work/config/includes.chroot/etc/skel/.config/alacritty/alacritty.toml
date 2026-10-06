@@ -1,0 +1,50 @@
+# ==============================================================================
+# Aero Linux — Alacritty Terminal Configuration
+# ==============================================================================
+
+[window]
+padding = { x = 16, y = 16 }
+dynamic_padding = true
+decorations = "none"
+opacity = 0.92
+blur = true
+
+[font]
+size = 11.0
+
+[font.normal]
+family = "JetBrains Mono"
+style = "Regular"
+
+[font.bold]
+family = "JetBrains Mono"
+style = "Bold"
+
+# Aero Cyber Dark Palette
+[colors.primary]
+background = "#0a0b0e"
+foreground = "#f8fafc"
+
+[colors.cursor]
+text = "#0a0b0e"
+cursor = "#00f2fe"
+
+[colors.normal]
+black = "#0f172a"
+red = "#ff5f56"
+green = "#27c93f"
+yellow = "#ffbd2e"
+blue = "#4facfe"
+magenta = "#a855f7"
+cyan = "#00f2fe"
+white = "#f8fafc"
+
+[colors.bright]
+black = "#334155"
+red = "#ff6b6b"
+green = "#51cf66"
+yellow = "#fcc419"
+blue = "#74c0fc"
+magenta = "#cc5de8"
+cyan = "#38d9a9"
+white = "#ffffff"
