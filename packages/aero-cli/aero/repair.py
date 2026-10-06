@@ -9,6 +9,21 @@ import subprocess
 from typing import Dict, List, Any
 
 
+def _run_privileged(cmd: List[str]) -> subprocess.CompletedProcess:
+    """Executes a command with root privileges if required and available, falling back safely."""
+    if os.geteuid() == 0:
+        full_cmd = cmd
+    elif shutil.which("sudo"):
+        full_cmd = ["sudo"] + cmd
+    else:
+        full_cmd = cmd
+
+    try:
+        return subprocess.run(full_cmd, capture_output=True)
+    except (FileNotFoundError, PermissionError):
+        return subprocess.CompletedProcess(args=full_cmd, returncode=127, stdout=b"", stderr=b"")
+
+
 def check_and_repair_dns() -> Dict[str, Any]:
     """Checks DNS resolution and resets systemd-resolved if stalled."""
     if not shutil.which("ping"):
@@ -22,8 +37,8 @@ def check_and_repair_dns() -> Dict[str, Any]:
     
     # Attempt repair
     if shutil.which("systemctl"):
-        subprocess.run(["sudo", "systemctl", "restart", "systemd-resolved"], capture_output=True)
-        subprocess.run(["sudo", "systemctl", "restart", "NetworkManager"], capture_output=True)
+        _run_privileged(["systemctl", "restart", "systemd-resolved"])
+        _run_privileged(["systemctl", "restart", "NetworkManager"])
         return {"component": "DNS & Network", "status": "repaired", "message": "Restarted systemd-resolved & NetworkManager"}
     return {"component": "DNS & Network", "status": "warning", "message": "Offline or unreachable network"}
 
@@ -43,8 +58,8 @@ def check_and_repair_apt() -> Dict[str, Any]:
         return {"component": "Package Manager (APT/DPKG)", "status": "ok", "message": "Package database clean and consistent"}
     
     # Run configure & fix
-    subprocess.run(["sudo", "dpkg", "--configure", "-a"], capture_output=True)
-    subprocess.run(["sudo", "apt-get", "install", "-f", "-y"], capture_output=True)
+    _run_privileged(["dpkg", "--configure", "-a"])
+    _run_privileged(["apt-get", "install", "-f", "-y"])
     return {"component": "Package Manager (APT/DPKG)", "status": "repaired", "message": "Configured unconfigured packages & resolved dependencies"}
 
 
@@ -74,7 +89,7 @@ def check_and_repair_failed_services() -> Dict[str, Any]:
         return {"component": "System Daemons", "status": "ok", "message": "0 failed systemd services"}
     
     # Attempt reset-failed
-    subprocess.run(["sudo", "systemctl", "reset-failed"], capture_output=True)
+    _run_privileged(["systemctl", "reset-failed"])
     return {
         "component": "System Daemons",
         "status": "warning",

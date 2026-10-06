@@ -55,7 +55,7 @@ jobs:
       - name: Install Runtime Build Dependencies
         run: |
           apt-get update -qq
-          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3 make binutils tar gzip git iputils-ping
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3 make binutils tar gzip git iputils-ping sudo
           git config --global --add safe.directory "*" || true
 
       - name: Execute Test Suite
