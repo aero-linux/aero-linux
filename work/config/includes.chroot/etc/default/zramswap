@@ -1,6 +1,0 @@
-# Aero Linux zRAM Configuration
-# /etc/default/zramswap
-
-ALGO=zstd
-PERCENT=100
-PRIORITY=100

@@ -1,0 +1,6 @@
+# Ignore build artifacts on gh-pages
+work/
+dist/
+packages/
+__pycache__/
+*.pyc
