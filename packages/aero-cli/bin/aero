@@ -45,9 +45,9 @@ from aero.audio import check_audio_status, set_audio_latency, LATENCY_PRESETS
 from aero.bt import check_bt_status, toggle_bt_power
 from aero.vpn import check_vpn_status, toggle_wireguard
 from aero.fonts import list_fonts, install_font, NERD_FONTS
-from aero.db_tools import list_databases, start_database, stop_database, DATABASES
+from aero.db_tools import list_databases, start_database, stop_database, run_sql_migration, inspect_sqlite_schema, DATABASES
 from aero.api_bench import bench_url
-from aero.vm import run_iso_in_vm
+from aero.vm import run_iso_in_vm, spawn_ephemeral_microvm
 from aero.system_updater import check_system_kernel, update_aero_os
 from aero.layout import set_desktop_layout
 from aero.ai import print_memory_calc, benchmark_model_speed
@@ -364,6 +364,11 @@ def main():
     db_ui_p = db_sub.add_parser("ui", help="Launch browser-based database management studio")
     db_ui_p.add_argument("name", nargs="?", default="postgres", choices=list(DATABASES.keys()), help="Database name (default: postgres)")
     db_ui_p.add_argument("--port", "-p", type=int, default=8081, help="Studio port (default: 8081)")
+    db_mig = db_sub.add_parser("migrate", help="Execute SQL migration script against SQLite or DB")
+    db_mig.add_argument("sql_file", help="Path to .sql script")
+    db_mig.add_argument("--target", default="sqlite", help="Target SQLite file or database (default: sqlite)")
+    db_sch = db_sub.add_parser("schema", help="Inspect tables and columns in SQLite database")
+    db_sch.add_argument("db_file", help="Path to .sqlite or .db file")
 
     # API Benchmarking
     api_parser = subparsers.add_parser("api", help="API load testing and benchmarking")
@@ -374,12 +379,17 @@ def main():
     api_bench.add_argument("--concurrency", "-w", type=int, default=10, help="Concurrent workers (default 10)")
 
     # Micro-VMs
-    vm_parser = subparsers.add_parser("vm", help="QEMU/KVM micro-VM runner")
+    vm_parser = subparsers.add_parser("vm", help="QEMU/KVM micro-VM and ephemeral sandbox runner")
     vm_sub = vm_parser.add_subparsers(dest="vm_action", help="VM actions")
     vm_run = vm_sub.add_parser("run", help="Boot ISO file in accelerated micro-VM")
     vm_run.add_argument("iso", help="Path to ISO image")
     vm_run.add_argument("--ram", type=int, default=4096, help="RAM in MB (default 4096)")
     vm_run.add_argument("--cores", type=int, default=4, help="CPU cores (default 4)")
+    vm_spawn = vm_sub.add_parser("spawn", help="Provision ephemeral lightweight microVM sandbox with instant teardown")
+    vm_spawn.add_argument("--ram", type=int, default=1024, help="Memory allocation in MB (default: 1024)")
+    vm_spawn.add_argument("--cores", type=int, default=2, help="vCPU count (default: 2)")
+    vm_spawn.add_argument("--kernel", help="Optional Linux vmlinuz kernel binary")
+    vm_spawn.add_argument("--dry-run", action="store_true", help="Validate microVM config without launching")
 
     # System Updater
     sys_parser = subparsers.add_parser("system", help="OS and Kernel upgrade manager")
@@ -1007,6 +1017,10 @@ def main():
             stop_database(args.name)
         elif args.db_action == "ui":
             launch_db_ui(args.name, args.port)
+        elif args.db_action == "migrate":
+            run_sql_migration(args.sql_file, args.target)
+        elif args.db_action == "schema":
+            inspect_sqlite_schema(args.db_file)
         else:
             list_databases()
 
@@ -1014,7 +1028,10 @@ def main():
         bench_url(args.url, args.count, args.concurrency)
 
     elif args.command == "vm":
-        run_iso_in_vm(args.iso, args.ram, args.cores)
+        if args.vm_action == "spawn":
+            spawn_ephemeral_microvm(args.ram, args.cores, args.kernel, dry_run=args.dry_run)
+        else:
+            run_iso_in_vm(args.iso, args.ram, args.cores)
 
     elif args.command == "system":
         if args.sys_action == "update":
