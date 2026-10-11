@@ -58,7 +58,7 @@ from aero.wallpaper import generate_wallpaper_svg, set_desktop_wallpaper
 from aero.agent import ask_local_agent
 from aero.perf_tools import profile_cpu_load, audit_io_scheduler
 from aero.sandbox import run_in_sandbox
-from aero.tracer import trace_tcp_tls_latency, trace_dns_benchmark
+from aero.tracer import trace_tcp_tls_latency, trace_dns_benchmark, audit_ebpf_kernel_support, trace_active_sockets
 from aero.cleaner import deep_system_clean
 from aero.cert_mgr import generate_dev_certificate
 from aero.notifier import send_notification
@@ -79,7 +79,7 @@ from aero.regex_tool import test_regex
 from aero.diff_tool import show_file_diff
 from aero.qr_tool import render_qr_terminal, generate_wifi_qr
 from aero.json_tools import format_json_str, minify_json_str, query_json_path
-from aero.crypto_tools import generate_uuid, generate_token, compute_hash
+from aero.crypto_tools import generate_uuid, generate_token, compute_hash, verify_file_checksum, compute_directory_manifest
 from aero.jwt_tools import b64_encode_str, b64_decode_str, decode_jwt_token
 from aero.http_client import http_request
 from aero.net_diagnostics import dns_dig, ping_host
@@ -447,13 +447,16 @@ def main():
     s_run.add_argument("--ram", type=int, default=2048, help="Memory limit in MB (default: 2048)")
 
     # Network Latency & Socket Tracer
-    trace_parser = subparsers.add_parser("trace", help="Network socket, TLS handshake, and DNS latency tracer")
+    trace_parser = subparsers.add_parser("trace", help="eBPF kernel tracing, network sockets, and latency profiler")
     trace_sub = trace_parser.add_subparsers(dest="trace_action", help="Trace actions")
     t_ping = trace_sub.add_parser("ping", help="Measure DNS, TCP SYN-ACK, and TLS handshake latency")
     t_ping.add_argument("host", nargs="?", default="github.com", help="Target hostname (default: github.com)")
     t_ping.add_argument("--port", "-p", type=int, default=443, help="Port (default: 443)")
     t_dns = trace_sub.add_parser("dns", help="Benchmark latency across top public DNS resolvers")
     t_dns.add_argument("--domain", default="google.com", help="Domain to resolve")
+    trace_sub.add_parser("ebpf", help="Audit kernel eBPF and tracefs tracing readiness")
+    t_sock = trace_sub.add_parser("sockets", help="Trace active TCP socket lifecycles and processes")
+    t_sock.add_argument("--filter", "-f", default="", help="Filter by process name (e.g. node, python, curl)")
 
     # Deep System Cache & De-Bloater Cleaner
     clean_parser = subparsers.add_parser("clean", help="Deep developer cache and system de-bloater cleaner")
@@ -582,9 +585,11 @@ def main():
     tok_parser.add_argument("--len", "-l", type=int, default=32, help="Token length (default: 32)")
     tok_parser.add_argument("--mode", "-m", choices=["hex", "alphanumeric", "urlsafe"], default="hex", help="Token format")
 
-    hash_parser = subparsers.add_parser("hash", help="Compute file or string cryptographic hash (SHA256/MD5)")
-    hash_parser.add_argument("algo", choices=["sha256", "sha512", "md5", "sha1"], help="Hash algorithm")
-    hash_parser.add_argument("target", help="File path or string")
+    hash_parser = subparsers.add_parser("hash", help="Compute file/directory cryptographic hash (SHA256/BLAKE3/MD5)")
+    hash_parser.add_argument("algo", choices=["sha256", "sha512", "md5", "sha1", "blake2b", "blake3"], help="Hash algorithm")
+    hash_parser.add_argument("target", help="File path, directory, or string")
+    hash_parser.add_argument("--verify", "-v", help="Expected hash to verify against")
+    hash_parser.add_argument("--manifest", action="store_true", help="Generate multi-threaded checksum manifest for a directory")
 
     # Base64 & JWT Tools
     b64_parser = subparsers.add_parser("base64", help="Encode/Decode Base64 strings")
@@ -1065,6 +1070,10 @@ def main():
     elif args.command == "trace":
         if args.trace_action == "dns":
             trace_dns_benchmark(args.domain)
+        elif args.trace_action == "ebpf":
+            audit_ebpf_kernel_support()
+        elif args.trace_action == "sockets":
+            trace_active_sockets(args.filter)
         else:
             trace_tcp_tls_latency(args.host, args.port)
 
@@ -1171,7 +1180,15 @@ def main():
         generate_token(args.len, args.mode)
 
     elif args.command == "hash":
-        compute_hash(args.target, args.algo)
+        if args.manifest and os.path.isdir(args.target):
+            manifest = compute_directory_manifest(args.target, args.algo)
+            print(f"\n📦 HASH MANIFEST FOR: {args.target} ({len(manifest)} files)")
+            for item in manifest:
+                print(f" • {item.get('hash', 'ERROR'):<64}  {item.get('path')}")
+        elif args.verify:
+            verify_file_checksum(args.target, args.verify, args.algo)
+        else:
+            compute_hash(args.target, args.algo)
 
     elif args.command == "base64":
         if args.b64_action == "dec":
