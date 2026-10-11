@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Verify SHA256 / BLAKE3 Checksum
+Comment=Compute and verify cryptographic checksum of selected file or directory
+Exec=alacritty -e bash -c "aero hash sha256 '%F'; echo ''; read -p 'Press Enter to close...' "
+Icon-Name=document-properties
+Selection=s
+Extensions=any;
+Quote=double
