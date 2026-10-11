@@ -47,7 +47,10 @@ The `aero` CLI is the core system, AI, and developer management utility in Aero 
 * `aero db start [postgres|redis|mysql|mongo|clickhouse]`: 1-command local background database.
 * `aero cert generate [domain]`: 1-command trusted local SSL/TLS certificate generator for HTTPS.
 * `aero clean [--dry-run]`: Deep system de-bloater (prunes npm, pip, apt, docker caches).
-* `aero trace [ping <host>|dns]`: Network socket connect, TLS handshake, and DNS latency tracer.
+* `aero trace [ping <host>|dns|ebpf|sockets]`: Network socket connect, TLS handshake, kernel TraceFS, and TCP socket lifecycle tracer.
+* `aero vm [run <iso>|spawn]`: QEMU/KVM accelerated micro-VM and ephemeral sandbox runner with automatic teardown.
+* `aero hash <algo> <target> [--verify <hash>] [--manifest]`: Multi-threaded cryptographic hasher and directory manifest generator (SHA256, BLAKE3, MD5).
+* `aero db [start|stop|ui|migrate|schema]`: Local containerized databases (Postgres, Redis, MySQL, ClickHouse), SQL migrations, and SQLite schema inspector.
 * `aero vault [set|get|list|delete|export]`: Local encrypted developer keyring & .env manager.
 * `aero live [--port 8080]`: Real-time developer web telemetry streaming dashboard.
 * `aero notify <title> [msg] [--sound]`: Desktop notification broadcaster and build finished alert.
