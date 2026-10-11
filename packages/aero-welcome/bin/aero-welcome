@@ -151,6 +151,7 @@ class AeroWelcomeApp(Gtk.Window):
             ("🎮 GPU & 3D Acceleration", "aero-gpu-gui", 0, 13),
             ("🌿 Git Commit Graph Tree", "aero-gitgraph-gui", 1, 13),
             ("🔒 Developer Secrets Vault", "aero-vault-gui", 0, 14),
+            ("⚡ eBPF & Kernel Socket Inspector", "aero-ebpf-gui", 1, 14),
         ]
 
         for text, cmd, col, row in dev_tools:
