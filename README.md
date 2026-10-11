@@ -29,7 +29,7 @@
   </a>
 </p>
 
-*Engineered for systems programmers, backend engineers, and local AI builders. Sub-350MB idle footprint, dynamic in-memory zRAM ZSTD compression, 1-click local LLM inference, 49 native GTK3 applications, and zero background bloat.*
+*Engineered for systems programmers, backend engineers, and local AI builders. Sub-350MB idle footprint, dynamic in-memory zRAM ZSTD compression, 1-click local LLM inference, 59 native GTK3 applications, and zero background bloat.*
 
 </div>
 
@@ -174,7 +174,7 @@ aero ssh [status|gen|copy|test] # Ed25519 SSH key management
 
 ## 🎛️ Complete Zero-Terminal Graphical Application Suite
 
-Aero Linux includes **49 dedicated native GTK3 graphical management tools**, ensuring developers and users never need a terminal for common workflows:
+Aero Linux includes **59 dedicated native GTK3 graphical management tools**, ensuring developers and users never need a terminal for common workflows:
 
 | Application | Command / Shortcut | Description |
 | :--- | :--- | :--- |
@@ -232,6 +232,7 @@ Aero Linux includes **49 dedicated native GTK3 graphical management tools**, ens
 | **Aero Port Inspector** | `aero-ports-gui` | Active listening dev ports, process viewer and kill tool |
 | **Aero Self-Repair** | `aero-repair-gui` | 1-Click automated DNS, package, and service repair |
 | **Aero About System** | `aero-about-gui` | Hardware specifications, kernel info, and Aero build badge |
+| **Aero eBPF & Sockets**| `aero-ebpf-gui` | Kernel TraceFS diagnostics, real-time socket lifecycles & process monitor |
 
 ---
 
@@ -281,8 +282,8 @@ aero-linux/
 ├── installer/                  # Calamares dual-boot safe installer configs & branding
 ├── packages/                   # Core Python & GTK3 developer applications
 │   ├── aero-cli/               # 59 native GTK3 apps, CLI subcommands & 133 unit tests
-│   └── aero-welcome/           # 6-tab GTK3 Control Center & Quick Setup GUI
-└── web/                        # Web portal, 49-app catalog, zRAM calc & hotkey guide
+│   ├── aero-welcome/           # 6-tab GTK3 Control Center & Quick Setup GUI
+└── web/                        # Web portal, 59-app catalog, zRAM calc & hotkey guide
 ```
 
 ---
