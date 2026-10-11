@@ -29,7 +29,7 @@ from aero.wallpaper import generate_wallpaper_svg, PALETTES
 from aero.memory import get_memory_stats
 from aero.perf_tools import get_cpu_stat_snapshot
 from aero.sandbox import check_namespace_support
-from aero.tracer import DNS_SERVERS
+from aero.tracer import DNS_SERVERS, audit_ebpf_kernel_support, trace_active_sockets
 from aero.cleaner import get_disk_free_mb
 from aero.cert_mgr import generate_dev_certificate
 from aero.notifier import send_notification
@@ -47,7 +47,7 @@ from aero.log_streamer import get_oom_events
 from aero.regex_tool import test_regex
 from aero.diff_tool import show_file_diff
 from aero.json_tools import format_json_str, minify_json_str, query_json_path
-from aero.crypto_tools import generate_uuid, generate_token, compute_hash
+from aero.crypto_tools import generate_uuid, generate_token, compute_hash, verify_file_checksum, compute_directory_manifest
 from aero.jwt_tools import b64_encode_str, b64_decode_str, decode_jwt_token
 from aero.net_diagnostics import dns_dig, ping_host
 from aero.ai_tools import audit_ai_memory_footprint, PROMPT_TEMPLATES
@@ -247,6 +247,13 @@ class TestAeroCLI(unittest.TestCase):
         self.assertIn("Cloudflare (1.1.1.1)", DNS_SERVERS)
         self.assertIn("Google (8.8.8.8)", DNS_SERVERS)
 
+    def test_ebpf_kernel_audit_and_sockets(self):
+        ebpf_stat = audit_ebpf_kernel_support()
+        self.assertIn("ready", ebpf_stat)
+        self.assertIn("tracefs", ebpf_stat)
+        sockets = trace_active_sockets()
+        self.assertIsInstance(sockets, list)
+
     def test_cleaner_disk_stats(self):
         free_mb = get_disk_free_mb()
         self.assertTrue(free_mb > 0)
@@ -360,6 +367,21 @@ class TestAeroCLI(unittest.TestCase):
         self.assertEqual(len(tok), 16)
         h = compute_hash("hello world", "sha256")
         self.assertEqual(len(h), 64)
+        # Test BLAKE2b/BLAKE3
+        b = compute_hash("hello world", "blake3")
+        self.assertEqual(len(b), 128)
+        # Test file verification
+        test_file = "/tmp/test_aero_verify.txt"
+        with open(test_file, "w") as f:
+            f.write("aero-pulsar-crypto")
+        f_hash = compute_hash(test_file, "sha256")
+        self.assertTrue(verify_file_checksum(test_file, f_hash, "sha256"))
+        self.assertFalse(verify_file_checksum(test_file, "wrong_hash", "sha256"))
+        # Test directory manifest
+        manifest = compute_directory_manifest("/tmp/test_aero_cert")
+        self.assertIsInstance(manifest, list)
+        if os.path.exists(test_file):
+            os.remove(test_file)
 
     def test_jwt_base64_tools(self):
         b64 = b64_encode_str("test_payload")
@@ -619,6 +641,11 @@ class TestAeroCLI(unittest.TestCase):
         p_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-ports-gui"
         self.assertTrue(os.path.exists(p_path))
         self.assertTrue(os.access(p_path, os.X_OK))
+
+    def test_ebpf_gui_script(self):
+        ebpf_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-ebpf-gui"
+        self.assertTrue(os.path.exists(ebpf_path))
+        self.assertTrue(os.access(ebpf_path, os.X_OK))
 
     def test_shortcuts_gui_script(self):
         s_path = f"{REPO_ROOT}/packages/aero-welcome/bin/aero-shortcuts-gui"
