@@ -12,11 +12,11 @@
 ### **The Ultra-Lean AI & High-Performance Developer Operating System**
 
 [![Web Portal](https://img.shields.io/badge/Web_Portal-Live_Portal-0891b2.svg?style=flat-square)](https://ronitgupta138.github.io/aero-linux/)
-[![Release](https://img.shields.io/badge/Release-v1.4.0--Supernova-0284c7.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux/releases)
+[![Release](https://img.shields.io/badge/Release-v1.5.0--Pulsar-0284c7.svg?style=flat-square)](https://github.com/ronitgupta138/aero-linux/releases)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub_Sponsors-ea4aaa.svg?style=flat-square&logo=githubsponsors)](https://github.com/sponsors/ronitgupta138)
 [![AlternativeTo](https://img.shields.io/badge/AlternativeTo-Listed-2563eb.svg?style=flat-square&logo=linux)](https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral)
 [![CI](https://github.com/aero-linux/aero-linux/actions/workflows/ci.yml/badge.svg)](https://github.com/aero-linux/aero-linux/actions/workflows/ci.yml)
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-130%20Passed-059669.svg?style=flat-square)](https://github.com/aero-linux/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-133%20Passed-059669.svg?style=flat-square)](https://github.com/aero-linux/aero-linux)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-059669.svg?style=flat-square)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-7c3aed.svg?style=flat-square)]()
 [![Works with GitHub](https://img.shields.io/badge/Works_with-GitHub-238636.svg?style=flat-square&logo=github)](https://github.com/developer-program)
@@ -280,7 +280,7 @@ aero-linux/
 │   └── man/                    # System manpage manuals (aero.1)
 ├── installer/                  # Calamares dual-boot safe installer configs & branding
 ├── packages/                   # Core Python & GTK3 developer applications
-│   ├── aero-cli/               # 49 native GTK3 apps, CLI subcommands & 130 unit tests
+│   ├── aero-cli/               # 59 native GTK3 apps, CLI subcommands & 133 unit tests
 │   └── aero-welcome/           # 6-tab GTK3 Control Center & Quick Setup GUI
 └── web/                        # Web portal, 49-app catalog, zRAM calc & hotkey guide
 ```

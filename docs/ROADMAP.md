@@ -18,8 +18,8 @@ Sep          Nov               Jan                 Mar                          
 | Version | Codename | Target Horizon | Cadence | Architecture Focus | Status |
 | :---: | :--- | :---: | :---: | :--- | :---: |
 | **v1.4** | **Supernova** | **September 2026** | Baseline | 49 GTK3 Apps, 312MB RAM, zRAM ZSTD, Dual Desktop, Local AI Runner, Live ISO | **✅ Production Live** |
-| **v1.5** | **Pulsar** | **Mid-November 2026** | ~6 Weeks | Zero-Overhead eBPF Tracing Engine, Firecracker Ephemeral MicroVMs (<50ms) | **🔨 In Development** |
-| **v1.6** | **Quasar** | **Mid-January 2027** | ~8 Weeks | Local Autonomous Multi-Agent Swarm, Atomic Btrfs CoW Rollbacks, Mesh VPN | **📋 Spec Complete** |
+| **v1.5** | **Pulsar** | **Mid-November 2026** | ~6 Weeks | Zero-Overhead eBPF Tracing Engine, Firecracker/KVM Ephemeral MicroVMs, SQL Migrations | **✅ Completed** |
+| **v1.6** | **Quasar** | **Mid-January 2027** | ~8 Weeks | Local Autonomous Multi-Agent Swarm, Atomic Btrfs Snapshots, WireGuard Mesh | **🔨 In Development** |
 | **v1.7** | **Hyperion** | **Late March 2027** | ~8 Weeks | Custom `linux-aero` BORE Low-Latency Kernel, Wayland VRR Adaptive Sync | **📋 Planned** |
 | **v2.0** | **Singularity** | **June / July 2027** | ~14 Weeks | Pure Rust Wayland Compositor (`aero-wm`), Declarative `aero.toml`, Zero X11 | **🚀 Flagship Target** |
 
@@ -51,21 +51,19 @@ Aero Linux follows a strict **Semantic Systems Versioning** model:
 
 ---
 
-### ⚡ 2. Next Milestone: `v1.5-Pulsar` (Target: Mid-November 2026 / 6 Weeks)
+### ⚡ 2. Current Milestone: `v1.5-Pulsar` (Completed)
 *Focus: Kernel Tracing, Ephemeral Sandboxes & Network Observability*
 
 #### 🎯 Technical Deliverables:
 1. **Native eBPF Tracing Engine (`aero trace` / `aero-ebpf-gui`):**
    * Zero-overhead kernel probe monitoring for HTTP/gRPC latency, socket lifecycle, and disk I/O bottlenecks.
-   * Real-time SVG/Cairo visual flamegraph generator for profiling CPU bottlenecks in Go, Rust, C++, Node.js, and Python processes.
-   * Interactive TCP socket monitor tracking open ports, drops, and retransmits.
-2. **Ephemeral MicroVM Sandboxes (`aero vm`):**
-   * 1-command ephemeral Linux MicroVM provisioning via Firecracker (<50ms cold boot).
-   * Safe sandbox execution for testing untrusted PRs, suspicious binaries, and container builds with hardware-level isolation.
-   * Automated snapshotting and instant teardown upon exit.
-3. **Advanced Zero-Terminal Context Menus:**
-   * Right-click SQLite/Postgres visual schema migrations.
-   * Direct file manager multi-threaded SHA256/BLAKE3 hashing.
+   * Real-time active TCP socket monitor with process filtering and kernel tracefs diagnostics.
+2. **Ephemeral MicroVM Sandboxes (`aero vm spawn`):**
+   * 1-command ephemeral Linux MicroVM provisioning via KVM hardware acceleration.
+   * Safe sandbox execution with temporary volatile scratch disks and instant teardown upon exit.
+3. **Advanced Zero-Terminal Context Menus & Hashing Engine:**
+   * Right-click SQLite and raw SQL visual migrations (`sql-migrate.nemo_action`).
+   * Direct file manager multi-threaded SHA256/BLAKE3 hashing (`verify-checksum.nemo_action`).
 
 ---
 
