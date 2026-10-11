@@ -102,6 +102,7 @@ desktop_entries=(
   "aero-color-gui:Aero Color Dropper:Screen Color Picker & Palette Studio:color-picker:Graphics;Utility;GTK;"
   "aero-font-gui:Aero Typography Studio:Coding Ligatures & Font Previewer:font:Settings;DesktopSettings;GTK;"
   "aero-ports-gui:Aero Port Inspector:Dev Server & TCP/UDP Port Scanner:network-server:Development;Network;GTK;"
+  "aero-ebpf-gui:Aero eBPF & Kernel Socket Inspector:Kernel TraceFS & Active Sockets:utilities-terminal:Development;System;GTK;"
   "aero-shortcuts-gui:Aero Shortcuts Guide:Interactive Keyboard Hotkeys Cheatsheet:input-keyboard:Utility;Documentation;GTK;"
   "aero-flasher-gui:Aero USB Flasher:Safe Live ISO USB Creator:drive-removable-media:System;Utility;GTK;"
   "aero-logs-gui:Aero System Logs:Live Journald & Kernel Diagnostic Viewer:utilities-terminal:System;Monitor;GTK;"

@@ -254,6 +254,14 @@ exec python3 "${AERO_HOME}/bin/aero-ports-gui" "$@"
 EOF
 chmod +x "${BIN_DIR}/aero-ports-gui"
 
+# Create global executable wrapper for aero-ebpf-gui
+cat << 'EOF' > "${BIN_DIR}/aero-ebpf-gui"
+#!/usr/bin/env bash
+AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
+exec python3 "${AERO_HOME}/bin/aero-ebpf-gui" "$@"
+EOF
+chmod +x "${BIN_DIR}/aero-ebpf-gui"
+
 # Create global executable wrapper for aero-shortcuts-gui
 cat << 'EOF' > "${BIN_DIR}/aero-shortcuts-gui"
 #!/usr/bin/env bash
@@ -795,6 +803,17 @@ Name=Aero Port Inspector
 Comment=Aero Linux Dev Server & Listening Port Manager
 Exec=${BIN_DIR}/aero-ports-gui
 Icon=network-server
+Terminal=false
+Type=Application
+Categories=Development;System;GTK;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-ebpf.desktop"
+[Desktop Entry]
+Name=Aero eBPF & Kernel Socket Inspector
+Comment=Aero Linux Kernel TraceFS & Socket Lifecycle Inspector
+Exec=${BIN_DIR}/aero-ebpf-gui
+Icon=utilities-terminal
 Terminal=false
 Type=Application
 Categories=Development;System;GTK;
