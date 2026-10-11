@@ -125,7 +125,7 @@ def run_doctor() -> dict:
     }
 
     report = {
-        "os": "Aero Linux (Rolling Edge)",
+        "os": "Aero Linux 1.5.0-Pulsar (x86_64)",
         "kernel": os.uname().release,
         "cpu": cpu,
         "memory": mem,

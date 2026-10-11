@@ -20,7 +20,7 @@ def run_aero_shell():
     print("/ ___ |/ /___ / _, _/ /_/ /   ___/ / __  / /___/ /___/ /___")
     print("/_/  |_/_____//_/ |_|\\____/   /____/_/ /_/_____/_____/_____/")
     print("\033[0m")
-    print("\033[1;37m⚡ Aero Linux Interactive Developer Shell v1.3.0-Nebula\033[0m")
+    print("\033[1;37m⚡ Aero Linux Interactive Developer Shell v1.5.0-Pulsar\033[0m")
     print("\033[90mType 'help' for available commands, 'doctor' for diagnostics, or 'exit' to quit.\033[0m\n")
 
     while True:

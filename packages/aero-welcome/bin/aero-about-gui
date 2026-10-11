@@ -12,8 +12,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GLib, Gdk
 
-from aero.cpu import get_cpu_info
-from aero.memory import get_memory_info
+from aero.doctor import get_cpu_info, get_memory_info
 from aero.thermals import get_temperatures
 
 

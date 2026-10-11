@@ -115,3 +115,8 @@ def get_top_memory_processes(limit: int = 10) -> list:
     except Exception:
         pass
     return processes
+
+
+# Compatibility alias for aero-about-gui and diagnostics
+from aero.doctor import get_memory_info
+

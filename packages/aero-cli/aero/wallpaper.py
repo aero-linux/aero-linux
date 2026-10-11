@@ -85,3 +85,8 @@ def set_desktop_wallpaper(palette_name: str = "cyber-cyan"):
         print("✅ Live Wayland wallpaper updated.")
     except Exception:
         pass
+
+
+# Compatibility alias for aero-theme-gui
+generate_wallpaper = generate_wallpaper_svg
+

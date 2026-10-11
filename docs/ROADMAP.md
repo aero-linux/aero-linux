@@ -17,8 +17,8 @@ Sep          Nov               Jan                 Mar                          
 
 | Version | Codename | Target Horizon | Cadence | Architecture Focus | Status |
 | :---: | :--- | :---: | :---: | :--- | :---: |
-| **v1.4** | **Supernova** | **September 2026** | Baseline | 49 GTK3 Apps, 312MB RAM, zRAM ZSTD, Dual Desktop, Local AI Runner, Live ISO | **✅ Production Live** |
-| **v1.5** | **Pulsar** | **Mid-November 2026** | ~6 Weeks | Zero-Overhead eBPF Tracing Engine, Firecracker/KVM Ephemeral MicroVMs, SQL Migrations | **✅ Completed** |
+| **v1.4** | **Supernova** | **September 2026** | Baseline | 49 GTK3 Apps, 312MB RAM, zRAM ZSTD, Dual Desktop, Local AI Runner, Live ISO | **✅ Shipped** |
+| **v1.5** | **Pulsar** | **October 2026** | ~6 Weeks | Zero-Overhead eBPF Tracing Engine, KVM Ephemeral MicroVMs, SQL Migrations, 59 Apps | **✅ Production Live** |
 | **v1.6** | **Quasar** | **Mid-January 2027** | ~8 Weeks | Local Autonomous Multi-Agent Swarm, Atomic Btrfs Snapshots, WireGuard Mesh | **🔨 In Development** |
 | **v1.7** | **Hyperion** | **Late March 2027** | ~8 Weeks | Custom `linux-aero` BORE Low-Latency Kernel, Wayland VRR Adaptive Sync | **📋 Planned** |
 | **v2.0** | **Singularity** | **June / July 2027** | ~14 Weeks | Pure Rust Wayland Compositor (`aero-wm`), Declarative `aero.toml`, Zero X11 | **🚀 Flagship Target** |
@@ -30,7 +30,7 @@ Sep          Nov               Jan                 Mar                          
 Aero Linux follows a strict **Semantic Systems Versioning** model:
 1. **Major Releases (`vX.0.0`):** Fundamental compositor or kernel architecture transitions (e.g. `v2.0-Singularity`).
 2. **Minor Milestone Releases (`v1.X.0`):** Major capability additions with celestial codenames (6–8 week engineering sprints).
-3. **Point / Patch Releases (`v1.4.X`):** Weekly or bi-weekly bug fixes, security patches, desktop context menus, and UI polishes without altering the active milestone codename.
+3. **Point / Patch Releases (`v1.5.X`):** Weekly or bi-weekly bug fixes, security patches, desktop context menus, and UI polishes without altering the active milestone codename.
 
 ---
 
@@ -38,8 +38,8 @@ Aero Linux follows a strict **Semantic Systems Versioning** model:
 
 ---
 
-### 🌟 1. Current Production: `v1.4-Supernova` (September 2026)
-*Status: Production Live & Deployed*
+### 🌟 1. Baseline Milestone: `v1.4-Supernova` (September 2026)
+*Status: Shipped & Deployed*
 
 * **Measured Memory Footprint:** 312MB cold-boot idle RAM on bare-metal AMD Ryzen 5600H hardware.
 * **Zero-Terminal Developer Suite:** 49 instant-start native GTK3 developer applications (<18ms cold start, zero Electron bloat).
@@ -51,7 +51,7 @@ Aero Linux follows a strict **Semantic Systems Versioning** model:
 
 ---
 
-### ⚡ 2. Current Milestone: `v1.5-Pulsar` (Completed)
+### ⚡ 2. Current Production: `v1.5-Pulsar` (October 2026)
 *Focus: Kernel Tracing, Ephemeral Sandboxes & Network Observability*
 
 #### 🎯 Technical Deliverables:

@@ -158,7 +158,7 @@ class UpdateManagerWindow(Gtk.Window):
         # Footer Actions
         footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.lbl_footer_info = Gtk.Label()
-        self.lbl_footer_info.set_markup("<span font='10' color='#8b949e'>Aero Linux Rolling Edge</span>")
+        self.lbl_footer_info.set_markup("<span font='10' color='#8b949e'>Aero Linux 1.5.0-Pulsar</span>")
         footer.pack_start(self.lbl_footer_info, False, False, 0)
 
         self.btn_install = Gtk.Button(label="⚡ Install Updates")

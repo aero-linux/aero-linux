@@ -910,6 +910,51 @@ class TestAeroCLI(unittest.TestCase):
             if os.path.isfile(full_path):
                 self.assertTrue(os.access(full_path, os.X_OK), f"{full_path} is not executable")
 
+    def test_version_and_release_consistency(self):
+        # Verify package __version__ and doctor OS string
+        import aero
+        self.assertEqual(aero.__version__, "1.5.0")
+        doc = run_doctor()
+        self.assertIn("1.5.0-Pulsar", doc.get("os", ""))
+
+    def test_gui_tools_import_integrity(self):
+        import ast
+        bin_dir = f"{REPO_ROOT}/packages/aero-welcome/bin"
+        bins = sorted([f for f in os.listdir(bin_dir) if os.path.isfile(os.path.join(bin_dir, f)) and not f.startswith("__")])
+        for b in bins:
+            p = os.path.join(bin_dir, b)
+            with open(p) as f:
+                tree = ast.parse(f.read(), filename=p)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom):
+                    mod_name = node.module
+                    if mod_name and mod_name.startswith("aero"):
+                        mod = __import__(mod_name, fromlist=[n.name for n in node.names])
+                        for n in node.names:
+                            self.assertTrue(hasattr(mod, n.name), f"{b} imports missing attribute {n.name} from {mod_name}")
+
+    def test_vault_gui_helpers(self):
+        from aero.vault import list_vault_keys, get_vault_secret, set_vault_secret, delete_vault_secret
+        set_vault_secret("TEST_GUI_KEY", "gui_val_123")
+        keys = list_vault_keys()
+        self.assertIn("TEST_GUI_KEY", keys)
+        val = get_vault_secret("TEST_GUI_KEY")
+        self.assertEqual(val, "gui_val_123")
+        res = delete_vault_secret("TEST_GUI_KEY")
+        self.assertTrue(res)
+
+    def test_dev_utils_hex_to_rgb(self):
+        from aero.dev_utils import hex_to_rgb
+        rgb = hex_to_rgb("#00F2FE")
+        self.assertEqual(rgb, (0, 242, 254))
+
+    def test_accent_and_wallpaper_compatibility_aliases(self):
+        from aero.accent_manager import ACCENT_PALETTES
+        from aero.wallpaper import generate_wallpaper
+        self.assertIn("cyan", ACCENT_PALETTES)
+        self.assertTrue(callable(generate_wallpaper))
+
+
 
 if __name__ == "__main__":
     unittest.main()

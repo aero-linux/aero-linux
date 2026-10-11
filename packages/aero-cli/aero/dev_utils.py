@@ -29,6 +29,17 @@ def convert_color(hex_code: str) -> Dict[str, Any]:
     return {"hex": f"#{hex_code.upper()}", "r": r, "g": g, "b": b, "luminance": round(lum, 2)}
 
 
+def hex_to_rgb(hex_code: str) -> tuple:
+    """Convert hex color string (#RRGGBB or #RGB) into integer (r, g, b) tuple."""
+    hex_code = hex_code.lstrip("#")
+    if len(hex_code) == 3:
+        hex_code = "".join(c * 2 for c in hex_code)
+    if len(hex_code) != 6:
+        return (0, 0, 0)
+    return (int(hex_code[0:2], 16), int(hex_code[2:4], 16), int(hex_code[4:6], 16))
+
+
+
 def time_execution(command: str) -> Dict[str, Any]:
     print(f"\n⏱️  \033[1;36mMEASURING COMMAND EXECUTION TIME:\033[0m {command}")
     print("═" * 58)

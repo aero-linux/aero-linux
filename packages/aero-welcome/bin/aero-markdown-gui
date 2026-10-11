@@ -92,7 +92,7 @@ SAMPLE_MARKDOWN = """# 🚀 Welcome to Aero Linux 1.5-Pulsar
 Aero Linux is an ultra-lean, high-performance developer distribution built with **zero background bloat**.
 
 ## ⚡ Core Features
-- **45+ Native GTK3 Developer Applications**
+- **59 Native GTK3 Developer Applications**
 - **Sub-350MB Idle RAM Footprint** with dynamic zRAM (ZSTD)
 - **1-Click Local LLM Studio** (Ollama with CUDA/ROCm auto-tuning)
 - **Zero-Terminal Parity** for every daily dev workflow
@@ -100,7 +100,7 @@ Aero Linux is an ultra-lean, high-performance developer distribution built with 
 ### 🛠️ Example Code
 ```python
 import os
-print("Hello from Aero Linux Supernova!")
+print("Hello from Aero Linux Pulsar!")
 ```
 
 ### 📊 Performance Table

@@ -6,7 +6,8 @@ We provide security updates and critical vulnerability patches for the following
 
 | Version | Supported |
 | :--- | :--- |
-| **1.4.x (Supernova)** | ✅ Yes (Latest Production) |
+| **1.5.x (Pulsar)** | ✅ Yes (Latest Production) |
+| **1.4.x (Supernova)** | ✅ Yes |
 | **1.3.x (Nebula)** | ✅ Yes |
 | **1.2.x (Titan)** | ✅ Yes |
 | **1.1.x (Edge)** | ✅ Yes |

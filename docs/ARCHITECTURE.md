@@ -14,7 +14,7 @@ Aero Linux is an ultra-lean, high-performance developer Linux distribution engin
 | **Terminal Emulator** | Alacritty (GPU-accelerated) | Sub-10ms input latency, JetBrains Mono font |
 | **Shell Environment** | Fish Shell + Aero Quick Command Aliases | Instant tab completions, syntax highlighting & git status |
 | **Display Manager** | Greetd with tuigreet | Direct Wayland session launch with zero display server bloat |
-| **Developer GUI Suite** | 49 Native PyGObject/GTK3 applications | Sub-18ms cold start, 15MB baseline RAM, zero Electron |
+| **Developer GUI Suite** | 59 Native PyGObject/GTK3 applications | Sub-18ms cold start, 15MB baseline RAM, zero Electron |
 
 ---
 
@@ -72,17 +72,17 @@ Powered by custom TLP configurations, ACPI hardware hooks, and P-State governors
 
 ---
 
-## 6. Zero-Terminal Graphical Application Suite (49 Apps)
+## 6. Zero-Terminal Graphical Application Suite (59 Apps)
 
-Aero Linux includes **49 dedicated native GTK3 graphical applications** covering every layer of development, security, hardware tuning, and systems administration:
+Aero Linux includes **59 dedicated native GTK3 graphical applications** covering every layer of development, security, hardware tuning, and systems administration:
 * **AI & LLM:** `aero-ai-gui` (Local LLM Studio), `aero-agent` (Terminal Assistant).
 * **Database & APIs:** `aero-db-gui` (SQLite Studio), `aero-api-gui` (Native REST Client), `aero-mock-gui` (Mock Server & Webhooks).
 * **Security & Keys:** `aero-vault-gui` (Encrypted Keyring), `aero-ssh-gui` (SSH Bookmarks), `aero-ssl-gui` (Dev HTTPS Certs), `aero-firewall-gui` (UFW Shield).
-* **Systems & Telemetry:** `aero-monitor` (Task Manager), `aero-ports-gui` (Dev Port Inspector), `aero-disk-gui` (Disk Visualizer), `aero-power-gui` (Battery Studio), `aero-cleaner-gui` (System Purger), `aero-snapshots-gui` (TimeMachine Restore Points).
+* **Systems & Telemetry:** `aero-monitor` (Task Manager), `aero-ebpf-gui` (eBPF & Kernel Socket Inspector), `aero-ports-gui` (Dev Port Inspector), `aero-disk-gui` (Disk Visualizer), `aero-power-gui` (Battery Studio), `aero-cleaner-gui` (System Purger), `aero-snapshots-gui` (TimeMachine Restore Points).
 * **Desktop Ergonomics:** `aero-spotlight` (Raycast-style Launcher), `aero-notes-gui` (Markdown Scratchpad), `aero-color-gui` (Screen Color Dropper), `aero-shortcuts-gui` (Cheatsheet Guide), `aero-gamehub` (Proton Game Launcher).
 
 ---
 
 ## 7. Strategic Roadmap
 
-For upcoming milestones (`v1.5-Pulsar`, `v1.6-Quasar`, `v1.7-Hyperion`, and `v2.0-Singularity`), see [docs/ROADMAP.md](ROADMAP.md).
+For upcoming milestones (`v1.6-Quasar`, `v1.7-Hyperion`, and `v2.0-Singularity`), see [docs/ROADMAP.md](ROADMAP.md).

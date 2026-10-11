@@ -12,6 +12,8 @@ ACCENT_PRESETS = {
     "arctic": {"hex": "#88c0d0", "name": "Nord Arctic", "glow": "rgba(136, 192, 208, 0.4)"},
 }
 
+ACCENT_PALETTES = ACCENT_PRESETS
+
 
 def list_accents():
     print("🎨 \033[1;36mAERO DESKTOP ACCENT COLOR STUDIO\033[0m")

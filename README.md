@@ -16,7 +16,7 @@
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub_Sponsors-ea4aaa.svg?style=flat-square&logo=githubsponsors)](https://github.com/sponsors/ronitgupta138)
 [![AlternativeTo](https://img.shields.io/badge/AlternativeTo-Listed-2563eb.svg?style=flat-square&logo=linux)](https://alternativeto.net/software/aero-linux/about/?utm_source=badge&utm_medium=referral)
 [![CI](https://github.com/aero-linux/aero-linux/actions/workflows/ci.yml/badge.svg)](https://github.com/aero-linux/aero-linux/actions/workflows/ci.yml)
-[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-133%20Passed-059669.svg?style=flat-square)](https://github.com/aero-linux/aero-linux)
+[![CI / Test Suite](https://img.shields.io/badge/Test_Suite-138%20Passed-059669.svg?style=flat-square)](https://github.com/aero-linux/aero-linux)
 [![Idle Memory](https://img.shields.io/badge/Idle_RAM-312MB-059669.svg?style=flat-square)]()
 [![zRAM](https://img.shields.io/badge/zRAM_ZSTD-Default_Enabled-7c3aed.svg?style=flat-square)]()
 [![Works with GitHub](https://img.shields.io/badge/Works_with-GitHub-238636.svg?style=flat-square&logo=github)](https://github.com/developer-program)
@@ -59,7 +59,7 @@ Tested on identical physical hardware (**AMD Ryzen 5 5600H, 12 Cores, 15GB RAM, 
 | :--- | :---: | :---: | :---: | :---: |
 | **Windows 11** | ~3,850 MB | ~11.5 GB | High (SSD Swapping) | ❌ Third-party app |
 | **Ubuntu 24.04 (GNOME)** | ~1,420 MB | ~14.0 GB | High (SSD Swapping) | ❌ Manual script |
-| **⚡ Aero Linux (1.4-Supernova)** | **312 MB** | **~15.1 GB** | **Nanoseconds (zRAM ZSTD)** | **✅ Built-in (`aero power`)** |
+| **⚡ Aero Linux (1.5-Pulsar)** | **312 MB** | **~15.1 GB** | **Nanoseconds (zRAM ZSTD)** | **✅ Built-in (`aero power`)** |
 
 ---
 
@@ -281,8 +281,8 @@ aero-linux/
 │   └── man/                    # System manpage manuals (aero.1)
 ├── installer/                  # Calamares dual-boot safe installer configs & branding
 ├── packages/                   # Core Python & GTK3 developer applications
-│   ├── aero-cli/               # 59 native GTK3 apps, CLI subcommands & 133 unit tests
-│   ├── aero-welcome/           # 6-tab GTK3 Control Center & Quick Setup GUI
+│   ├── aero-cli/               # 59 native GTK3 apps, CLI subcommands & 138 unit tests
+│   └── aero-welcome/           # 6-tab GTK3 Control Center & Quick Setup GUI
 └── web/                        # Web portal, 59-app catalog, zRAM calc & hotkey guide
 ```
 

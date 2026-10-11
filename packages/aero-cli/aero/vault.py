@@ -108,3 +108,26 @@ def vault_export_env():
     data = _load_vault()
     for k, v in data.items():
         print(f'export {k}="{v}"')
+
+
+# Compatibility helpers for aero-vault-gui
+def list_vault_keys() -> list:
+    """Return list of secret key names in the vault."""
+    return list(_load_vault().keys())
+
+
+def get_vault_secret(key: str) -> Optional[str]:
+    """Retrieve secret value without printing to stdout."""
+    data = _load_vault()
+    return data.get(key)
+
+
+def set_vault_secret(key: str, value: str):
+    """Store secret into vault."""
+    vault_set(key, value)
+
+
+def delete_vault_secret(key: str) -> bool:
+    """Delete key from vault."""
+    return vault_delete(key)
+

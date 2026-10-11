@@ -67,3 +67,14 @@ def deep_system_clean(dry_run: bool = False) -> Dict[str, Any]:
         print(f"✅ Deep Clean Complete! Reclaimed: \033[1;32m{freed_mb} MB\033[0m storage.")
     print("═" * 56 + "\n")
     return {"freed_mb": freed_mb, "free_before_mb": free_before, "free_after_mb": free_after}
+
+
+def get_disk_cleanable_stats() -> Dict[str, Any]:
+    """Compatibility helper for graphical cleaner telemetry."""
+    return {"free_mb": get_disk_free_mb()}
+
+
+def clean_system_artifacts(dry_run: bool = False) -> Dict[str, Any]:
+    """Compatibility helper for graphical cleaner purge action."""
+    return deep_system_clean(dry_run=dry_run)
+

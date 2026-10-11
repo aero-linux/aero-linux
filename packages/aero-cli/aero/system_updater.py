@@ -8,7 +8,7 @@ def check_system_kernel():
     print("═" * 55)
     print(f" • Architecture:   \033[1;32m{platform.machine()}\033[0m")
     print(f" • Active Kernel:  \033[1;33m{platform.release()}\033[0m")
-    print(f" • OS Release:     Aero Linux 1.0 (Rolling Edge)")
+    print(f" • OS Release:     Aero Linux 1.5.0-Pulsar (64-bit)")
     print(f" • Low-Latency:    {'✅ Active' if 'lowlatency' in platform.release() or 'xanmod' in platform.release() or 'zen' in platform.release() else 'ℹ️ Standard'}")
     print()
 

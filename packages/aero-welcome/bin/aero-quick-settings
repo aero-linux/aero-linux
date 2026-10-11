@@ -201,7 +201,7 @@ class QuickSettingsWindow(Gtk.Window):
         # Footer Status & Control Center Launcher
         footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         lbl_footer = Gtk.Label()
-        lbl_footer.set_markup("<span font='10' color='#8b949e'>Aero Linux 1.1-Edge</span>")
+        lbl_footer.set_markup("<span font='10' color='#8b949e'>Aero Linux 1.5.0-Pulsar</span>")
         footer.pack_start(lbl_footer, False, False, 0)
 
         btn_full_ctrl = Gtk.Button(label="⚙️ All Settings")

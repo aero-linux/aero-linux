@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Aero Linux - Automated Debian (.deb) Package Builder
-# Packages the entire Aero CLI, 30-app GUI suite, autocompletions & man pages
+# Packages the entire Aero CLI, 59-app GUI suite, autocompletions & man pages
 # ==============================================================================
 
 set -euo pipefail
@@ -39,7 +39,7 @@ Maintainer: Ronit Gupta <ronitgupta138@gmail.com>
 Depends: python3 (>= 3.10), python3-gi, gir1.2-gtk-3.0, python3-setuptools
 Recommends: sway, waybar, alacritty, ufw, pipewire, brightnessctl
 Description: The Ultra-Lean AI & High-Performance Developer Linux Control Suite
- Complete 30-application Zero-Terminal GTK3 Graphical Management Suite,
+ Complete 59-application Zero-Terminal GTK3 Graphical Management Suite,
  real-time hardware telemetry, dynamic zRAM compaction, local LLM serving,
  and power management engine for Aero Linux.
 EOF

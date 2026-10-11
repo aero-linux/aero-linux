@@ -89,7 +89,7 @@ window {
 """
 
 SAMPLE_A = """# Aero Linux System Config
-VERSION = "1.2.0"
+VERSION = "1.4.0-Supernova"
 DESKTOP_MODE = "standard"
 ENABLE_AUTOTILING = False
 ZRAM_COMPRESSION = "lzo"
@@ -97,7 +97,7 @@ MAX_MEMORY_MB = 4096
 """
 
 SAMPLE_B = """# Aero Linux System Config
-VERSION = "1.3.0-Nebula"
+VERSION = "1.5.0-Pulsar"
 DESKTOP_MODE = "cyber_tiling"
 ENABLE_AUTOTILING = True
 ZRAM_COMPRESSION = "zstd"

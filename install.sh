@@ -199,20 +199,22 @@ EOF
 chmod +x "${BIN_DIR}/aero-vault-gui"
 
 # Create global executable wrapper for aero-about-gui
-cat << 'EOF' > "${BIN_DIR}/aero-about"
+cat << 'EOF' > "${BIN_DIR}/aero-about-gui"
 #!/usr/bin/env bash
 AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
 exec python3 "${AERO_HOME}/bin/aero-about-gui" "$@"
 EOF
-chmod +x "${BIN_DIR}/aero-about"
+chmod +x "${BIN_DIR}/aero-about-gui"
+ln -sf "${BIN_DIR}/aero-about-gui" "${BIN_DIR}/aero-about"
 
 # Create global executable wrapper for aero-screenshot-gui
-cat << 'EOF' > "${BIN_DIR}/aero-screenshot"
+cat << 'EOF' > "${BIN_DIR}/aero-screenshot-gui"
 #!/usr/bin/env bash
 AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
 exec python3 "${AERO_HOME}/bin/aero-screenshot-gui" "$@"
 EOF
-chmod +x "${BIN_DIR}/aero-screenshot"
+chmod +x "${BIN_DIR}/aero-screenshot-gui"
+ln -sf "${BIN_DIR}/aero-screenshot-gui" "${BIN_DIR}/aero-screenshot"
 
 # Create global executable wrapper for aero-repair-gui
 cat << 'EOF' > "${BIN_DIR}/aero-repair-gui"
@@ -223,20 +225,22 @@ EOF
 chmod +x "${BIN_DIR}/aero-repair-gui"
 
 # Create global executable wrapper for aero-notes-gui
-cat << 'EOF' > "${BIN_DIR}/aero-notes"
+cat << 'EOF' > "${BIN_DIR}/aero-notes-gui"
 #!/usr/bin/env bash
 AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
 exec python3 "${AERO_HOME}/bin/aero-notes-gui" "$@"
 EOF
-chmod +x "${BIN_DIR}/aero-notes"
+chmod +x "${BIN_DIR}/aero-notes-gui"
+ln -sf "${BIN_DIR}/aero-notes-gui" "${BIN_DIR}/aero-notes"
 
 # Create global executable wrapper for aero-color-gui
-cat << 'EOF' > "${BIN_DIR}/aero-color"
+cat << 'EOF' > "${BIN_DIR}/aero-color-gui"
 #!/usr/bin/env bash
 AERO_HOME="${HOME}/.local/share/aero-linux/packages/aero-welcome"
 exec python3 "${AERO_HOME}/bin/aero-color-gui" "$@"
 EOF
-chmod +x "${BIN_DIR}/aero-color"
+chmod +x "${BIN_DIR}/aero-color-gui"
+ln -sf "${BIN_DIR}/aero-color-gui" "${BIN_DIR}/aero-color"
 
 # Create global executable wrapper for aero-font-gui
 cat << 'EOF' > "${BIN_DIR}/aero-font-gui"
@@ -586,6 +590,17 @@ Icon=utilities-terminal
 Terminal=false
 Type=Application
 Categories=System;TerminalEmulator;
+EOF
+
+cat << EOF > "${HOME}/.local/share/applications/aero-quick-settings.desktop"
+[Desktop Entry]
+Name=Aero Quick Settings
+Comment=Aero Linux Desktop Quick Action Center
+Exec=${BIN_DIR}/aero-quick-settings
+Icon=preferences-system
+Terminal=false
+Type=Application
+Categories=Settings;GTK;
 EOF
 
 cat << EOF > "${HOME}/.local/share/applications/aero-wifi.desktop"
