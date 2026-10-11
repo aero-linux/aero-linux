@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Apply SQL Migration to Database
+Comment=Execute selected SQL migration script against local development database
+Exec=alacritty -e bash -c "aero db migrate '%F'; echo ''; read -p 'Press Enter to close...' "
+Icon-Name=server-database
+Selection=s
+Extensions=sql;
+Quote=double

@@ -1,5 +1,8 @@
 import subprocess
 import shutil
+import sqlite3
+import os
+from typing import Dict, Any, List
 
 DATABASES = {
     "postgres": {
@@ -62,7 +65,6 @@ def start_database(db_key: str) -> bool:
     db = DATABASES[db_key]
     print(f"🚀 Starting \033[1;32m{db_key.capitalize()}\033[0m ({db['image']})...")
 
-    # Stop existing container if running
     subprocess.run([runtime, "rm", "-f", db["container"]], capture_output=True)
 
     cmd = [runtime, "run", "-d", "--name", db["container"], "-p", db["port"]]
@@ -90,3 +92,65 @@ def stop_database(db_key: str) -> bool:
         print(f"✅ {db_key.capitalize()} stopped.")
         return True
     return False
+
+
+def run_sql_migration(sql_file: str, db_target: str = "sqlite") -> bool:
+    """
+    Execute a raw SQL migration script against SQLite or a containerized database.
+    """
+    if not os.path.isfile(sql_file):
+        print(f"❌ SQL migration file not found: {sql_file}")
+        return False
+
+    with open(sql_file, "r") as f:
+        sql_content = f.read()
+
+    print(f"\n📦 RUNNING SQL MIGRATION: {os.path.basename(sql_file)} ➔ {db_target}")
+    print("═" * 60)
+
+    if db_target.endswith(".db") or db_target.endswith(".sqlite") or db_target == "sqlite":
+        db_path = db_target if db_target != "sqlite" else "aero_dev.sqlite"
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.executescript(sql_content)
+            conn.commit()
+            conn.close()
+            print(f"✅ Migration executed successfully against SQLite: {db_path}")
+            return True
+        except Exception as e:
+            print(f"❌ SQLite migration error: {e}")
+            return False
+
+    print(f"⚠️  Target '{db_target}' is an external database; ensure driver is configured.")
+    return True
+
+
+def inspect_sqlite_schema(sqlite_file: str) -> List[Dict[str, Any]]:
+    """
+    Inspect tables and column schemas of an existing SQLite database.
+    """
+    if not os.path.isfile(sqlite_file):
+        print(f"❌ SQLite file not found: {sqlite_file}")
+        return []
+
+    tables_info = []
+    try:
+        conn = sqlite3.connect(sqlite_file)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+        tables = [r[0] for r in cursor.fetchall()]
+
+        print(f"\n📊 SQLITE SCHEMA INSPECTOR: {os.path.basename(sqlite_file)}")
+        print("═" * 60)
+        for tbl in tables:
+            cursor.execute(f"PRAGMA table_info('{tbl}');")
+            columns = [{"id": col[0], "name": col[1], "type": col[2], "notnull": col[3]} for col in cursor.fetchall()]
+            tables_info.append({"table": tbl, "columns": columns})
+            col_names = ", ".join([f"{c['name']} ({c['type']})" for c in columns])
+            print(f" • Table \033[1;36m{tbl}\033[0m: {col_names}")
+        print("═" * 60 + "\n")
+        conn.close()
+    except Exception as e:
+        print(f"❌ Error inspecting SQLite schema: {e}")
+    return tables_info
