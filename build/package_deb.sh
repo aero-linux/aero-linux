@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DETECTED_VER=$(grep "version=" "${ROOT_DIR}/packages/aero-cli/setup.py" | head -n1 | cut -d'"' -f2 || echo "1.4.0")
+DETECTED_VER=$(grep "version=" "${ROOT_DIR}/packages/aero-cli/setup.py" | head -n1 | cut -d'"' -f2 || echo "1.5.0")
 VERSION="${VERSION:-$DETECTED_VER}"
 PKG_NAME="aero-linux"
 ARCH="amd64"

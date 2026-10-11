@@ -9,7 +9,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Auto-detect version from setup.py or environment
-DETECTED_VER=$(grep "version=" "${ROOT_DIR}/packages/aero-cli/setup.py" | head -n1 | cut -d'"' -f2 || echo "1.4.0")
+DETECTED_VER=$(grep "version=" "${ROOT_DIR}/packages/aero-cli/setup.py" | head -n1 | cut -d'"' -f2 || echo "1.5.0")
 VERSION="${VERSION:-$DETECTED_VER}"
 RELEASE_CODENAME="${RELEASE_CODENAME:-supernova}"
 DIST_NAME="aero-linux"
