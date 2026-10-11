@@ -1,7 +1,15 @@
+"""
+Aero Linux - Kernel eBPF & Socket Lifecycle Tracing Engine
+Low-overhead tracing for network sockets, DNS resolution, and TCP connection lifecycle.
+"""
+
 import socket
 import ssl
 import time
-from typing import Dict, Any
+import os
+import shutil
+import subprocess
+from typing import Dict, Any, List
 
 
 DNS_SERVERS = {
@@ -96,3 +104,65 @@ def trace_dns_benchmark(domain: str = "google.com") -> Dict[str, float]:
             results[name] = -1.0
             print(f" • {name:<26}: ❌ Timeout")
     return results
+
+
+def audit_ebpf_kernel_support() -> Dict[str, Any]:
+    """
+    Audit kernel configuration and debugfs/tracefs mounts for eBPF observability readiness.
+    """
+    tracefs_mounted = os.path.exists("/sys/kernel/tracing") or os.path.exists("/sys/kernel/debug/tracing")
+    bpf_fs_mounted = os.path.exists("/sys/fs/bpf")
+    has_bpftool = shutil.which("bpftool") is not None
+    has_bpftrace = shutil.which("bpftrace") is not None
+
+    status = {
+        "tracefs": tracefs_mounted,
+        "bpf_fs": bpf_fs_mounted,
+        "bpftool": has_bpftool,
+        "bpftrace": has_bpftrace,
+        "ready": tracefs_mounted or bpf_fs_mounted
+    }
+
+    print("\n⚡ AERO eBPF & KERNEL TRACING DIAGNOSTIC")
+    print("═" * 50)
+    print(f" • TraceFS Mounted:      {'✅ Active' if tracefs_mounted else '⚪ Unmounted'}")
+    print(f" • BPF FileSystem:       {'✅ Active' if bpf_fs_mounted else '⚪ Missing'}")
+    print(f" • BPFtool Available:    {'✅ Installed' if has_bpftool else '⚪ Optional (apt install bpftool)'}")
+    print(f" • BPFtrace Engine:      {'✅ Installed' if has_bpftrace else '⚪ Optional (apt install bpftrace)'}")
+    print("═" * 50 + "\n")
+    return status
+
+
+def trace_active_sockets(filter_proc: str = "") -> List[Dict[str, Any]]:
+    """
+    Inspect active TCP socket connections with state, foreign address, and PID.
+    """
+    connections = []
+    if shutil.which("ss"):
+        cmd = ["ss", "-tanp"]
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            for line in res.stdout.splitlines()[1:]:
+                parts = line.split()
+                if len(parts) >= 5:
+                    state = parts[0]
+                    recv_q = parts[1]
+                    send_q = parts[2]
+                    local = parts[3]
+                    peer = parts[4]
+                    proc = parts[5] if len(parts) > 5 else "-"
+                    if filter_proc and filter_proc.lower() not in proc.lower():
+                        continue
+                    connections.append({
+                        "state": state,
+                        "local": local,
+                        "peer": peer,
+                        "process": proc
+                    })
+        except Exception as e:
+            print(f"Socket trace error: {e}")
+
+    print(f"\n⚡ TRACED SOCKETS ({len(connections)} active connections):")
+    for c in connections[:12]:
+        print(f" • {c['state']:<12} {c['local']:<24} ➔ {c['peer']:<24} {c['process']}")
+    return connections
