@@ -1,6 +1,6 @@
 # Fish completion for Aero Linux CLI (aero)
 
-set -l aero_commands doctor memory power ai vault dev net store repair git ssh ssl firewall speed disk sync startup services flasher logs font ports shortcuts notes color screenshot monitor updater wifi bluetooth audio displays gamehub phone security benchmark clean about layout zoom oom wallpaper shell calc diff qr archive sandbox tunnel markdown gpu cron crypto db env mock regex deps search turbomount tiling recorder accent appimage json jwt http ping dig trace thermals battery trash clipboard
+set -l aero_commands doctor memory power ai vault dev net store repair git ssh ssl firewall speed disk sync startup services flasher logs font ports shortcuts notes color screenshot monitor updater wifi bluetooth audio displays gamehub phone security benchmark clean about layout zoom oom wallpaper shell calc diff qr archive sandbox tunnel markdown gpu cron crypto db env mock regex deps search turbomount tiling recorder accent appimage json jwt http ping dig trace thermals battery trash clipboard vm hash
 
 complete -c aero -f
 complete -c aero -n "not __fish_seen_subcommand_from $aero_commands" -a "$aero_commands"
