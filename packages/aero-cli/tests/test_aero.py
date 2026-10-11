@@ -779,6 +779,13 @@ class TestAeroCLI(unittest.TestCase):
         deb_script = f"{REPO_ROOT}/build/package_deb.sh"
         self.assertTrue(os.path.exists(deb_script))
         self.assertTrue(os.access(deb_script, os.X_OK))
+        # Ensure package_deb desktop_entries covers every single GUI executable in packages/aero-welcome/bin
+        with open(deb_script) as f:
+            content = f.read()
+        bin_dir = f"{REPO_ROOT}/packages/aero-welcome/bin"
+        for fname in os.listdir(bin_dir):
+            if fname.startswith("aero-") and fname != "aero-welcome":
+                self.assertIn(fname, content, f"{fname} missing desktop entry in package_deb.sh")
         for sh in ["aero.bash", "aero.fish", "aero.zsh"]:
             c_path = f"{REPO_ROOT}/build/completions/{sh}"
             self.assertTrue(os.path.exists(c_path))
