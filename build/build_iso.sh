@@ -11,7 +11,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Auto-detect version from setup.py or environment
 DETECTED_VER=$(grep "version=" "${ROOT_DIR}/packages/aero-cli/setup.py" | head -n1 | cut -d'"' -f2 || echo "1.5.0")
 VERSION="${VERSION:-$DETECTED_VER}"
-RELEASE_CODENAME="${RELEASE_CODENAME:-supernova}"
+RELEASE_CODENAME="${RELEASE_CODENAME:-pulsar}"
 DIST_NAME="aero-linux"
 ARCH="amd64"
 DIST_DIR="${ROOT_DIR}/dist"
@@ -89,19 +89,19 @@ fi
 set menu_color_normal=white/black
 set menu_color_highlight=cyan/black
 
-menuentry "⚡ Aero Linux v1.4.0 (Supernova) Live Session [x86_64]" {
+menuentry "⚡ Aero Linux v1.5.0 (Pulsar) Live Session [x86_64]" {
     set gfxpayload=keep
     linux  /live/vmlinuz boot=live quiet splash zram=1 aero.layout=windows ---
     initrd /live/initrd.img
 }
 
-menuentry "⚡ Aero Linux v1.4.0 Live (RAM Mode - Copy to RAM)" {
+menuentry "⚡ Aero Linux v1.5.0 Live (RAM Mode - Copy to RAM)" {
     set gfxpayload=keep
     linux  /live/vmlinuz boot=live toram quiet splash ---
     initrd /live/initrd.img
 }
 
-menuentry "⚡ Aero Linux v1.4.0 Live (Failsafe Graphics / Nomodeset)" {
+menuentry "⚡ Aero Linux v1.5.0 Live (Failsafe Graphics / Nomodeset)" {
     set gfxpayload=keep
     linux  /live/vmlinuz boot=live nomodeset quiet ---
     initrd /live/initrd.img
@@ -115,7 +115,7 @@ EOF_GRUB
 # 4. Generate Live System Metadata
 cat << EOF_META > "${CD_DIR}/live/README.txt"
 ================================================================================
-⚡ AERO LINUX v1.4.0-SUPERNOVA LIVE INSTALLATION MEDIA
+⚡ AERO LINUX v1.5.0-PULSAR LIVE INSTALLATION MEDIA
 ================================================================================
 Architecture: x86_64
 Base: Debian/Ubuntu Minimal Base
