@@ -63,6 +63,8 @@ _aero() {
         'turbomount:In-memory RAM-disk turbo compilation'
         'tiling:Dynamic BSP auto-tiling daemon'
         'recorder:Screen & media recorder'
+        'vm:QEMU/KVM micro-VM & ephemeral sandbox runner'
+        'hash:Cryptographic hash & manifest engine'
     )
 
     _describe 'aero command' commands
