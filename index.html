@@ -7,7 +7,7 @@
   
   <!-- Primary Meta Tags -->
   <meta name="title" content="Aero Linux — The Ultra-Lean AI & Developer Operating System">
-  <meta name="description" content="Engineered for engineers. Sub-350MB idle RAM, 49 native GTK3 developer applications, dynamic zRAM ZSTD memory compression, and 1-click local LLM runner out of the box.">
+  <meta name="description" content="Engineered for engineers. Sub-350MB idle RAM, 59 native GTK3 developer applications, dynamic zRAM ZSTD memory compression, and 1-click local LLM runner out of the box.">
   <meta name="keywords" content="linux, developer os, aero linux, low ram linux, sway, wayland, ollama, local llm, developer tools, gtk3, zram zstd, fast distro">
   <meta name="author" content="Ronit Gupta">
   <meta name="theme-color" content="#05070a">
@@ -22,7 +22,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ronitgupta138.github.io/aero-linux/">
   <meta property="og:title" content="Aero Linux — The Ultra-Lean AI & Developer Operating System">
-  <meta property="og:description" content="Engineered for engineers. Sub-350MB idle RAM, 49 native GTK3 developer applications, dynamic zRAM ZSTD compression, and 1-click local LLM serving.">
+  <meta property="og:description" content="Engineered for engineers. Sub-350MB idle RAM, 59 native GTK3 developer applications, dynamic zRAM ZSTD compression, and 1-click local LLM serving.">
   <meta property="og:image" content="https://ronitgupta138.github.io/aero-linux/assets/aero-preview.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -32,7 +32,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://ronitgupta138.github.io/aero-linux/">
   <meta name="twitter:title" content="Aero Linux — The Ultra-Lean AI & Developer Operating System">
-  <meta name="twitter:description" content="Sub-350MB idle RAM, 49 native GTK3 apps, dynamic zRAM ZSTD compression, and 1-click local LLM serving.">
+  <meta name="twitter:description" content="Sub-350MB idle RAM, 59 native GTK3 apps, dynamic zRAM ZSTD compression, and 1-click local LLM serving.">
   <meta name="twitter:image" content="https://ronitgupta138.github.io/aero-linux/assets/aero-preview.png">
   <meta name="twitter:creator" content="@ronitgupta138">
 
@@ -44,8 +44,8 @@
     "name": "Aero Linux",
     "operatingSystem": "Linux (x86_64)",
     "applicationCategory": "DeveloperApplication",
-    "softwareVersion": "1.4.0",
-    "description": "The Ultra-Lean Operating System for AI, Systems Engineering, and High-Performance Development with 49 native GTK3 applications, dynamic zRAM ZSTD compression, and sub-350MB idle RAM.",
+    "softwareVersion": "1.5.0",
+    "description": "The Ultra-Lean Operating System for AI, Systems Engineering, and High-Performance Development with 59 native GTK3 applications, dynamic zRAM ZSTD compression, and sub-350MB idle RAM.",
     "url": "https://ronitgupta138.github.io/aero-linux/",
     "downloadUrl": "https://github.com/ronitgupta138/aero-linux/releases",
     "license": "https://opensource.org/licenses/MIT",
@@ -362,8 +362,11 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
 
         <!-- Release Version Selector Tabs -->
         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
-          <button id="rel-btn-v14" onclick="selectRelease('v14')" class="btn btn-secondary" style="background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #fff; font-weight: 700; padding: 10px 18px;">
-            🌟 v1.4.0-Supernova <span style="background: #00f2fe; color: #000; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; margin-left: 6px; font-weight: 800;">LATEST</span>
+          <button id="rel-btn-v15" onclick="selectRelease('v15')" class="btn btn-secondary" style="background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #fff; font-weight: 700; padding: 10px 18px;">
+            ⚡ v1.5.0-Pulsar <span style="background: #00f2fe; color: #000; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; margin-left: 6px; font-weight: 800;">LATEST</span>
+          </button>
+          <button id="rel-btn-v14" onclick="selectRelease('v14')" class="btn btn-secondary" style="padding: 10px 18px; font-weight: 600;">
+            🌟 v1.4.0-Supernova
           </button>
           <button id="rel-btn-v13" onclick="selectRelease('v13')" class="btn btn-secondary" style="padding: 10px 18px; font-weight: 600;">
             🌌 v1.3.0-Nebula
@@ -496,19 +499,19 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
             <span class="engine-badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">🎛️ 100% GRAPHICAL WORKFLOW</span>
             <h3 style="font-size: 1.8rem; font-weight: 800; margin-top: 8px;">Zero-Terminal Native Developer Suite</h3>
             <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 650px; margin: 6px auto 20px;">
-              49 instant-start native GTK3 applications engineered with sub-20ms cold start, 15MB RAM baseline, and zero Electron bloat.
+              59 instant-start native GTK3 applications engineered with sub-20ms cold start, 15MB RAM baseline, and zero Electron bloat.
             </p>
 
             <!-- Search Bar & Filters -->
             <div class="suite-filter-container">
               <div class="suite-search-box">
                 <span style="font-size: 1.1rem; color: #00f2fe;">🔍</span>
-                <input type="text" id="app-search-input" placeholder="Search 49 native tools (e.g. sql, docker, ai, jwt, wifi, regex, git)..." oninput="filterApps()" autocomplete="off">
+                <input type="text" id="app-search-input" placeholder="Search 59 native tools (e.g. sql, docker, ai, jwt, wifi, regex, git)..." oninput="filterApps()" autocomplete="off">
                 <button id="search-clear-btn" onclick="clearAppSearch()" style="display:none; background:none; border:none; color:#64748b; font-size:1rem; cursor:pointer;">✕</button>
               </div>
-              
+
               <div class="suite-category-tabs">
-                <button class="cat-tab active" data-cat="all" onclick="setAppCategory('all', event)">All (49)</button>
+                <button class="cat-tab active" data-cat="all" onclick="setAppCategory('all', event)">All (59)</button>
                 <button class="cat-tab" data-cat="ai" onclick="setAppCategory('ai', event)">🤖 AI &amp; LLM (2)</button>
                 <button class="cat-tab" data-cat="dev" onclick="setAppCategory('dev', event)">🛠️ Dev Tools (19)</button>
                 <button class="cat-tab" data-cat="systems" onclick="setAppCategory('systems', event)">⚡ Systems &amp; Hardware (11)</button>
@@ -516,7 +519,7 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
                 <button class="cat-tab" data-cat="media" onclick="setAppCategory('media', event)">🎨 Media &amp; Desktop (9)</button>
               </div>
 
-              <div id="app-filter-count" class="suite-count-badge">Showing 49 of 49 apps</div>
+              <div id="app-filter-count" class="suite-count-badge">Showing 50 of 50 apps</div>
             </div>
           </div>
           
@@ -1305,6 +1308,24 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
               </div>
               <p class="app-desc">Visual Git commit graph tree, stage/unstage file selector & conventional commit assistant.</p>
             </div>
+
+            <!-- Card 50: eBPF Kernel & Socket Inspector -->
+            <div class="app-card" data-category="systems" data-keywords="ebpf trace sockets kernel tracefs packet drops ports latency network tcp aero ebpf">
+              <div class="app-card-top">
+                <div class="app-card-title">
+                  <span class="app-icon">⚡</span>
+                  <div>
+                    <h4 class="app-name">50. eBPF & Socket Inspector</h4>
+                    <span class="app-cmd"><code>aero-ebpf-gui</code></span>
+                  </div>
+                </div>
+                <div class="app-tags">
+                  <span class="app-tag ram-tag">14MB RAM</span>
+                  <span class="app-tag" style="background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3);">v1.5</span>
+                </div>
+              </div>
+              <p class="app-desc">Kernel TraceFS diagnostics, real-time TCP socket lifecycle tracking & process filtering.</p>
+            </div>
           </div>
           <div id="no-apps-state" class="no-apps-found" style="display: none;">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">🔍</div>
@@ -1507,7 +1528,7 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
               </tr>
               <tr>
                 <td><b>Native Developer Suite</b></td>
-                <td class="highlight"><b>49 Native GTK3 Apps (&lt;20ms boot)</b></td>
+                <td class="highlight"><b>59 Native GTK3 Apps (&lt;20ms boot)</b></td>
                 <td>0 (Terminal Only)</td>
                 <td>0 (Terminal Only)</td>
                 <td>Bloatware &amp; Ads</td>
@@ -1804,7 +1825,7 @@ net.ipv4.tcp_congestion_control = bbr
               <li>Dual Desktop Engine (Windows Floating &amp; Sway Tiling)</li>
               <li>1-Click Local LLM Runner with Ollama &amp; DeepSeek-R1</li>
               <li>Automated Debian Package (.deb) &amp; Live Bootable ISO</li>
-              <li>130/130 Passing Unit Tests &amp; Multi-Distro CI Matrix</li>
+              <li>133/133 Passing Unit Tests &amp; Multi-Distro CI Matrix</li>
             </ul>
             <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
               <a href="#download" class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 8px 12px; justify-content: center;">Download v1.4.0 Live</a>
@@ -1818,19 +1839,19 @@ net.ipv4.tcp_congestion_control = bbr
                 <span class="roadmap-version-tag">v1.5</span>
                 <span class="roadmap-codename">Pulsar</span>
               </div>
-              <span class="roadmap-status-pill pill-dev">Active Sprint</span>
+              <span class="roadmap-status-pill pill-live" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);">Delivered</span>
             </div>
-            <div class="roadmap-date">📅 Mid-November 2026 • ~6 Weeks</div>
+            <div class="roadmap-date">📅 October 2026 • Shipped</div>
             <div class="roadmap-focus">Zero-Overhead eBPF &amp; Ephemeral MicroVMs</div>
             <ul class="roadmap-list">
               <li>Kernel probe tracing for socket latency &amp; drops (<code>aero trace</code>)</li>
-              <li>Cairo/SVG visual flamegraphs for Go, Rust &amp; Python (<code>aero-ebpf-gui</code>)</li>
-              <li>Firecracker ephemeral MicroVM developer sandboxes (&lt;50ms boot)</li>
-              <li>Right-click SQLite/Postgres schema migrations in Nemo</li>
-              <li>Multi-threaded BLAKE3 &amp; SHA256 checksum calculating action</li>
+              <li>Kernel TraceFS &amp; active sockets GUI (<code>aero-ebpf-gui</code>)</li>
+              <li>KVM ephemeral MicroVM developer sandboxes with auto-wipe</li>
+              <li>Right-click SQL migrations &amp; schema inspection in Nemo</li>
+              <li>Multi-threaded BLAKE3 &amp; SHA256 checksum engine</li>
             </ul>
             <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
-              <a href="https://github.com/ronitgupta138/aero-linux/milestone/1" target="_blank" class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 8px 12px; justify-content: center; color: #00f2fe; border-color: rgba(0,242,254,0.3);">Milestone #1 on GitHub ➔</a>
+              <a href="https://github.com/ronitgupta138/aero-linux/releases" target="_blank" class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 8px 12px; justify-content: center; color: #10b981; border-color: rgba(16,185,129,0.3);">Shipped in Repository ➔</a>
             </div>
           </div>
 
@@ -1841,7 +1862,7 @@ net.ipv4.tcp_congestion_control = bbr
                 <span class="roadmap-version-tag">v1.6</span>
                 <span class="roadmap-codename">Quasar</span>
               </div>
-              <span class="roadmap-status-pill pill-planned">Spec Complete</span>
+              <span class="roadmap-status-pill pill-dev">In Development</span>
             </div>
             <div class="roadmap-date">📅 Mid-January 2027 • ~8 Weeks</div>
             <div class="roadmap-focus">Autonomous Multi-Agent Swarm &amp; Btrfs CoW</div>
@@ -1939,7 +1960,7 @@ net.ipv4.tcp_congestion_control = bbr
 
       <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.82rem; color: #64748b;">
         <p style="margin: 0;">© 2026 Aero Linux Project. Engineered by <a href="https://github.com/ronitgupta138" target="_blank" style="color: #94a3b8; text-decoration: none; font-weight: 600;">Ronit Gupta</a> &amp; Community.</p>
-        <p style="margin: 0; font-family: var(--font-mono);">Sub-350MB RAM • 49 GTK3 Apps • Dynamic zRAM</p>
+        <p style="margin: 0; font-family: var(--font-mono);">Sub-350MB RAM • 59 GTK3 Apps • Dynamic zRAM</p>
       </div>
     </div>
   </footer>
@@ -2275,9 +2296,20 @@ net.ipv4.tcp_congestion_control = bbr
     }
 
     const RELEASES_DATA = {
+      'v15': {
+        title: 'Aero Linux 1.5-Pulsar',
+        badge: 'LATEST PRODUCTION RELEASE',
+        desc: '64-bit (x86_64) • Complete 59-App GUI Suite • Zero-Overhead eBPF Tracing • Ephemeral MicroVMs • 133 Tests Passing',
+        size: '872 KB (Live ISO) / 288 KB (.deb)',
+        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux_1.5.0_pulsar_amd64.iso',
+        downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux-1.5-pulsar-src.tar.gz',
+        debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux_1.5.0_amd64.deb',
+        githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.5.0-pulsar',
+        sha: '19d3481d1f3eae44eeb2d0d155eb81326d10e4e125db9204c04a716ce7ea67c1 (.deb)'
+      },
       'v14': {
         title: 'Aero Linux 1.4-Supernova',
-        badge: 'LATEST PRODUCTION RELEASE',
+        badge: 'STABLE RELEASE (SUPERNOVA)',
         desc: '64-bit (x86_64) • Complete 45-App GUI Suite • Live Bootable ISO • Sub-350MB Idle RAM • 130 Tests Passing',
         size: '872 KB (Live ISO) / 474 KB (.deb)',
         isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_supernova_amd64.iso',
@@ -2350,7 +2382,7 @@ net.ipv4.tcp_congestion_control = bbr
       document.getElementById('rel-github-btn').setAttribute('href', data.githubUrl);
       document.getElementById('rel-sha').textContent = data.sha;
 
-      ['v14', 'v13', 'v12', 'v11', 'v10'].forEach(k => {
+      ['v15', 'v14', 'v13', 'v12', 'v11', 'v10'].forEach(k => {
         const btn = document.getElementById('rel-btn-' + k);
         if (btn) {
           if (k === relKey) {
@@ -2508,7 +2540,7 @@ net.ipv4.tcp_congestion_control = bbr
       });
 
       document.addEventListener('DOMContentLoaded', () => {
-        selectRelease('v14');
+        selectRelease('v15');
         termTimer = setInterval(autoCycleTerminal, 5000);
         renderHotkeys(HOTKEYS_DATA);
       });
