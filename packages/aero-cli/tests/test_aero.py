@@ -19,8 +19,8 @@ from aero.share import get_local_ip
 from aero.battery import get_battery_health
 from aero.audio import LATENCY_PRESETS
 from aero.fonts import NERD_FONTS
-from aero.db_tools import DATABASES
-from aero.vm import check_kvm
+from aero.db_tools import DATABASES, run_sql_migration, inspect_sqlite_schema
+from aero.vm import check_kvm, spawn_ephemeral_microvm
 from aero.layout import set_desktop_layout
 from aero.ai import calc_model_memory
 from aero.kernel_mgr import PROFILES as KERNEL_PROFILES, audit_kernel_scheduler
@@ -197,6 +197,26 @@ class TestAeroCLI(unittest.TestCase):
     def test_kvm(self):
         res = check_kvm()
         self.assertIsInstance(res, bool)
+        # Test ephemeral microvm dry run
+        spawn_res = spawn_ephemeral_microvm(memory_mb=512, cores=1, dry_run=True)
+        self.assertTrue(spawn_res["success"])
+        self.assertTrue(spawn_res["ephemeral"])
+
+    def test_sql_migration_and_schema(self):
+        sql_file = "/tmp/test_migration.sql"
+        db_file = "/tmp/test_aero_mig.sqlite"
+        with open(sql_file, "w") as f:
+            f.write("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT);")
+        mig_ok = run_sql_migration(sql_file, db_file)
+        self.assertTrue(mig_ok)
+        schema = inspect_sqlite_schema(db_file)
+        self.assertEqual(len(schema), 1)
+        self.assertEqual(schema[0]["table"], "users")
+        # Cleanup
+        if os.path.exists(sql_file):
+            os.remove(sql_file)
+        if os.path.exists(db_file):
+            os.remove(db_file)
 
     def test_desktop_layout(self):
         res = set_desktop_layout("windows")
