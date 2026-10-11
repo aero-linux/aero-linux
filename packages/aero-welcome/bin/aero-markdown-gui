@@ -87,7 +87,7 @@ window {
 }
 """
 
-SAMPLE_MARKDOWN = """# 🚀 Welcome to Aero Linux 1.4-Supernova
+SAMPLE_MARKDOWN = """# 🚀 Welcome to Aero Linux 1.5-Pulsar
 
 Aero Linux is an ultra-lean, high-performance developer distribution built with **zero background bloat**.
 
