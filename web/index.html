@@ -399,8 +399,8 @@ Disk swap writes to NVMe/SSD, causing 100x latency stalls during intense compila
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin: 25px 0;">
-              <a id="rel-iso-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux_1.5.0_pulsar_amd64.iso" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);">
-                💿 Live ISO (.iso)
+              <a id="rel-iso-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_supernova_amd64.iso" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);">
+                <span>💿</span> Live ISO (.iso)
               </a>
               <a id="rel-deb-btn" href="https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux_1.5.0_amd64.deb" class="btn btn-primary" style="padding: 12px; font-weight: 700; gap: 6px; font-size: 0.9rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                 📦 Debian (.deb)
@@ -2199,7 +2199,7 @@ net.ipv4.tcp_congestion_control = bbr
       const isoBtn = document.getElementById('rel-iso-btn');
       let targetFile = 'aero-linux_1.5.0_amd64.deb';
       if (shaText.includes('(ISO)')) {
-        targetFile = (isoBtn && isoBtn.getAttribute('href') ? isoBtn.getAttribute('href').split('/').pop() : 'aero-linux_1.5.0_pulsar_amd64.iso');
+        targetFile = (isoBtn && isoBtn.getAttribute('href') ? isoBtn.getAttribute('href').split('/').pop() : 'aero-linux_1.4.0_supernova_amd64.iso');
       } else {
         targetFile = (debBtn && debBtn.getAttribute('href') ? debBtn.getAttribute('href').split('/').pop() : 'aero-linux_1.5.0_amd64.deb');
       }
@@ -2463,7 +2463,7 @@ net.ipv4.tcp_congestion_control = bbr
         badge: 'LATEST PRODUCTION RELEASE',
         desc: '64-bit (x86_64) • Complete 59-App GUI Suite • Zero-Overhead eBPF Tracing • Ephemeral MicroVMs • 138 Tests Passing',
         size: '872 KB (Live ISO) / 288 KB (.deb)',
-        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux_1.5.0_pulsar_amd64.iso',
+        isoUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.4.0-supernova/aero-linux_1.4.0_supernova_amd64.iso',
         downloadUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux-1.5-pulsar-src.tar.gz',
         debUrl: 'https://github.com/ronitgupta138/aero-linux/releases/download/v1.5.0-pulsar/aero-linux_1.5.0_amd64.deb',
         githubUrl: 'https://github.com/ronitgupta138/aero-linux/releases/tag/v1.5.0-pulsar',
