@@ -8,7 +8,7 @@ aero \- The Ultra-Lean AI & High-Performance Developer Linux Control Engine
 .B aero
 is the primary systems engineering, performance tuning, and local AI orchestration suite for Aero Linux.
 It provides hardware telemetry, dynamic zRAM compaction, local LLM serving, containerized sandboxes,
-encrypted keyrings, network latency tracers, desktop layout switching, and a complete 45-app graphical suite.
+encrypted keyrings, network latency tracers, desktop layout switching, and a complete 59-app graphical suite.
 
 .SH CORE COMMANDS
 .TP
@@ -60,8 +60,17 @@ Wireless mobile device synchronization and file beaming.
 .B zoom \fI[in | out | reset | peek]\fR
 High-precision display magnification and momentary 2-finger peek zoom.
 .TP
-.B trace \fI[ping <host> | dns]\fR
-Measure network socket connect, TLS handshake, and DNS resolution latency.
+.B trace \fI[ping <host> | dns | ebpf | sockets]\fR
+Measure network latency, TLS handshake, kernel TraceFS diagnostics, and active socket lifecycles.
+.TP
+.B vm \fI[run <iso> | spawn]\fR
+Boot live ISO images or spawn ephemeral micro-VMs with volatile scratch disks and instant teardown.
+.TP
+.B hash \fI<algo> <target> [--verify <hash>] [--manifest]\fR
+Multi-threaded cryptographic file and directory manifest hasher (SHA256, BLAKE3, MD5).
+.TP
+.B db \fI[start | stop | ui | migrate <file> | schema <db>]\fR
+Manage local containers, execute SQL migrations, and inspect SQLite schemas.
 .TP
 .B clean \fI[--dry-run]\fR
 Deep system cache and developer de-bloater cleaner (npm, pip, apt, docker).
